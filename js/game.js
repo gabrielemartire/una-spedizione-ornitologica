@@ -327,8 +327,13 @@ const Gioco = (() => {
     document.getElementById("postcard-title").textContent = `Cartolina · ${time}`;
     drawPostcard();
     log(`Giorno ${trip.day}: sbarchi ${time === "notte" ? "di notte" : time === "alba" ? "all'alba" : "nel pomeriggio"}. Da qualche parte, vicino all'acqua, canta un uccello.`, TIME_ICONS[time]);
+    if (birdInRuin()) log("Il canto sembra venire da dentro le rovine…", "bird");
     Suoni.toggleAmbient("vento");
     render();
+  }
+
+  function birdInRuin() {
+    return !!s.ruin && !s.bird.gone && s.ruin.interior.has(key(s.bird));
   }
 
   function drawPostcard() {
@@ -580,6 +585,7 @@ const Gioco = (() => {
       if (spent > speed) break;
       o.x = c.x;
       o.y = c.y;
+      if (!s.bird.gone && !s.bird.observed && dist(o, s.bird) <= 2) scare("L'orso è passato troppo vicino");
       Suoni.play("passoOrso");
       render();
       await sleep(STEP_DELAY);
@@ -783,7 +789,8 @@ const Gioco = (() => {
       <div><span>Orso</span><b>${bearState}</b></div>
       <div class="seed"><span>Seed</span><b>${s.seed}</b></div>`;
 
-    const birdState = b.observed ? "✔ osservato" : b.gone ? "✗ volato via" : "da osservare";
+    const birdState = b.observed ? "✔ osservato" : b.gone ? "✗ volato via"
+      : birdInRuin() && !insideRuin() ? "canta dentro le rovine" : "da osservare";
     el.notebook.innerHTML = `<div class="nb-row"><span>${b.observed ? "v" : "?"} ${BIRD.nome}</span><b>${birdState}</b></div>`;
     el.log.innerHTML = s.log.map((e, i) =>
       `<li${i ? "" : ' class="is-new"'}>${e.icon ? iconHtml(e.icon) : "<i></i>"}<span>${e.msg}</span></li>`).join("");
