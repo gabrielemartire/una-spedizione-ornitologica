@@ -212,7 +212,7 @@ Ogni creatura mostra il suo stato (`!` ti insegue, `?` ti cerca, `z` si riposa) 
 
 | Creatura | Comportamento | Come la gestisci |
 |---|---|---|
-| Orso | 4 passi a round quando ti insegue (più di te!), 3 quando ti cerca, 1 quando vaga; l'acqua gli costa doppio. Tenace: ti fiuta da vicino, ti vede da lontano, aggira gli ostacoli e ti segue. Se ti perde va dove ti ha visto l'ultima volta. Fa la guardia al territorio dell'uccello | Correndo non lo semini: nasconditi nell'erba alta e nei cespugli, attraversa il ruscello, usa esche e trappole |
+| Orso | 4 passi ogni 3 tuoi quando ti insegue (più veloce di te!), al tuo passo quando ti cerca, uno ogni due quando vaga; l'acqua gli costa doppio. Dopo averti colpito si ferma per 3 battiti. Tenace: ti fiuta da vicino, ti vede da lontano, aggira gli ostacoli e ti segue. Se ti perde va dove ti ha visto l'ultima volta. Fa la guardia al territorio dell'uccello | Correndo non lo semini: nasconditi nell'erba alta e nei cespugli, attraversa il ruscello, usa esche e trappole |
 | Lupi | In branco, cercano di circondarti | Separali con l'acqua; il petardo li mette in fuga |
 | Cinghiale | Ti insegue, 2 caselle a turno, solo in linea retta | Portalo nella tagliola |
 | Serpente | Fermo nell'erba alta, morde chi è adiacente | Va notato ed evitato |
