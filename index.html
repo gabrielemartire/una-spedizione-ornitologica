@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Una spedizione ornitologica</title>
+  <link rel="icon" href="assets/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="frame">
+
+    <!-- Menu principale -->
+    <section id="screen-menu" class="screen is-active">
+      <img class="logo" src="assets/logo.svg" alt="" width="312" height="204">
+      <h1 class="title">Una spedizione ornitologica</h1>
+      <p class="subtitle">isole, nebbie e piume · a turni</p>
+
+      <nav class="menu">
+        <button class="menu-item" disabled>Nuova spedizione <span class="tag">presto</span></button>
+        <button class="menu-item" disabled>Riprendi un taccuino <span class="tag">presto</span></button>
+        <button class="menu-item" data-goto="screen-credits">Crediti</button>
+      </nav>
+
+      <p class="hint">↑ ↓ per scegliere · Invio per confermare</p>
+    </section>
+
+    <!-- Crediti -->
+    <section id="screen-credits" class="screen">
+      <h2 class="heading">~ Crediti ~</h2>
+
+      <div class="credits">
+        <h3>Ideazione e game design</h3>
+        <p>Gabriele Martire</p>
+
+        <h3>Sviluppo</h3>
+        <p>Gabriele Martire<br>con l'aiuto di Claude (Anthropic)</p>
+
+        <h3>Ispirazione</h3>
+        <p>
+          <em>Pioneers</em> di Eigen Lenk<br>
+          per l'atmosfera da esploratori del '500,<br>
+          la palette ridotta e l'idea che un viaggio<br>
+          possa essere raccontato a turni.<br>
+          Grazie, Eigen.
+        </p>
+
+        <h3>Icone</h3>
+        <p>
+          <a href="https://game-icons.net" target="_blank" rel="noopener">game-icons.net</a><br>
+          di Lorc, Delapouite e tutti i contributori<br>
+          licenza <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>
+        </p>
+
+        <h3>Carattere</h3>
+        <p>VT323 di Peter Hull · SIL Open Font License</p>
+
+        <h3>E grazie a te</h3>
+        <p>che hai acceso il gioco.<br>Buon viaggio, e occhi al cielo.</p>
+      </div>
+
+      <nav class="menu">
+        <button class="menu-item" data-goto="screen-menu">← Torna al menu</button>
+      </nav>
+    </section>
+
+  </main>
+  <script src="js/menu.js"></script>
+</body>
+</html>
