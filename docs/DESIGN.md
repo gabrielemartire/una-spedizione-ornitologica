@@ -316,7 +316,7 @@ Il checksum intercetta gli errori di battitura. Il codice è falsificabile da ch
 
 Nel menu: **Suoni ON/OFF** e **Volume da 1 a 5** (frecce ← → o clic). Le impostazioni audio sono l'unica cosa che il browser ricorda tra una sessione e l'altra.
 
-Proposte, ascoltabili dal menu in *Ascolta i suoni* (da scegliere):
+Suoni approvati come base, ascoltabili dal menu in *Ascolta i suoni*:
 
 | Gruppo | Suoni |
 |---|---|
@@ -351,4 +351,4 @@ Idea: **ogni uccello ha il suo verso**, generato dal suo ID. Lo stesso uccello c
 - **Momenti del giorno:** alba, pomeriggio e notte, che cambiano con il passare dei giorni (§ 6).
 - **Cosa sopravvive al viaggio:** solo il taccuino. Strumenti, soldi e binocolo migliorato si perdono.
 - **Ciurma:** per ora è solo un costo giornaliero, senza eventi.
-- **Audio:** niente musica, suoni d'ambiente ed effetti; la scelta definitiva dei suoni è in corso (§ 16).
+- **Audio:** niente musica, suoni d'ambiente ed effetti sintetizzati; le proposte del § 16 sono approvate come base.
