@@ -23,9 +23,18 @@ ICONS = {
     "wall": "delapouite/brick-wall",
     "rubble": "delapouite/stone-pile",
     "ruins": "delapouite/ancient-ruins",
-    "explorer": "delapouite/hiking",
     "bear": "delapouite/bear-head",
     "bird": "delapouite/hummingbird",
+    "binoculars": "delapouite/binoculars",
+    "house": "delapouite/house",
+    "telescope": "delapouite/telescope",
+    "pay": "delapouite/receive-money",
+    "coins": "delapouite/two-coins",
+    "hourglass": "lorc/hourglass",
+    "quill": "lorc/quill-ink",
+    "sunrise": "delapouite/sunrise",
+    "sun": "lorc/sun",
+    "moon": "lorc/moon",
 }
 
 BASE = "https://raw.githubusercontent.com/game-icons/icons/master/{}.svg"

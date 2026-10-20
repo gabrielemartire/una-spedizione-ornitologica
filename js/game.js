@@ -14,6 +14,10 @@ const Gioco = (() => {
   const BEAR_HEARING = 2;     // l'orso sente un po' più lontano del rumore stesso
   const BEAR_DAMAGE = 4;
   const MAX_HP = 10;
+  const ROUNDS_PER_DAY = 15;  // a terra, dopo tanti round passa un giorno
+  const START_MONEY = 100;
+  const CREW_PAY = 8;         // la paga giornaliera della ciurma
+  const TIME_ICONS = { alba: "sunrise", pomeriggio: "sun", notte: "moon" };
   const PHASE_PAUSE = 550;    // ms: annuncio del turno degli animali
   const STEP_DELAY = 170;     // ms: ogni passo di un animale
 
@@ -34,6 +38,7 @@ const Gioco = (() => {
     wall:   { icon: "wall",      cls: "t-wall",   walk: false, sight: false },
     floor:  { ch: "·",           cls: "t-floor",  walk: true,  sight: true, noise: 1, sound: "passoErba" },
     rubble: { icon: "rubble",    cls: "t-rubble", walk: true,  sight: true, noise: 3, sound: "macerie" },
+    house:  { icon: "house",     cls: "t-house",  walk: false, sight: false },
   };
 
   const BIRD = { id: 17, nome: "Becco Blu" };
@@ -138,6 +143,7 @@ const Gioco = (() => {
   function zoneName(tags) {
     if (tags.has("cascata")) return "Radura della cascata";
     if (tags.has("rovine")) return "Rovine nel bosco";
+    if (tags.has("villaggio")) return "Radura presso il villaggio";
     return "Radura sul ruscello";
   }
 
@@ -196,6 +202,7 @@ const Gioco = (() => {
       map[2][fallX] = "deep";
     }
     const ruin = tags.has("rovine") ? placeRuin(map, r) : null;
+    if (tags.has("villaggio")) placeHamlet(map, r);
     blob("tree", 16, 2, 0.6);
     blob("tall", 12, 2, 0.7);
     blob("bush", 40, 0, 1);
@@ -230,6 +237,15 @@ const Gioco = (() => {
     const bear = pick(bearSpots);
 
     return { map, start, bird, bear, free, ruin };
+  }
+
+  // Il villaggio della cartolina: qualche casa al margine orientale della zona
+  function placeHamlet(map, r) {
+    const y0 = 2 + Math.floor(r() * (H - 9));
+    for (const [dx, dy] of [[1, 0], [3, 1], [0, 3], [2, 4], [3, 5]]) {
+      const x = W - 5 + dx, y = y0 + dy;
+      if (map[y][x] === "grass") map[y][x] = "house";
+    }
   }
 
   // Un edificio diroccato: muri spessi, un paio di varchi, macerie intorno
@@ -273,7 +289,15 @@ const Gioco = (() => {
 
   // --- Partita ---
 
+  // La spedizione dura più zone: giorno, soldi e vita passano da una all'altra
+  let trip = null;
+
   function start() {
+    trip = { day: 1, money: START_MONEY, hp: MAX_HP };
+    land();
+  }
+
+  function land() {
     const seed = Math.floor(Math.random() * 1e9);
     const { tags, time } = zoneTags(seed);
     const zone = generate(seed, tags);
@@ -285,10 +309,11 @@ const Gioco = (() => {
       free: zone.free,
       ruin: zone.ruin,
       startPos: zone.start,
-      player: { ...zone.start, hp: MAX_HP },
+      player: { ...zone.start, hp: trip.hp },
       bird: { ...zone.bird, observed: false, gone: false },
       bear: { ...zone.bear, mode: "wander", last: null, searchLeft: 0, rest: 0 },
       round: 1,
+      dayRounds: 0,
       steps: STEPS,
       noise: 0,
       heard: [],
@@ -301,7 +326,7 @@ const Gioco = (() => {
     document.getElementById("zone-title").textContent = `${zoneName(tags)} · ${time}`;
     document.getElementById("postcard-title").textContent = `Cartolina · ${time}`;
     drawPostcard();
-    log(`Sbarchi ${time === "notte" ? "di notte" : time === "alba" ? "all'alba" : "nel pomeriggio"}. Da qualche parte, vicino all'acqua, canta un uccello.`);
+    log(`Giorno ${trip.day}: sbarchi ${time === "notte" ? "di notte" : time === "alba" ? "all'alba" : "nel pomeriggio"}. Da qualche parte, vicino all'acqua, canta un uccello.`, TIME_ICONS[time]);
     Suoni.toggleAmbient("vento");
     render();
   }
@@ -310,8 +335,8 @@ const Gioco = (() => {
     Cartolina.render({ seed: s.seed, tags: s.tags, time: s.time, bird: !s.bird.gone }, document.getElementById("postcard"));
   }
 
-  function log(msg) {
-    s.log.unshift(msg);
+  function log(msg, icon = null) {
+    s.log.unshift({ msg, icon });
     s.log.length = Math.min(s.log.length, 7);
   }
 
@@ -364,7 +389,7 @@ const Gioco = (() => {
     if (d <= OBSERVE && los(s.map, p, b)) {
       b.observed = true;
       Suoni.play("osservato");
-      log(`✎ ${BIRD.nome} osservato e annotato nel taccuino! Torna alla nave.`);
+      log(`${BIRD.nome} osservato e annotato nel taccuino! Torna alla nave.`, "quill");
     } else if (d <= OBSERVE) {
       log("Qualcosa ti copre la vista.");
     } else {
@@ -400,20 +425,47 @@ const Gioco = (() => {
     s.steps = STEPS;
     s.noise = 0;
     s.heard = [];
+    if (++s.dayRounds >= ROUNDS_PER_DAY) {
+      s.dayRounds = 0;
+      if (!passDay()) return;
+      render();
+      await sleep(1100);
+      if (s !== run) return;
+    }
     s.busy = false;
     phase("player");
     render();
   }
 
+  // Passa un giorno: si paga la ciurma. Se non si può, la spedizione finisce
+  function passDay() {
+    trip.day++;
+    if (trip.money < CREW_PAY) {
+      trip.money = 0;
+      bankrupt();
+      return false;
+    }
+    trip.money -= CREW_PAY;
+    phase("day");
+    log(`Giorno ${trip.day}. Paghi la ciurma: −${CREW_PAY} monete.`, "pay");
+    Suoni.play("monete");
+    return true;
+  }
+
+  const PHASES = {
+    animals: { text: () => "Turno degli animali", sound: "turnoAnimali" },
+    player: { text: () => "Tocca a te", sound: "tuoTurno" },
+    day: { text: () => `Giorno ${trip.day}`, sound: "campana" },
+  };
+
   function phase(kind) {
-    const animals = kind === "animals";
-    el.banner.textContent = animals ? "Turno degli animali" : "Tocca a te";
-    el.banner.className = `phase-banner ${animals ? "is-animals" : "is-player"}`;
+    el.banner.textContent = PHASES[kind].text();
+    el.banner.className = `phase-banner is-${kind}`;
     el.banner.hidden = false;
-    el.map.classList.toggle("is-animals", animals);
-    Suoni.play(animals ? "turnoAnimali" : "tuoTurno");
+    el.map.classList.toggle("is-animals", kind === "animals");
+    Suoni.play(PHASES[kind].sound);
     clearTimeout(el.bannerTimer);
-    if (!animals) el.bannerTimer = setTimeout(() => { el.banner.hidden = true; }, 700);
+    if (kind === "player") el.bannerTimer = setTimeout(() => { el.banner.hidden = true; }, 700);
   }
 
   // --- Uccello ---
@@ -440,11 +492,11 @@ const Gioco = (() => {
     if (!spots.length || Math.random() < BIRD_LEAVE) {
       b.gone = true;
       drawPostcard();
-      log(`${reason}: il ${BIRD.nome} vola via dalla zona. :(`);
+      log(`${reason}: il ${BIRD.nome} vola via dalla zona. :(`, "bird");
       return;
     }
     Object.assign(b, pickRandom(spots));
-    log(`${reason}: il ${BIRD.nome} vola in un altro punto della radura.`);
+    log(`${reason}: il ${BIRD.nome} vola in un altro punto della radura.`, "bird");
   }
 
   // --- Orso ---
@@ -501,13 +553,13 @@ const Gioco = (() => {
     if (o.rest) { o.rest--; return; }
 
     if (bearSees() || bearHears()) {
-      if (o.mode !== "hunt") { Suoni.play("orso"); log("L'orso ti ha fiutato e ti insegue!"); }
+      if (o.mode !== "hunt") { Suoni.play("orso"); log("L'orso ti ha fiutato e ti insegue!", "bear"); }
       o.mode = "hunt";
       o.last = { x: p.x, y: p.y };
     } else if (o.mode === "hunt") {
       o.mode = "search";
       o.searchLeft = 3;
-      log("L'orso ti ha perso e va a cercarti dove ti ha visto.");
+      log("L'orso ti ha perso e va a cercarti dove ti ha visto.", "bear");
     }
 
     const speed = BEAR_SPEED[o.mode];
@@ -546,7 +598,7 @@ const Gioco = (() => {
     el.map.classList.remove("is-hit");
     void el.map.offsetWidth; // fa ripartire l'animazione
     el.map.classList.add("is-hit");
-    log(`L'orso ti raggiunge e ti colpisce! −${BEAR_DAMAGE} vita.`);
+    log(`L'orso ti raggiunge e ti colpisce! −${BEAR_DAMAGE} vita.`, "bear");
     if (!p.hp) die();
   }
 
@@ -554,20 +606,29 @@ const Gioco = (() => {
 
   function endZone() {
     s.over = true;
+    trip.hp = s.player.hp;
     const b = s.bird;
     const esito = b.observed ? `Hai annotato il <strong>${BIRD.nome}</strong> nel taccuino.`
       : b.gone ? `Il ${BIRD.nome} è volato via. Andrà meglio la prossima volta.`
       : `Torni a bordo senza aver osservato il ${BIRD.nome}.`;
-    showOverlay("Di nuovo a bordo", `${esito}<br>Round a terra: ${s.round} · Vita: ${s.player.hp}/${MAX_HP}`, true);
+    showOverlay("Di nuovo a bordo", `${esito}<br>Giorno ${trip.day} · ${trip.money} monete · Vita ${s.player.hp}/${MAX_HP}<br>Salpare costa un giorno di viaggio.`, "zone");
     Suoni.play("campana");
   }
 
   function die() {
     s.over = true;
-    showOverlay("Sbranato", "L'orso ha avuto la meglio.<br>Nel gioco completo qui finirebbe la spedizione.", false);
+    showOverlay("Sbranato", `L'orso ha avuto la meglio, al giorno ${trip.day}.<br>La spedizione finisce qui.`, "end");
   }
 
-  function showOverlay(title, html, canStay) {
+  function bankrupt() {
+    s.over = true;
+    s.busy = false;
+    Suoni.play("campana");
+    showOverlay("Abbandonato", `Giorno ${trip.day}: non hai più monete per la paga.<br>La ciurma ti lascia a terra e salpa senza di te.`, "end");
+  }
+
+  // kind: "zone" = puoi salpare o restare; "end" = la spedizione è finita
+  function showOverlay(title, html, kind) {
     el.banner.hidden = true;
     el.map.classList.remove("is-animals");
     render();
@@ -575,12 +636,30 @@ const Gioco = (() => {
       <h3>${title}</h3>
       <p>${html}</p>
       <nav class="menu">
-        <button class="menu-item" data-game-action="new-zone">Salpa verso una nuova zona</button>
-        ${canStay ? '<button class="menu-item" data-game-action="stay">Resta a terra</button>' : ""}
+        ${kind === "zone"
+          ? `<button class="menu-item" data-game-action="sail">Salpa verso una nuova zona (−${CREW_PAY} monete)</button>
+             <button class="menu-item" data-game-action="stay">Resta a terra</button>`
+          : '<button class="menu-item" data-game-action="new-trip">Nuova spedizione</button>'}
         <button class="menu-item" data-goto="screen-menu">Torna al menu</button>
       </nav>`;
     el.overlay.hidden = false;
     el.overlay.querySelector(".menu-item").focus();
+  }
+
+  // Il viaggio verso la zona successiva costa un giorno (e la paga)
+  function sail() {
+    trip.day++;
+    if (trip.money < CREW_PAY) {
+      trip.money = 0;
+      return bankrupt();
+    }
+    Suoni.stopAll();
+    trip.money -= CREW_PAY;
+    land();
+    log(`Un giorno di navigazione. Paghi la ciurma: −${CREW_PAY} monete.`, "pay");
+    phase("day");
+    setTimeout(() => { if (!s.over && !s.busy) el.banner.hidden = true; }, 1200);
+    render();
   }
 
   function stay() {
@@ -666,7 +745,7 @@ const Gioco = (() => {
         if (reach.get(k) > 0) cls += hunting ? " danger" : " reach";
 
         if (same(p, { x, y })) {
-          icon = "explorer";
+          icon = "binoculars";
           cls += hidden() ? " e-player is-hidden" : " e-player";
         } else if (same(o, { x, y })) {
           icon = "bear";
@@ -690,18 +769,24 @@ const Gioco = (() => {
     const steps = s.busy ? "aspetta…" : "●".repeat(s.steps) + "○".repeat(STEPS - s.steps);
     const noise = "●".repeat(s.noise) + "○".repeat(4 - s.noise);
     const bearState = o.rest ? "si riposa" : { wander: "fiuta in giro", search: "ti cerca", hunt: "ti insegue!" }[o.mode];
+    const left = ROUNDS_PER_DAY - s.dayRounds;
+    const sand = "▰".repeat(Math.ceil(left / 3)) + "▱".repeat(5 - Math.ceil(left / 3));
     el.status.innerHTML = `
+      <div class="status-day">${iconHtml(TIME_ICONS[s.time])}<b>Giorno ${trip.day}</b><span>${s.time}</span></div>
+      <div title="Round prima che passi un giorno">${iconHtml("hourglass")}<span>Clessidra</span><b>${sand} ${left}</b></div>
+      <div title="La ciurma costa ${CREW_PAY} monete al giorno">${iconHtml("coins")}<span>Monete</span><b>${trip.money} <small>(−${CREW_PAY}/g)</small></b></div>
+      <hr>
       <div><span>Vita</span><b class="hearts">${hearts}</b></div>
-      <div><span>Round</span><b>${s.round}</b></div>
       <div><span>Passi</span><b>${steps}</b></div>
       <div><span>Rumore</span><b>${noise}</b></div>
       <div><span>Nascosto</span><b>${hidden() ? "sì" : "no"}</b></div>
       <div><span>Orso</span><b>${bearState}</b></div>
-      <div><span>Seed</span><b>${s.seed}</b></div>`;
+      <div class="seed"><span>Seed</span><b>${s.seed}</b></div>`;
 
     const birdState = b.observed ? "✔ osservato" : b.gone ? "✗ volato via" : "da osservare";
     el.notebook.innerHTML = `<div class="nb-row"><span>${b.observed ? "v" : "?"} ${BIRD.nome}</span><b>${birdState}</b></div>`;
-    el.log.innerHTML = s.log.map((m, i) => `<li${i ? "" : ' class="is-new"'}>${m}</li>`).join("");
+    el.log.innerHTML = s.log.map((e, i) =>
+      `<li${i ? "" : ' class="is-new"'}>${e.icon ? iconHtml(e.icon) : "<i></i>"}<span>${e.msg}</span></li>`).join("");
   }
 
   // --- Comandi ---
@@ -724,7 +809,8 @@ const Gioco = (() => {
 
   document.addEventListener("click", (e) => {
     const action = e.target.closest("[data-game-action]")?.dataset.gameAction;
-    if (action === "new-zone") { Suoni.stopAll(); start(); }
+    if (action === "new-trip") { Suoni.stopAll(); start(); }
+    if (action === "sail") sail();
     if (action === "stay") stay();
 
     const cell = e.target.closest("#map > div");

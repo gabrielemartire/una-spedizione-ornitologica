@@ -67,7 +67,7 @@ In entrambi i casi si apre il **resoconto del viaggio** con l'attestato PDF (§ 
 │                                     │  vita · ciurma│
 ├──────────────────────────┬──────────┴───────────────┤
 │  C · TACCUINO /          │  D · CARTOLINA           │
-│      INVENTARIO          │      (ASCII a layer)     │
+│      INVENTARIO          │      (pixel art a layer) │
 └──────────────────────────┴──────────────────────────┘
 ```
 
@@ -76,7 +76,7 @@ In entrambi i casi si apre il **resoconto del viaggio** con l'attestato PDF (§ 
 | **A** Battlemap | La zona in cui sei sbarcato, a griglia, con icone | Più alta possibile. In mare mostra il ponte della nave o il mare |
 | **B** Globo | Sfera ASCII che ruota, la nave, i puntatori delle voci | Sotto, la barra di stato: data, soldi, vita, costo giornaliero |
 | **C** Taccuino | Due schede: **Taccuino** (uccelli visti e mancanti) e **Inventario** | Ricorda il libro delle quest di Pioneers |
-| **D** Cartolina | Il panorama ASCII della zona, visto da una persona in piedi | Composta a layer; è informazione, non decorazione |
+| **D** Cartolina | Il panorama della zona in pixel art, visto da una persona in piedi | Composta a layer; è informazione, non decorazione |
 
 Barra menu in stile anni '90: `Spedizione · Taccuino · Inventario · Ciurma · Aiuto`.
 
@@ -89,6 +89,8 @@ Barra menu in stile anni '90: `Spedizione · Taccuino · Inventario · Ciurma ·
 - Indicatori come in Pioneers: velocità in nodi, rotta in gradi.
 - La sfera ruota sotto la nave, in ASCII ombreggiato (`.:-=+*#%@`).
 - Avvicinandoti alla costa compare l'opzione **Attracca**: entri nella battlemap di quella zona.
+
+**Cannocchiale.** In navigazione, vicino a una costa, il cannocchiale mostra **la cartolina di quella zona senza sbarcare**. Sbarcare costa giorni (e paga della ciurma); guardare no. Così la cartolina diventa lo strumento per decidere dove attraccare: c'è una cascata? un uccello in volo? rovine?
 
 **Puntatori.** Le voci comprate in città compaiono sul globo come segni: un cerchio largo per le voci vaghe, una croce precisa per quelle care.
 
@@ -148,7 +150,11 @@ Il panorama della zona come lo vedrebbe una persona appena sbarcata: **vista fro
 
 Ogni layer ha 3–5 varianti, ognuna è un piccolo disegno ASCII con trasparenza (lo spazio non copre ciò che sta dietro).
 
-**Due modi di vederla (switch nel riquadro):** la scena viene disegnata una volta sola in **pixel art 120 × 80**, con retino ordinato per le sfumature, luce e ombra decise dalla posizione del sole o della luna, foschia sulle montagne lontane e riflessi sull'acqua. In modalità **ASCII** ogni carattere riassume 2 × 4 pixel e diventa un retino (`░ ▒`) o un simbolo (stelle, uccelli, erba, cascata). Le due versioni mostrano sempre la stessa scena.
+**Pixel art 120 × 80**, con retino ordinato per le sfumature, luce e ombra decise dalla posizione del sole o della luna, foschia sulle montagne lontane, riflessi sull'acqua, finestre accese di notte. (Una versione ASCII è stata provata e scartata: la pixel art rende molto di più.)
+
+**Lontano e vicino.** Lo **sfondo** (montagne, castello) è la regione intorno: si vede ma non si raggiunge. Il **piano medio** (villaggio, rovine, cascata, ruscello) è dentro la zona: sulla battlemap c'è davvero. Il villaggio diventa qualche casa al margine della mappa; le rovine un edificio in cui entrare; la cascata la sorgente del ruscello.
+
+**Impaginazione garantita:** ruscello, castello, villaggio e rovine vengono messi in fila in ordine casuale, ognuno con una larghezza minima e massima, così nessuno copre mai un altro.
 
 **Dimensioni:** **60 × 20 caratteri**, quanto una schermata di Game Boy: abbastanza per leggere le forme, abbastanza piccolo da restare "vintage".
 
@@ -170,7 +176,7 @@ Una griglia fitta (**40 × 24 caselle**) generata dallo stesso seed della cartol
 
 **Animali non stupidi.** Le creature non si fanno male da sole (niente cariche contro gli alberi): aggirano gli ostacoli, ti seguono, cercano dove ti hanno visto l'ultima volta. Si battono con le trappole, le esche e il terreno, non con i loro errori.
 
-**Tempo a terra.** Ogni sbarco costa **1 giorno**; restare oltre i **15 round** ne costa un altro.
+**Tempo a terra.** Ogni sbarco costa **1 giorno**. A terra una **clessidra** conta i round: dopo **15 round** passa un giorno. Il passaggio è sempre visibile: campana, banner *Giorno N*, paga della ciurma nel diario (con la sua icona). Se non puoi pagare, la ciurma ti abbandona e la spedizione finisce.
 
 **Rovine.** Un edificio diroccato di circa 8 × 6 caselle: muri spessi, un varco e un crollo pieno di macerie (rumorose), a volte un pilastro. **Da fuori si vede solo il tetto: l'interno si scopre entrando.** I muri bloccano la vista, l'orso può entrare dai varchi. A volte l'uccello nidifica dentro.
 
@@ -320,6 +326,7 @@ Il checksum intercetta gli errori di battitura. Il codice è falsificabile da ch
 - **Font:** monospazio retro (VT323).
 - **Interfaccia:** finestre con doppio bordo, barra menu, pulsanti testuali con `▶`, come Pioneers.
 - **Palette:** il menu ha una palette verde da 4 colori; **ogni bioma e ogni città ha la propria palette da 3–4 colori**, applicata a cartolina e battlemap.
+- **Icone:** la battlemap e il diario usano le icone di game-icons.net (CC BY 3.0), colorate con la palette della zona. L'esploratore è un binocolo.
 - **Logo:** un binocolo dorato da cui spunta un'ala di pappagallo rossa, gialla e blu, in pixel art.
 - **Riferimenti:** Pioneers (Eigen Lenk) per interfaccia e tono; scene a due toni stile Game Boy per la dimensione e la densità dell'ASCII; Brogue e Caves of Qud per l'uso del colore in modalità testo.
 

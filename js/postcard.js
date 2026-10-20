@@ -1,17 +1,12 @@
 // La cartolina: il panorama della zona, composto a layer dai tag della zona.
 // Regola d'oro: niente di ciò che si vede è inventato, tutto viene dai tag.
 //
-// La scena si disegna una volta sola in pixel (120 × 80) e si mostra in due modi:
-// - pixel art: i pixel così come sono;
-// - ASCII: ogni carattere copre 2 × 4 pixel e diventa un retino (░ ▒) o un simbolo.
+// La scena è pixel art 120 × 80, con un retino ordinato per le sfumature.
 // Espone l'oggetto globale `Cartolina`.
 const Cartolina = (() => {
   const PW = 120;
   const PH = 80;
-  const COLS = PW / 2;
-  const ROWS = PH / 4;
   const HY = 36; // l'orizzonte, in pixel
-  const STORAGE_KEY = "spedizione.cartolina";
 
   // Una palette ridotta per ogni momento del giorno
   const PALETTES = {
@@ -56,8 +51,6 @@ const Cartolina = (() => {
   // Retino ordinato 4 × 4: sfuma tra due colori senza inventarne di nuovi
   const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]].map((row) => row.map((v) => (v + 0.5) / 16));
 
-  let mode = "ascii";
-  try { mode = localStorage.getItem(STORAGE_KEY) || mode; } catch (_) {}
   let last = null;
 
   function rng(seed) {
@@ -78,19 +71,11 @@ const Cartolina = (() => {
     const P = PALETTES[zone.time];
     const night = zone.time === "notte";
     const buf = new Array(PW * PH).fill(P.ground);
-    const hints = new Array(COLS * ROWS).fill(null);
 
     const inside = (x, y) => x >= 0 && y >= 0 && x < PW && y < PH;
-    // Ogni pixel disegnato cancella il simbolo ASCII della sua cella: il layer davanti copre quello dietro
     const px = (x, y, c) => {
       x = Math.round(x); y = Math.round(y);
-      if (!inside(x, y)) return;
-      buf[y * PW + x] = c;
-      hints[(y >> 2) * COLS + (x >> 1)] = null;
-    };
-    const hint = (x, y, ch, fg) => {
-      const cx = Math.round(x) >> 1, cy = Math.round(y) >> 2;
-      if (cx >= 0 && cy >= 0 && cx < COLS && cy < ROWS) hints[cy * COLS + cx] = { ch, fg };
+      if (inside(x, y)) buf[y * PW + x] = c;
     };
     const get = (x, y) => (inside(x, y) ? buf[y * PW + x] : null);
     const mix = (a, b, t, x, y) => (t > BAYER[y & 3][x & 3] ? b : a);
@@ -136,16 +121,30 @@ const Cartolina = (() => {
       for (let x = x0; x < x0 + w; x += 2) block(x, y - 2, 1, 2, lit, shadow);
     };
 
-    // Le posizioni orizzontali già occupate: niente si nasconde dietro qualcos'altro
-    let rx = 36 + r() * 48;
-    const taken = [[rx - 14, rx + 14]];
-    const freeX = (width) => {
-      const xs = Array.from({ length: PW - width - 4 }, (_, i) => i + 2).sort(() => r() - 0.5);
-      const x = xs.find((x) => taken.every(([a, b]) => x + width < a || x > b));
-      if (x === undefined) return null; // nessun posto: meglio non disegnarlo che coprirlo
-      taken.push([x - 2, x + width + 2]);
-      return x;
-    };
+    // Impaginazione: castello, villaggio, rovine e ruscello (con l'eventuale cascata) stanno
+    // in fila, in ordine casuale, senza mai coprirsi. Ognuno ha una larghezza minima e massima:
+    // prima si riserva il minimo, poi si divide lo spazio avanzato.
+    const GAP = 4;
+    const items = [["fiume", 28, 28], ["castello", 30, 30], ["villaggio", 34, 14], ["rovine", 26, 14]]
+      .filter(([tag]) => tag === "fiume" || zone.tags.has(tag))
+      .map(([tag, max, min]) => ({ tag, max, min, w: min }))
+      .sort(() => r() - 0.5);
+    let slack = PW - 4 - items.reduce((sum, it) => sum + it.min, 0) - GAP * (items.length - 1);
+    for (const it of items) {
+      const grow = Math.min(it.max - it.min, Math.floor(slack * r()));
+      it.w += grow;
+      slack -= grow;
+    }
+    const spots = {};
+    let cursor = 2;
+    for (const it of items) {
+      const air = Math.floor(r() * (slack + 1)); // un po' d'aria, a caso
+      slack -= air;
+      cursor += air;
+      spots[it.tag] = { x: cursor, w: it.w };
+      cursor += it.w + GAP;
+    }
+    let rx = spots.fiume.x + spots.fiume.w / 2;
 
     // 1. Cielo sfumato, con l'alone attorno al sole o alla luna
     for (let y = 0; y < HY + 10; y++) {
@@ -165,7 +164,6 @@ const Cartolina = (() => {
         const x = Math.floor(r() * PW), y = Math.floor(r() * (HY - 6));
         const bright = r() < 0.3;
         px(x, y, bright ? P.star : P.starDim);
-        if (bright && r() < 0.6) hint(x, y, r() < 0.3 ? "*" : "·", P.star);
       }
     }
     const discR = zone.time === "alba" ? 7 : 5;
@@ -220,9 +218,9 @@ const Cartolina = (() => {
 
     // 6. Castello, villaggio, rovine: appoggiati sulle colline
     if (zone.tags.has("castello")) {
-      const x0 = freeX(30);
-      if (x0 !== null) {
-        const base = groundAt(x0, 30);
+      const spot = spots.castello;
+      if (spot) {
+        const x0 = spot.x, base = groundAt(x0, 30);
         block(x0, base - 10, 30, 10, P.stone, P.stoneShadow);
         crenels(x0, base - 10, 30, P.stone, P.stoneShadow);
         for (const [tx, th] of [[x0 - 2, 17], [x0 + 25, 17], [x0 + 11, 23]]) {
@@ -238,10 +236,11 @@ const Cartolina = (() => {
       }
     }
     if (zone.tags.has("villaggio")) {
-      const x0 = freeX(34);
-      if (x0 !== null) {
+      const spot = spots.villaggio;
+      if (spot) {
+        const x0 = spot.x;
         let x = x0;
-        while (x < x0 + 30) {
+        while (x < x0 + spot.w - 6) {
           const w = 6 + Math.floor(r() * 3), h = 4 + Math.floor(r() * 2), base = groundAt(x, w);
           block(x, base - h, w, h, P.stone, P.stoneShadow);
           for (let k = 0; k <= w / 2 + 1; k++) { // tetto a capanna
@@ -256,16 +255,16 @@ const Cartolina = (() => {
       }
     }
     if (zone.tags.has("rovine")) {
-      const x0 = freeX(26);
-      if (x0 !== null) {
-        const base = groundAt(x0, 26) + 6;
-        for (let k = 0; k < 6; k++) {
+      const spot = spots.rovine;
+      if (spot) {
+        const x0 = spot.x, base = groundAt(x0, spot.w) + 6;
+        for (let k = 0; k < Math.floor(spot.w / 4) - 1; k++) {
           const w = 2 + Math.floor(r() * 3), h = 5 + Math.floor(r() * 9), xx = x0 + k * 4 + Math.floor(r() * 2);
           block(xx, base - h, w, h, P.stone, P.stoneShadow);
           if (r() < 0.6) px(xx + Math.floor(r() * w), base - h, P.grassDark); // muschio
         }
         // Un arco rimasto in piedi
-        const ax = x0 + 8, ah = 14;
+        const ax = x0 + Math.floor(spot.w / 2) - 5, ah = 14;
         block(ax, base - ah, 2, ah, P.stone, P.stoneShadow);
         block(ax + 8, base - ah, 2, ah, P.stone, P.stoneShadow);
         for (let j = 0; j <= 8; j++) px(ax + 1 + j, base - ah - Math.round(Math.sin((j / 8) * Math.PI) * 3), P.stone);
@@ -281,7 +280,6 @@ const Cartolina = (() => {
         for (let j = -half; j <= half; j++) px(x + j, base - h + k, (lightLeft ? j > 0 : j < 0) ? P.treeFarShadow : P.treeFar);
       }
     }
-    for (let x = 0; x < PW; x += 4) if (r() < 0.6) hint(x, forestY - 3, "♣", P.treeFar);
 
     // 8. L'acqua: un ruscello che scende verso di noi, forse da una cascata
     let waterTop = forestY - 2;
@@ -295,11 +293,8 @@ const Cartolina = (() => {
       }
       for (let y = cliffTop; y < forestY + 4; y++) {
         for (let x = rx - 3; x <= rx + 3; x++) px(x, y, (x + Math.floor(y / 2)) % 3 === 0 ? P.foam : P.water);
-        hint(rx, y, "|", P.foam);
       }
       ellipse(rx, forestY + 5, 8, 2.5, (x, y) => mix(P.foam, P.water, r(), x, y)); // la schiuma alla base
-      hint(rx - 4, forestY + 5, "~", P.foam);
-      hint(rx + 4, forestY + 5, "*", P.foam);
       waterTop = forestY + 6;
     }
     const isWater = (c) => c === P.water || c === P.waterDark || c === P.waterLight;
@@ -313,7 +308,6 @@ const Cartolina = (() => {
         if (Math.abs(x - sunX) < 3 && r() < 0.6) c = P.waterLight; // il riflesso del sole o della luna
         px(x, y, c);
       }
-      if (y % 8 === 0) hint(rx + (r() - 0.5) * half, y, "~", P.waterLight);
     }
 
     // 9. Pini in primo piano, a fare da cornice
@@ -345,7 +339,6 @@ const Cartolina = (() => {
       if (Math.abs(x - rx) < 12) continue;
       ellipse(x, y, 3 + r() * 2, 2, (xx, yy) => (yy < y - 0.5 ? P.rockLight : P.rock));
     }
-    for (let x = 0; x < PW; x += 2) if (r() < 0.35 && !isWater(get(x, PH - 2))) hint(x, PH - 2, r() < 0.5 ? '"' : ",", P.grass);
 
     // 11. L'uccello della zona in volo, solo se c'è ancora
     if (zone.bird) {
@@ -353,11 +346,10 @@ const Cartolina = (() => {
       for (let i = 0; i < flock; i++) {
         const bx = 20 + r() * (PW - 40), by = 8 + r() * 16;
         [[0, 0], [1, 1], [2, 1], [3, 0], [-1, -1], [4, -1]].forEach(([dx, dy]) => px(bx + dx, by + dy, P.bird));
-        hint(bx + 1.5, by, "v", P.bird);
       }
     }
 
-    return { buf, hints };
+    return buf;
   }
 
   // --- Disegno ---
@@ -384,76 +376,27 @@ const Cartolina = (() => {
     return canvas;
   }
 
-  function drawPixels(scene, canvas) {
+  function drawPixels(buf, canvas) {
     const small = document.createElement("canvas");
     small.width = PW;
     small.height = PH;
     const sctx = small.getContext("2d");
     const img = sctx.createImageData(PW, PH);
-    scene.buf.forEach((hex, i) => img.data.set([...rgb(hex), 255], i * 4));
+    buf.forEach((hex, i) => img.data.set([...rgb(hex), 255], i * 4));
     sctx.putImageData(img, 0, 0);
     const ctx = canvas.getContext("2d");
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(small, 0, 0, canvas.width, canvas.height);
   }
 
-  // Ogni carattere riassume 2 × 4 pixel: colore di fondo, retino col secondo colore, o un simbolo
-  function drawAscii(scene, canvas) {
-    const ctx = canvas.getContext("2d");
-    const cw = canvas.width / COLS, ch = canvas.height / ROWS;
-    ctx.font = `${Math.round(ch * 1.05)}px VT323, ui-monospace, monospace`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    for (let cy = 0; cy < ROWS; cy++) {
-      for (let cx = 0; cx < COLS; cx++) {
-        const counts = new Map();
-        for (let y = cy * 4; y < cy * 4 + 4; y++) {
-          for (let x = cx * 2; x < cx * 2 + 2; x++) {
-            const c = scene.buf[y * PW + x];
-            counts.set(c, (counts.get(c) || 0) + 1);
-          }
-        }
-        const [[bg], second] = [...counts].sort((a, b) => b[1] - a[1]);
-        ctx.fillStyle = bg;
-        ctx.fillRect(Math.floor(cx * cw), Math.floor(cy * ch), Math.ceil(cw), Math.ceil(ch));
-
-        const h = scene.hints[cy * COLS + cx];
-        let glyph = null, fg = null;
-        if (h) { glyph = h.ch; fg = h.fg; }
-        else if (second && second[1] >= 3) { glyph = second[1] >= 4 ? "▒" : "░"; fg = second[0]; }
-        if (glyph) {
-          ctx.fillStyle = fg;
-          ctx.fillText(glyph, cx * cw + cw / 2, cy * ch + ch / 2 + ch * 0.05);
-        }
-      }
-    }
-  }
-
-  function draw() {
-    if (!last) return;
-    const canvas = canvasFor(last.container);
-    if (mode === "pixel") drawPixels(last.scene, canvas);
-    else drawAscii(last.scene, canvas);
-    const toggle = document.getElementById("postcard-mode");
-    if (toggle) toggle.textContent = mode === "pixel" ? "pixel ▸ ascii" : "ascii ▸ pixel";
-  }
-
   function render(zone, container) {
-    last = { scene: compose(zone), container };
-    draw();
-    // Il font VT323 può arrivare dopo il primo disegno
-    if (document.fonts) document.fonts.load("16px VT323").then(draw);
+    last = { buf: compose(zone), container };
+    redraw();
   }
 
-  function setMode(next) {
-    mode = next;
-    try { localStorage.setItem(STORAGE_KEY, mode); } catch (_) {}
-    draw();
+  function redraw() {
+    if (last) drawPixels(last.buf, canvasFor(last.container));
   }
 
-  document.addEventListener("click", (e) => {
-    if (e.target.closest("#postcard-mode")) setMode(mode === "pixel" ? "ascii" : "pixel");
-  });
-
-  return { render, setMode };
+  return { render, redraw };
 })();

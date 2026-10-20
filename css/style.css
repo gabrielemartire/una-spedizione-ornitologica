@@ -146,6 +146,7 @@ body.in-game .frame { width: min(1200px, 100%); padding: 12px; }
 .t-wall   { color: #a89f8c; background: #2e2c24; }
 .t-floor  { color: #5e5a4c; background: #1e1d18; }
 .t-rubble { color: #8a8270; }
+.t-house  { color: #c9785a; background: #2a2018; }
 .t-roof   { color: #6e6656; background: #3a362c; }
 
 /* Il momento del giorno cambia la palette della zona */
@@ -216,6 +217,7 @@ body.in-game .frame { width: min(1200px, 100%); padding: 12px; }
 .phase-banner[hidden] { display: none; }
 .phase-banner.is-animals { color: var(--danger); }
 .phase-banner.is-player { color: var(--bird); }
+.phase-banner.is-day { color: var(--paper); font-size: 40px; }
 @keyframes banner-in { from { opacity: 0; transform: translate(-50%, -8px); } }
 
 .map-overlay {
@@ -231,7 +233,16 @@ body.in-game .frame { width: min(1200px, 100%); padding: 12px; }
 
 .placeholder { margin: 0 auto 8px; color: var(--dark); text-align: center; line-height: 1.05; }
 .status { display: grid; gap: 2px; }
-.status div { display: flex; justify-content: space-between; gap: 8px; }
+.status div { display: flex; align-items: center; gap: 8px; }
+.status div > b { margin-left: auto; }
+.status .ic { width: 18px; height: 18px; fill: var(--mid); flex: none; }
+.status small { color: var(--dark); font-size: 16px; }
+.status hr { width: 100%; border: 0; border-top: 1px dashed var(--dark); margin: 4px 0; }
+.status .status-day { font-size: 26px; }
+.status .status-day .ic { width: 26px; height: 26px; fill: var(--bird); }
+.status .status-day b { margin-left: 0; }
+.status .status-day span { margin-left: auto; }
+.status .seed { color: var(--dark); font-size: 16px; }
 .status span { color: var(--mid); }
 .status b { font-weight: normal; }
 .hearts { color: var(--danger); letter-spacing: 1px; }
@@ -239,25 +250,14 @@ body.in-game .frame { width: min(1200px, 100%); padding: 12px; }
 .notebook .nb-row { display: flex; justify-content: space-between; gap: 8px; }
 .notebook b { font-weight: normal; color: var(--bird); }
 .log { list-style: none; margin: 8px 0 0; padding: 0; color: var(--mid); font-size: 19px; min-height: 7.5em; }
-.log li { line-height: 1.1; }
+.log li { line-height: 1.1; display: flex; gap: 6px; align-items: flex-start; margin-bottom: 2px; }
+.log li .ic, .log li i { width: 16px; height: 16px; fill: var(--mid); flex: none; margin-top: 2px; }
+.log li.is-new .ic { fill: var(--bird); }
 .log li.is-new { color: var(--paper); }
-.log li::before { content: "› "; color: var(--dark); }
 .keys { margin: 8px 0 0; color: var(--dark); font-size: 18px; }
 
 .postcard { line-height: 0; }
 .postcard canvas { display: block; image-rendering: pixelated; }
-.panel-title:has(.mode-toggle) { display: flex; justify-content: space-between; align-items: center; }
-.mode-toggle {
-  font: inherit;
-  font-size: 16px;
-  color: var(--ink);
-  background: none;
-  border: 1px solid var(--ink);
-  padding: 0 6px;
-  cursor: pointer;
-}
-.mode-toggle:hover { background: var(--paper); }
-
 @media (max-width: 860px) {
   .game-top, .game-bottom { grid-template-columns: 1fr; }
 }
