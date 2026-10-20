@@ -182,6 +182,22 @@ const Cartolina = (() => {
       }
     }
 
+    // Dal ponte della nave: solo mare fino all'orizzonte
+    if (zone.sea) {
+      for (let y = HY; y < PH; y++) {
+        const t = (y - HY) / (PH - HY);
+        const spacing = Math.max(3, Math.round(14 * (1 - t))); // le onde lontane sono fitte e piccole
+        for (let x = 0; x < PW; x++) {
+          let c = ramp([P.haze, P.waterLight, P.water, P.waterDark], 0.25 + t * 0.75, x, y);
+          if (y > HY + 1 && (y * 5 + Math.floor((x + y * 3) / (2 + t * 6))) % (spacing + 4) === 0) c = t > 0.6 ? P.foam : P.waterLight;
+          if (Math.abs(x - sunX) < 2 + t * 6 && r() < 0.45 - t * 0.3) c = P.glow; // la scia di luce
+          px(x, y, c);
+        }
+      }
+      for (let x = 0; x < PW; x++) px(x, HY, P.haze);
+      return buf;
+    }
+
     // 4. Montagne: due catene, la lontana slavata dalla foschia, la vicina più scura
     if (zone.tags.has("montagne")) {
       const far = fbm(26);

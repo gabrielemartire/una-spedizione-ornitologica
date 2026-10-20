@@ -34,7 +34,7 @@ Solo il taccuino, scritto a mano e timbrato con il suo codice, viaggia con te.
 
 ## A che punto siamo
 
-🚧 **In costruzione.** Per ora c'è il menu iniziale. Il progetto completo è descritto nel [documento di design](docs/DESIGN.md).
+🚧 **In costruzione, ma già giocabile.** Si naviga sul globo in tempo reale, si guarda la costa col cannocchiale, si sbarca nelle zone e si cerca di osservare l'uccello senza farsi prendere dall'orso. Il tempo passa, la ciurma va pagata, in città ci si cura. Mancano ancora i 60 uccelli, il mercato e l'attestato finale: il progetto completo è descritto nel [documento di design](docs/DESIGN.md).
 
 ## Grazie
 

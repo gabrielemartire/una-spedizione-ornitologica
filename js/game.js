@@ -14,6 +14,7 @@ const Gioco = (() => {
   const BEAR_HEARING = 2;     // l'orso sente un po' più lontano del rumore stesso
   const BEAR_DAMAGE = 4;
   const MAX_HP = 10;
+  const HEAL_COST = 5;        // monete per punto vita, in città
   const ROUNDS_PER_DAY = 15;  // a terra, dopo tanti round passa un giorno
   const START_MONEY = 100;
   const CREW_PAY = 8;         // la paga giornaliera della ciurma
@@ -287,66 +288,124 @@ const Gioco = (() => {
     return null;
   }
 
-  // --- Partita ---
+  // --- Spedizione ---
 
-  // La spedizione dura più zone: giorno, soldi e vita passano da una all'altra
+  // La spedizione: il mondo, la nave, il tempo, i soldi, il diario. Dura finché giochi.
+  // trip.clock conta i giorni passati (0 = alba del primo giorno); i decimali sono il momento.
   let trip = null;
 
+  const timeOf = (clock) => TIMES[Math.min(2, Math.floor((((clock % 1) + 1) % 1) * 3 + 1e-9))];
+
   function start() {
-    trip = { day: 1, money: START_MONEY, hp: MAX_HP };
-    land();
+    const seed = Math.floor(Math.random() * 1e9);
+    const world = Globo.createWorld(seed, (zSeed) => {
+      const { tags } = zoneTags(zSeed);
+      return { tags, name: zoneName(tags) };
+    });
+    trip = {
+      seed, world, clock: 0, money: START_MONEY, hp: MAX_HP, log: [], zones: {}, mode: "sea",
+      ship: { ...world.start, sails: 0 },
+    };
+    s = null;
+    initUi();
+    log("Giorno 1: il Forte è alle tue spalle. Il taccuino è quasi vuoto.", "ship");
+    Mare.enter();
   }
 
-  function land() {
-    const seed = Math.floor(Math.random() * 1e9);
-    const { tags, time } = zoneTags(seed);
-    const zone = generate(seed, tags);
+  // Far passare il tempo. Ogni nuovo giorno si paga la ciurma: se non si può, finisce tutto.
+  function advanceClock(days) {
+    const before = Math.floor(trip.clock);
+    trip.clock += days;
+    for (let d = before + 1; d <= Math.floor(trip.clock); d++) if (!passDay()) return false;
+    return true;
+  }
+
+  const day = () => Math.floor(trip.clock) + 1;
+
+  function landAt(zone) {
+    // Calare la scialuppa e organizzare lo sbarco richiede un momento della giornata
+    if (!advanceClock(1 / 3)) return;
+    trip.mode = "land";
+    const time = timeOf(trip.clock);
+    const gen = generate(zone.seed, zone.tags);
+    const memory = trip.zones[zone.id] || { observed: false, gone: false };
     s = {
-      seed,
-      tags,
+      zone,
+      seed: zone.seed,
+      tags: zone.tags,
       time,
-      map: zone.map,
-      free: zone.free,
-      ruin: zone.ruin,
-      startPos: zone.start,
-      player: { ...zone.start, hp: trip.hp },
-      bird: { ...zone.bird, observed: false, gone: false },
-      bear: { ...zone.bear, mode: "wander", last: null, searchLeft: 0, rest: 0 },
+      map: gen.map,
+      free: gen.free,
+      ruin: gen.ruin,
+      startPos: gen.start,
+      player: { ...gen.start, hp: trip.hp },
+      bird: { ...gen.bird, observed: memory.observed, gone: memory.gone },
+      bear: { ...gen.bear, mode: "wander", last: null, searchLeft: 0, rest: 0 },
       round: 1,
-      dayRounds: 0,
       steps: STEPS,
       noise: 0,
       heard: [],
-      log: [],
       busy: false,
       over: false,
     };
+    showView("land");
     buildDom();
-    document.getElementById("screen-game").dataset.time = time;
-    document.getElementById("zone-title").textContent = `${zoneName(tags)} · ${time}`;
-    document.getElementById("postcard-title").textContent = `Cartolina · ${time}`;
+    el.zoneTitle.textContent = `${zone.name} · ${time}`;
     drawPostcard();
-    log(`Giorno ${trip.day}: sbarchi ${time === "notte" ? "di notte" : time === "alba" ? "all'alba" : "nel pomeriggio"}. Da qualche parte, vicino all'acqua, canta un uccello.`, TIME_ICONS[time]);
+    const bird = s.bird.observed ? `Il ${BIRD.nome} di questa zona è già nel taccuino.`
+      : s.bird.gone ? `Il ${BIRD.nome} se n'è andato da qui.` : "Da qualche parte, vicino all'acqua, canta un uccello.";
+    log(`Giorno ${day()}: sbarchi ${time === "notte" ? "di notte" : time === "alba" ? "all'alba" : "nel pomeriggio"}. ${bird}`, TIME_ICONS[time]);
     if (birdInRuin()) log("Il canto sembra venire da dentro le rovine…", "bird");
+    Suoni.stopAll();
     Suoni.toggleAmbient("vento");
     render();
   }
 
-  function birdInRuin() {
-    return !!s.ruin && !s.bird.gone && s.ruin.interior.has(key(s.bird));
+  // Le città: per ora ci si cura e basta. Mercato, taverna e bottega arriveranno.
+  function visitCity(city) {
+    trip.mode = "city";
+    Suoni.play("campana");
+    log(`Attracchi a ${city.name}.`, "house");
+    cityOverlay(city);
+  }
+
+  function cityOverlay(city) {
+    const missing = MAX_HP - trip.hp, cost = missing * HEAL_COST;
+    const canHeal = missing > 0 && trip.money >= HEAL_COST;
+    showOverlay(city.name,
+      `Giorno ${day()} · ${trip.money} monete · Vita ${trip.hp}/${MAX_HP}<br>Mercato, taverna e bottega apriranno presto.`,
+      "city", canHeal ? `Curati (${HEAL_COST} monete per punto vita, −${Math.min(cost, Math.floor(trip.money / HEAL_COST) * HEAL_COST)})` : null);
+    el.overlay.dataset.city = city.id;
+  }
+
+  function heal() {
+    const city = trip.world.cities.find((c) => c.id === el.overlay.dataset.city);
+    const points = Math.min(MAX_HP - trip.hp, Math.floor(trip.money / HEAL_COST));
+    trip.hp += points;
+    trip.money -= points * HEAL_COST;
+    Suoni.play("monete");
+    log(`Il guaritore ti rimette in sesto: +${points} vita, −${points * HEAL_COST} monete.`, "coins");
+    cityOverlay(city);
+    renderStatus();
   }
 
   function drawPostcard() {
-    Cartolina.render({ seed: s.seed, tags: s.tags, time: s.time, bird: !s.bird.gone }, document.getElementById("postcard"));
+    el.postcardTitle.textContent = `Cartolina · ${s.time}`;
+    Cartolina.render({ seed: s.seed, tags: s.tags, time: s.time, bird: !s.bird.gone }, el.postcard);
   }
 
   function log(msg, icon = null) {
-    s.log.unshift({ msg, icon });
-    s.log.length = Math.min(s.log.length, 7);
+    trip.log.unshift({ msg, icon });
+    trip.log.length = Math.min(trip.log.length, 7);
+    renderLog();
+  }
+
+  function birdInRuin() {
+    return !!s && !!s.ruin && !s.bird.gone && s.ruin.interior.has(key(s.bird));
   }
 
   function insideRuin() {
-    return !!s.ruin && s.ruin.interior.has(key(s.player));
+    return !!s && !!s.ruin && s.ruin.interior.has(key(s.player));
   }
 
   function hidden() {
@@ -430,9 +489,9 @@ const Gioco = (() => {
     s.steps = STEPS;
     s.noise = 0;
     s.heard = [];
-    if (++s.dayRounds >= ROUNDS_PER_DAY) {
-      s.dayRounds = 0;
-      if (!passDay()) return;
+    const today = day();
+    if (!advanceClock(1 / ROUNDS_PER_DAY)) return;
+    if (day() !== today) {
       render();
       await sleep(1100);
       if (s !== run) return;
@@ -444,7 +503,6 @@ const Gioco = (() => {
 
   // Passa un giorno: si paga la ciurma. Se non si può, la spedizione finisce
   function passDay() {
-    trip.day++;
     if (trip.money < CREW_PAY) {
       trip.money = 0;
       bankrupt();
@@ -452,7 +510,7 @@ const Gioco = (() => {
     }
     trip.money -= CREW_PAY;
     phase("day");
-    log(`Giorno ${trip.day}. Paghi la ciurma: −${CREW_PAY} monete.`, "pay");
+    log(`Giorno ${day()}. Paghi la ciurma: −${CREW_PAY} monete.`, "pay");
     Suoni.play("monete");
     return true;
   }
@@ -460,7 +518,7 @@ const Gioco = (() => {
   const PHASES = {
     animals: { text: () => "Turno degli animali", sound: "turnoAnimali" },
     player: { text: () => "Tocca a te", sound: "tuoTurno" },
-    day: { text: () => `Giorno ${trip.day}`, sound: "campana" },
+    day: { text: () => `Giorno ${day()}`, sound: "campana" },
   };
 
   function phase(kind) {
@@ -470,7 +528,7 @@ const Gioco = (() => {
     el.map.classList.toggle("is-animals", kind === "animals");
     Suoni.play(PHASES[kind].sound);
     clearTimeout(el.bannerTimer);
-    if (kind === "player") el.bannerTimer = setTimeout(() => { el.banner.hidden = true; }, 700);
+    if (kind !== "animals") el.bannerTimer = setTimeout(() => { el.banner.hidden = true; }, 700);
   }
 
   // --- Uccello ---
@@ -608,64 +666,64 @@ const Gioco = (() => {
     if (!p.hp) die();
   }
 
-  // --- Fine zona ---
+  // --- Fine zona e fine spedizione ---
 
   function endZone() {
     s.over = true;
     trip.hp = s.player.hp;
+    trip.zones[s.zone.id] = { observed: s.bird.observed, gone: s.bird.gone };
     const b = s.bird;
-    const esito = b.observed ? `Hai annotato il <strong>${BIRD.nome}</strong> nel taccuino.`
-      : b.gone ? `Il ${BIRD.nome} è volato via. Andrà meglio la prossima volta.`
+    const esito = b.observed ? `Il <strong>${BIRD.nome}</strong> è nel taccuino.`
+      : b.gone ? `Il ${BIRD.nome} è volato via. Andrà meglio altrove.`
       : `Torni a bordo senza aver osservato il ${BIRD.nome}.`;
-    showOverlay("Di nuovo a bordo", `${esito}<br>Giorno ${trip.day} · ${trip.money} monete · Vita ${s.player.hp}/${MAX_HP}<br>Salpare costa un giorno di viaggio.`, "zone");
+    showOverlay("Di nuovo a bordo", `${esito}<br>Giorno ${day()} · ${trip.money} monete · Vita ${s.player.hp}/${MAX_HP}`, "zone");
     Suoni.play("campana");
+  }
+
+  function endTrip(title, html) {
+    trip.over = true;
+    Mare.stop();
+    if (s) { s.over = true; s.busy = false; }
+    showOverlay(title, html, "end");
   }
 
   function die() {
-    s.over = true;
-    showOverlay("Sbranato", `L'orso ha avuto la meglio, al giorno ${trip.day}.<br>La spedizione finisce qui.`, "end");
+    endTrip("Sbranato", `L'orso ha avuto la meglio, al giorno ${day()}.<br>La spedizione finisce qui.`);
   }
 
   function bankrupt() {
-    s.over = true;
-    s.busy = false;
+    trip.money = 0;
     Suoni.play("campana");
-    showOverlay("Abbandonato", `Giorno ${trip.day}: non hai più monete per la paga.<br>La ciurma ti lascia a terra e salpa senza di te.`, "end");
+    endTrip("Abbandonato", `Giorno ${day()}: non hai più monete per la paga.<br>La ciurma ti lascia a terra e salpa senza di te.`);
   }
 
-  // kind: "zone" = puoi salpare o restare; "end" = la spedizione è finita
-  function showOverlay(title, html, kind) {
+  // kind: "zone" = riprendi il mare o resta; "city" = in porto; "end" = la spedizione è finita
+  function showOverlay(title, html, kind, healLabel = null) {
     el.banner.hidden = true;
     el.map.classList.remove("is-animals");
-    render();
+    if (s && trip.mode === "land") render();
+    const buttons = {
+      zone: `<button class="menu-item" data-game-action="sail">Riprendi il mare</button>
+             <button class="menu-item" data-game-action="stay">Resta a terra</button>`,
+      city: `${healLabel ? `<button class="menu-item" data-game-action="heal">${healLabel}</button>` : ""}
+             <button class="menu-item" data-game-action="sail">Riprendi il mare</button>`,
+      end: '<button class="menu-item" data-game-action="new-trip">Nuova spedizione</button>',
+    }[kind];
     el.overlay.innerHTML = `
       <h3>${title}</h3>
       <p>${html}</p>
       <nav class="menu">
-        ${kind === "zone"
-          ? `<button class="menu-item" data-game-action="sail">Salpa verso una nuova zona (−${CREW_PAY} monete)</button>
-             <button class="menu-item" data-game-action="stay">Resta a terra</button>`
-          : '<button class="menu-item" data-game-action="new-trip">Nuova spedizione</button>'}
+        ${buttons}
         <button class="menu-item" data-goto="screen-menu">Torna al menu</button>
       </nav>`;
     el.overlay.hidden = false;
     el.overlay.querySelector(".menu-item").focus();
   }
 
-  // Il viaggio verso la zona successiva costa un giorno (e la paga)
   function sail() {
-    trip.day++;
-    if (trip.money < CREW_PAY) {
-      trip.money = 0;
-      return bankrupt();
-    }
-    Suoni.stopAll();
-    trip.money -= CREW_PAY;
-    land();
-    log(`Un giorno di navigazione. Paghi la ciurma: −${CREW_PAY} monete.`, "pay");
-    phase("day");
-    setTimeout(() => { if (!s.over && !s.busy) el.banner.hidden = true; }, 1200);
-    render();
+    el.overlay.hidden = true;
+    s = null;
+    Mare.enter();
   }
 
   function stay() {
@@ -687,18 +745,39 @@ const Gioco = (() => {
 
   const iconHtml = (name) => `<svg class="ic" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 
-  function buildDom() {
+  // I riferimenti agli elementi della schermata di gioco, una volta per spedizione
+  function initUi() {
     iconSprite();
+    const $ = (id) => document.getElementById(id);
     el = {
-      map: document.getElementById("map"),
-      overlay: document.getElementById("map-overlay"),
-      banner: document.getElementById("phase-banner"),
-      status: document.getElementById("status"),
-      notebook: document.getElementById("notebook"),
-      log: document.getElementById("log"),
+      map: $("map"), mapWrap: $("map-wrap"), sea: $("sea-view"), overlay: $("map-overlay"), banner: $("phase-banner"),
+      status: $("status"), notebook: $("notebook"), log: $("log"), keys: $("keys"),
+      zoneTitle: $("zone-title"), postcard: $("postcard"), postcardTitle: $("postcard-title"),
+      miniGlobe: $("globe-mini"), bTitle: $("b-title"),
     };
     el.overlay.hidden = true;
     el.banner.hidden = true;
+  }
+
+  const KEYS_HELP = {
+    land: "3 passi a round, poi si muovono gli animali · frecce/WASD muovi · spazio/O osserva · Invio fine round · ⚓ torna a bordo · Esc menu",
+    sea: "← → rotta · ↑ ↓ vele · T cannocchiale · Invio sbarca o attracca in città · Esc menu",
+  };
+
+  // A terra il riquadro A è la battlemap, in mare è il globo
+  function showView(mode) {
+    const land = mode === "land";
+    el.mapWrap.hidden = !land;
+    el.sea.hidden = land;
+    el.miniGlobe.hidden = !land;
+    el.bTitle.textContent = land ? "Globo" : "Navigazione";
+    el.keys.textContent = KEYS_HELP[land ? "land" : "sea"];
+    el.overlay.hidden = true;
+    renderLog();
+    renderNotebook();
+  }
+
+  function buildDom() {
     el.map.classList.remove("is-animals", "is-hit");
     el.map.innerHTML = "";
     el.map.style.gridTemplateColumns = `repeat(${W}, var(--cell))`;
@@ -771,28 +850,58 @@ const Gioco = (() => {
       }
     }
 
-    const hearts = "♥".repeat(Math.ceil(p.hp / 2)) + "♡".repeat(Math.ceil(MAX_HP / 2) - Math.ceil(p.hp / 2));
-    const steps = s.busy ? "aspetta…" : "●".repeat(s.steps) + "○".repeat(STEPS - s.steps);
-    const noise = "●".repeat(s.noise) + "○".repeat(4 - s.noise);
-    const bearState = o.rest ? "si riposa" : { wander: "fiuta in giro", search: "ti cerca", hunt: "ti insegue!" }[o.mode];
-    const left = ROUNDS_PER_DAY - s.dayRounds;
-    const sand = "▰".repeat(Math.ceil(left / 3)) + "▱".repeat(5 - Math.ceil(left / 3));
-    el.status.innerHTML = `
-      <div class="status-day">${iconHtml(TIME_ICONS[s.time])}<b>Giorno ${trip.day}</b><span>${s.time}</span></div>
-      <div title="Round prima che passi un giorno">${iconHtml("hourglass")}<span>Clessidra</span><b>${sand} ${left}</b></div>
+    renderStatus();
+    renderNotebook();
+    renderLog();
+    if (el.miniGlobe && !el.miniGlobe.hidden) Mare.drawMini(el.miniGlobe);
+  }
+
+  // Il riquadro B: tempo, soldi, vita e, a terra, i dettagli del round
+  function renderStatus() {
+    const land = trip.mode === "land" && s;
+    const time = land ? s.time : timeOf(trip.clock);
+    const hp = land ? s.player.hp : trip.hp;
+    const frac = trip.clock % 1;
+    const left = Math.ceil((1 - frac) * ROUNDS_PER_DAY - 1e-9);
+    const sand = "▰".repeat(Math.ceil((1 - frac) * 5)) + "▱".repeat(5 - Math.ceil((1 - frac) * 5));
+    const hearts = "♥".repeat(Math.ceil(hp / 2)) + "♡".repeat(Math.ceil(MAX_HP / 2) - Math.ceil(hp / 2));
+    let html = `
+      <div class="status-day">${iconHtml(TIME_ICONS[time])}<b>Giorno ${day()}</b><span>${time}</span></div>
+      <div title="Quanto manca al prossimo giorno">${iconHtml("hourglass")}<span>Clessidra</span><b>${sand}${land ? ` ${left}` : ""}</b></div>
       <div title="La ciurma costa ${CREW_PAY} monete al giorno">${iconHtml("coins")}<span>Monete</span><b>${trip.money} <small>(−${CREW_PAY}/g)</small></b></div>
       <hr>
-      <div><span>Vita</span><b class="hearts">${hearts}</b></div>
+      <div><span>Vita</span><b class="hearts">${hearts}</b></div>`;
+    if (land) {
+      const o = s.bear;
+      const steps = s.busy ? "aspetta…" : "●".repeat(s.steps) + "○".repeat(STEPS - s.steps);
+      const noise = "●".repeat(s.noise) + "○".repeat(4 - s.noise);
+      const bearState = o.rest ? "si riposa" : { wander: "fiuta in giro", search: "ti cerca", hunt: "ti insegue!" }[o.mode];
+      html += `
       <div><span>Passi</span><b>${steps}</b></div>
       <div><span>Rumore</span><b>${noise}</b></div>
       <div><span>Nascosto</span><b>${hidden() ? "sì" : "no"}</b></div>
-      <div><span>Orso</span><b>${bearState}</b></div>
-      <div class="seed"><span>Seed</span><b>${s.seed}</b></div>`;
+      <div><span>Orso</span><b>${bearState}</b></div>`;
+    } else {
+      html += Mare.statusRows();
+    }
+    el.status.innerHTML = html;
+  }
 
-    const birdState = b.observed ? "✔ osservato" : b.gone ? "✗ volato via"
-      : birdInRuin() && !insideRuin() ? "canta dentro le rovine" : "da osservare";
-    el.notebook.innerHTML = `<div class="nb-row"><span>${b.observed ? "v" : "?"} ${BIRD.nome}</span><b>${birdState}</b></div>`;
-    el.log.innerHTML = s.log.map((e, i) =>
+  // Il taccuino: per ora un solo uccello, osservato in quante zone
+  function renderNotebook() {
+    const seen = Object.values(trip.zones).filter((z) => z.observed).length + (s && s.bird.observed && !trip.zones[s.zone.id]?.observed ? 1 : 0);
+    let state = seen ? `✔ visto ${seen > 1 ? `in ${seen} zone` : ""}` : "da osservare";
+    if (s && trip.mode === "land") {
+      const b = s.bird;
+      state = b.observed ? "✔ osservato qui" : b.gone ? "✗ volato via"
+        : birdInRuin() && !insideRuin() ? "canta dentro le rovine" : state;
+    }
+    el.notebook.innerHTML = `<div class="nb-row"><span>${seen ? "v" : "?"} ${BIRD.nome}</span><b>${state}</b></div>`;
+  }
+
+  function renderLog() {
+    if (!el) return;
+    el.log.innerHTML = trip.log.map((e, i) =>
       `<li${i ? "" : ' class="is-new"'}>${e.icon ? iconHtml(e.icon) : "<i></i>"}<span>${e.msg}</span></li>`).join("");
   }
 
@@ -804,7 +913,7 @@ const Gioco = (() => {
   };
 
   document.addEventListener("keydown", (e) => {
-    if (!document.body.classList.contains("in-game") || !s || s.over) return;
+    if (!document.body.classList.contains("in-game") || !trip || trip.mode !== "land" || !s || s.over) return;
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     if (!MOVES[k] && k !== " " && k !== "o" && k !== "Enter") return;
     e.preventDefault();
@@ -819,6 +928,7 @@ const Gioco = (() => {
     if (action === "new-trip") { Suoni.stopAll(); start(); }
     if (action === "sail") sail();
     if (action === "stay") stay();
+    if (action === "heal") heal();
 
     const cell = e.target.closest("#map > div");
     if (cell && canAct()) {
@@ -831,9 +941,17 @@ const Gioco = (() => {
   });
 
   window.addEventListener("resize", () => {
+    if (!trip) return;
     fitMap();
     if (s) drawPostcard();
   });
 
-  return { start };
+  // Quello che serve alla navigazione (js/sea.js)
+  return {
+    start, landAt, visitCity, advanceClock, renderStatus, log, timeOf, day,
+    get trip() { return trip; },
+    get el() { return el; },
+    showView,
+    iconHtml: (name) => iconHtml(name),
+  };
 })();

@@ -119,7 +119,17 @@ body.in-game .frame { width: min(1200px, 100%); padding: 12px; }
   font-size: 18px;
 }
 
-.map-wrap { position: relative; display: grid; justify-content: center; }
+.view-wrap { position: relative; }
+.map-wrap { display: grid; justify-content: center; }
+.map-wrap[hidden], .sea-view[hidden], .globe-mini[hidden] { display: none; }
+.sea-view { display: grid; justify-items: center; gap: 6px; }
+.sea-view canvas { display: block; image-rendering: pixelated; }
+.sea-hud { display: flex; gap: 18px; align-items: center; color: var(--mid); }
+.sea-hud b { color: var(--paper); font-weight: normal; }
+.sea-hud .ic { width: 22px; height: 22px; fill: var(--bird); }
+.sea-prompt { color: var(--mid); text-align: center; min-height: 1.2em; }
+.sea-prompt b { color: var(--bird); font-weight: normal; }
+.globe-mini { display: block; margin: 0 auto 8px; image-rendering: pixelated; }
 .map {
   --cell: 28px;
   display: grid;
@@ -231,7 +241,6 @@ body.in-game .frame { width: min(1200px, 100%); padding: 12px; }
 .map-overlay[hidden] { display: none; }
 .map-overlay h3 { margin: 0; font-size: 36px; font-weight: normal; color: var(--bird); }
 
-.placeholder { margin: 0 auto 8px; color: var(--dark); text-align: center; line-height: 1.05; }
 .status { display: grid; gap: 2px; }
 .status div { display: flex; align-items: center; gap: 8px; }
 .status div > b { margin-left: auto; }

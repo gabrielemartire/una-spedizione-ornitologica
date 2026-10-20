@@ -35,21 +35,23 @@
     <section id="screen-game" class="screen game">
       <div class="game-top">
         <div class="panel panel-a">
-          <div class="panel-title" id="zone-title">Radura</div>
-          <div class="map-wrap">
-            <div id="map" class="map" aria-label="Mappa della zona"></div>
+          <div class="panel-title" id="zone-title">In mare aperto</div>
+          <div class="view-wrap">
+            <div id="map-wrap" class="map-wrap" hidden>
+              <div id="map" class="map" aria-label="Mappa della zona"></div>
+            </div>
+            <div id="sea-view" class="sea-view">
+              <div id="sea-hud" class="sea-hud"></div>
+              <canvas id="globe-big" aria-label="Il globo"></canvas>
+              <div id="sea-prompt" class="sea-prompt"></div>
+            </div>
             <div id="phase-banner" class="phase-banner" hidden></div>
             <div id="map-overlay" class="map-overlay" hidden></div>
           </div>
         </div>
         <div class="panel panel-b">
-          <div class="panel-title">Globo</div>
-          <pre class="placeholder">  .-~~~-.
- /  ∙ ⌂  \
-|  ≈≈  ∙  |
- \ ≈≈≈   /
-  '-~~~-'
-in arrivo</pre>
+          <div class="panel-title" id="b-title">Navigazione</div>
+          <canvas id="globe-mini" class="globe-mini" hidden aria-label="Dove sei sul globo"></canvas>
           <div id="status" class="status"></div>
         </div>
       </div>
@@ -58,7 +60,7 @@ in arrivo</pre>
           <div class="panel-title">Taccuino</div>
           <div id="notebook" class="notebook"></div>
           <ul id="log" class="log"></ul>
-          <p class="keys">3 passi a round, poi si muovono gli animali · frecce/WASD muovi · spazio/O osserva · Invio fine round · ⚓ salpa · Esc menu</p>
+          <p class="keys" id="keys"></p>
         </div>
         <div class="panel panel-d">
           <div class="panel-title" id="postcard-title">Cartolina</div>
@@ -160,7 +162,9 @@ in arrivo</pre>
   <script src="js/audio.js"></script>
   <script src="js/icons.js"></script>
   <script src="js/postcard.js"></script>
+  <script src="js/globe.js"></script>
   <script src="js/game.js"></script>
+  <script src="js/sea.js"></script>
   <script src="js/menu.js"></script>
 </body>
 </html>

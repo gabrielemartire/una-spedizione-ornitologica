@@ -82,21 +82,21 @@ Barra menu in stile anni '90: `Spedizione · Taccuino · Inventario · Ciurma ·
 
 ## 6. Il globo
 
-**Generazione.** Ogni partita genera un arcipelago: **un'isola grande e 3–6 isole minori**, da un seed. Ogni isola è divisa in **zone**; ogni zona ha un bioma e alcune caratteristiche (§ 7). **Non tutti i biomi sono presenti in ogni partita**: alcuni uccelli in certi viaggi semplicemente non ci sono.
+**Generazione.** Ogni spedizione genera un arcipelago: **un'isola grande e 4–5 isole minori**, da un seed, su un mondo sferico (una texture di 360 × 180 gradi). Ogni isola è divisa in **zone** (punti distanti almeno 7°, ognuno con il suo territorio); ogni zona ha un seed e dei tag (§ 7), quindi la stessa cartolina e la stessa mappa a ogni visita. Le zone ricordano se il loro uccello è già stato osservato o è volato via. **Non tutti i biomi sono presenti in ogni partita**: alcuni uccelli in certi viaggi semplicemente non ci sono.
 
-**Navigazione (tempo reale).**
-- ← → sterzano, ↑ ↓ regolano le vele (velocità).
-- Indicatori come in Pioneers: velocità in nodi, rotta in gradi.
-- La sfera ruota sotto la nave, in ASCII ombreggiato (`.:-=+*#%@`).
-- Avvicinandoti alla costa compare l'opzione **Attracca**: entri nella battlemap di quella zona.
+**Navigazione (tempo reale).** In mare il riquadro A mostra il globo grande; a terra il riquadro B ne mostra uno piccolo.
+- ← → cambiano la rotta, ↑ ↓ le vele (4 livelli). Indicatori di rotta in gradi e punti cardinali.
+- La sfera, in pixel art con luce, ombra e atmosfera sul bordo, **ruota sotto la nave**, che resta al centro con la sua scia.
+- Mari profondi e bassi fondali, spiagge, prati, boschi, colline; rocce e neve dove la zona ha le montagne. I confini delle zone sono appena segnati.
+- La costa ferma la nave. **Vicino alla costa** (≈2,4°) la zona si illumina: **Invio sbarca** (costa un momento della giornata). Vicino a una città, Invio attracca in porto.
 
-**Cannocchiale.** In navigazione, vicino a una costa, il cannocchiale mostra **la cartolina di quella zona senza sbarcare**. Sbarcare costa giorni (e paga della ciurma); guardare no. Così la cartolina diventa lo strumento per decidere dove attraccare: c'è una cascata? un uccello in volo? rovine?
+**Cannocchiale (T).** In navigazione, entro ≈9° da una costa, il cannocchiale mostra **la cartolina di quella zona senza sbarcare**. Sbarcare costa giorni (e paga della ciurma); guardare no. Così la cartolina diventa lo strumento per decidere dove attraccare: c'è una cascata? un uccello in volo? rovine?
 
 **Puntatori.** Le voci comprate in città compaiono sul globo come segni: un cerchio largo per le voci vaghe, una croce precisa per quelle care.
 
-**Tempo.** In mare **un giorno passa ogni ~20 secondi** di navigazione (valore da tarare). A fine giornata suona la campana di bordo e paghi la ciurma.
+**Tempo.** Un unico orologio per tutta la spedizione. In mare scorre **solo mentre navighi**: un giorno ogni ~20 secondi a vele spiegate. Sbarcare costa un momento della giornata; a terra ogni round è 1/15 di giorno. All'inizio di ogni giorno suona la campana e paghi la ciurma.
 
-**Momenti del giorno.** Ogni giorno ha tre momenti: **alba**, **pomeriggio** e **notte**. Sbarchi nel momento in cui arrivi, e il momento resta fisso per tutta la visita a terra.
+**Momenti del giorno.** Ogni giorno ha tre momenti: **alba**, **pomeriggio** e **notte**, che tingono anche il globo. Sbarchi nel momento in cui arrivi, e il momento resta fisso per tutta la visita a terra.
 - La cartolina cambia cielo e luce; la palette della zona si scurisce di notte.
 - Alcuni uccelli compaiono solo in certi momenti (*mattinieri* all'alba, *notturni* di notte).
 - Di notte la visione si accorcia per tutti e alcune creature sono più attive.
@@ -249,7 +249,7 @@ Due città per globo, sempre presenti.
 | Strumenti | tutti, binocolo migliorabile | pochi |
 | Posizione | sull'isola grande | in un fiordo, vicino alle zone fredde e selvagge |
 
-Anche le città hanno la loro **cartolina** in D. In città la battlemap è sostituita da un menu: *Mercato · Taverna (voci) · Guaritore · Bottega · Salpa*.
+Anche le città hanno la loro **cartolina** in D. In città la battlemap è sostituita da un menu: *Mercato · Taverna (voci) · Guaritore · Bottega · Salpa*. **Per ora c'è solo il guaritore** (5 monete per punto vita); il resto arriverà.
 
 ## 11. Economia
 
