@@ -18,18 +18,22 @@ const Gioco = (() => {
   const STEP_DELAY = 170;     // ms: ogni passo di un animale
 
   // noise = raggio del rumore in caselle; hide = chi ci sta dentro si vede solo da vicino
+  // icon = icona di game-icons.net (js/icons.js); ch = carattere per le caselle senza icona
   const TILES = {
-    sea:   { ch: "≈", cls: "t-sea",   walk: false, sight: true },
-    grass: { ch: ".", cls: "t-grass", walk: true,  sight: true, noise: 2, sound: "passoErba" },
-    tall:  { ch: '"', cls: "t-tall",  walk: true,  sight: true, noise: 1, sound: "passoErba", hide: true },
-    bush:  { ch: "♠", cls: "t-bush",  walk: true,  sight: true, noise: 3, sound: "cespuglio", hide: true },
-    tree:  { ch: "♣", cls: "t-tree",  walk: false, sight: false },
-    rock:  { ch: "▲", cls: "t-rock",  walk: false, sight: false },
-    water: { ch: "≈", cls: "t-water", walk: true,  sight: true, noise: 4, sound: "passoAcqua" },
-    deep:  { ch: "≈", cls: "t-deep",  walk: false, sight: true },
-    ship:  { ch: "⚓", cls: "t-ship",  walk: true,  sight: true, noise: 0 },
-    fall:  { ch: "‖", cls: "t-fall",  walk: false, sight: true },
-    ruin:  { ch: "#", cls: "t-ruin",  walk: false, sight: false },
+    sea:    { icon: "waves",     cls: "t-sea",    walk: false, sight: true },
+    grass:  { ch: "·",           cls: "t-grass",  walk: true,  sight: true, noise: 2, sound: "passoErba" },
+    tall:   { icon: "grass",     cls: "t-tall",   walk: true,  sight: true, noise: 1, sound: "passoErba", hide: true },
+    bush:   { icon: "bush",      cls: "t-bush",   walk: true,  sight: true, noise: 3, sound: "cespuglio", hide: true },
+    tree:   { icon: "beech",     cls: "t-tree",   walk: false, sight: false },
+    rock:   { icon: "rock",      cls: "t-rock",   walk: false, sight: false },
+    water:  { icon: "waves",     cls: "t-water",  walk: true,  sight: true, noise: 4, sound: "passoAcqua" },
+    deep:   { icon: "waves",     cls: "t-deep",   walk: false, sight: true },
+    ship:   { icon: "ship",      cls: "t-ship",   walk: true,  sight: true, noise: 0 },
+    fall:   { icon: "waterfall", cls: "t-fall",   walk: false, sight: true },
+    // Le rovine: muri, pavimento coperto dal tetto finché non entri, macerie rumorose
+    wall:   { icon: "wall",      cls: "t-wall",   walk: false, sight: false },
+    floor:  { ch: "·",           cls: "t-floor",  walk: true,  sight: true, noise: 1, sound: "passoErba" },
+    rubble: { icon: "rubble",    cls: "t-rubble", walk: true,  sight: true, noise: 3, sound: "macerie" },
   };
 
   const BIRD = { id: 17, nome: "Becco Blu" };
@@ -191,7 +195,7 @@ const Gioco = (() => {
       }
       map[2][fallX] = "deep";
     }
-    if (tags.has("rovine")) blob("ruin", 4, 1, 0.55);
+    const ruin = tags.has("rovine") ? placeRuin(map, r) : null;
     blob("tree", 16, 2, 0.6);
     blob("tall", 12, 2, 0.7);
     blob("bush", 40, 0, 1);
@@ -203,13 +207,20 @@ const Gioco = (() => {
     }
 
     const reach = bfs(map, start).depth;
+    if (ruin && ![...ruin.interior].some((k) => reach.has(k))) return null;
     const free = [...reach.keys()].map((k) => { const [x, y] = k.split(",").map(Number); return { x, y }; })
       .filter((c) => map[c.y][c.x] === "grass" || map[c.y][c.x] === "tall");
 
     // L'uccello ama stare vicino all'acqua o agli alberi
     const nearWater = (c) => DIRS.some(([dx, dy]) => inside(c.x + dx, c.y + dy) && ["water", "tree"].includes(map[c.y + dy][c.x + dx]));
-    const birdSpots = free.filter((c) => dist(c, start) >= 14 && nearWater(c)
-      && bandCells(map, c).filter((b) => reach.has(key(b))).length >= 3);
+    const observable = (c) => bandCells(map, c).filter((b) => reach.has(key(b))).length >= 3;
+    // Nelle rovine, a volte, l'uccello nidifica dentro: lo scopri solo entrando
+    const insideSpots = ruin && r() < 0.5
+      ? [...ruin.interior].map((k) => { const [x, y] = k.split(",").map(Number); return { x, y }; })
+        .filter((c) => map[c.y][c.x] === "floor" && reach.has(key(c)) && observable(c))
+      : [];
+    const birdSpots = insideSpots.length ? insideSpots
+      : free.filter((c) => dist(c, start) >= 14 && nearWater(c) && observable(c));
     if (!birdSpots.length) return null;
     const bird = pick(birdSpots);
 
@@ -218,7 +229,46 @@ const Gioco = (() => {
     if (!bearSpots.length) return null;
     const bear = pick(bearSpots);
 
-    return { map, start, bird, bear, free };
+    return { map, start, bird, bear, free, ruin };
+  }
+
+  // Un edificio diroccato: muri spessi, un paio di varchi, macerie intorno
+  function placeRuin(map, r) {
+    for (let attempt = 0; attempt < 60; attempt++) {
+      const bw = 7 + Math.floor(r() * 3), bh = 5 + Math.floor(r() * 3);
+      const x0 = 5 + Math.floor(r() * (W - bw - 7)), y0 = 1 + Math.floor(r() * (H - bh - 2));
+      let clear = true;
+      for (let y = y0 - 1; y <= y0 + bh && clear; y++) {
+        for (let x = x0 - 1; x <= x0 + bw && clear; x++) clear = inside(x, y) && map[y][x] === "grass";
+      }
+      if (!clear) continue;
+
+      const interior = new Set();
+      const perimeter = [];
+      for (let y = y0; y < y0 + bh; y++) {
+        for (let x = x0; x < x0 + bw; x++) {
+          const edge = x === x0 || y === y0 || x === x0 + bw - 1 || y === y0 + bh - 1;
+          map[y][x] = edge ? "wall" : "floor";
+          if (!edge) interior.add(`${x},${y}`);
+          const corner = (x === x0 || x === x0 + bw - 1) && (y === y0 || y === y0 + bh - 1);
+          if (edge && !corner) perimeter.push({ x, y });
+        }
+      }
+      // Un varco pulito e un crollo pieno di macerie
+      const door = perimeter[Math.floor(r() * perimeter.length)];
+      map[door.y][door.x] = "floor";
+      const breach = perimeter[Math.floor(r() * perimeter.length)];
+      if (map[breach.y][breach.x] === "wall") map[breach.y][breach.x] = "rubble";
+      // Un pilastro rimasto in piedi
+      if (bw >= 8 && bh >= 6) map[y0 + 2][x0 + 3] = "wall";
+      // Pietre cadute intorno
+      for (let i = 0; i < 7; i++) {
+        const x = x0 - 1 + Math.floor(r() * (bw + 2)), y = y0 - 1 + Math.floor(r() * (bh + 2));
+        if (inside(x, y) && map[y][x] === "grass") map[y][x] = "rubble";
+      }
+      return { interior };
+    }
+    return null;
   }
 
   // --- Partita ---
@@ -233,6 +283,7 @@ const Gioco = (() => {
       time,
       map: zone.map,
       free: zone.free,
+      ruin: zone.ruin,
       startPos: zone.start,
       player: { ...zone.start, hp: MAX_HP },
       bird: { ...zone.bird, observed: false, gone: false },
@@ -262,6 +313,10 @@ const Gioco = (() => {
   function log(msg) {
     s.log.unshift(msg);
     s.log.length = Math.min(s.log.length, 7);
+  }
+
+  function insideRuin() {
+    return !!s.ruin && s.ruin.interior.has(key(s.player));
   }
 
   function hidden() {
@@ -537,7 +592,18 @@ const Gioco = (() => {
 
   // --- Disegno ---
 
+  // Le icone diventano simboli SVG riusabili: ogni casella li richiama con <use>
+  function iconSprite() {
+    if (document.getElementById("icon-sprite")) return;
+    const symbols = Object.entries(ICONS)
+      .map(([name, d]) => `<symbol id="i-${name}" viewBox="0 0 512 512"><path d="${d}"/></symbol>`).join("");
+    document.body.insertAdjacentHTML("afterbegin", `<svg id="icon-sprite" hidden>${symbols}</svg>`);
+  }
+
+  const iconHtml = (name) => `<svg class="ic" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+
   function buildDom() {
+    iconSprite();
     el = {
       map: document.getElementById("map"),
       overlay: document.getElementById("map-overlay"),
@@ -577,34 +643,46 @@ const Gioco = (() => {
     const band = !b.observed && !b.gone ? new Set(bandCells(map, b).map(key)) : new Set();
     const reach = bearReach();
     const hunting = o.mode === "hunt";
+    const roofed = s.ruin && !insideRuin() ? s.ruin.interior : new Set(); // il tetto si apre solo se entri
+
+    const roofCenter = s.ruin ? [...s.ruin.interior][Math.floor(s.ruin.interior.size / 2)] : null;
 
     for (let y = 0; y < H; y++) {
       for (let x = 0; x < W; x++) {
         const t = TILES[map[y][x]];
         const c = el.cells[y][x];
         const k = `${x},${y}`;
-        let ch = t.ch;
+        // Gli alberi alternano faggi e pini, sempre uguali nella stessa casella
+        let icon = t === TILES.tree && (x * 7 + y * 13) % 3 === 0 ? "pine" : t.icon;
+        let ch = t.ch || "";
         let cls = `cell ${t.cls}`;
-        delete c.dataset.intent;
+        let intent = null;
 
-        if (band.has(k)) cls += " band";
+        if (roofed.has(k)) {
+          icon = k === roofCenter ? "ruins" : null;
+          ch = "";
+          cls = "cell t-roof";
+        } else if (band.has(k)) cls += " band";
         if (reach.get(k) > 0) cls += hunting ? " danger" : " reach";
 
         if (same(p, { x, y })) {
-          ch = "@";
+          icon = "explorer";
           cls += hidden() ? " e-player is-hidden" : " e-player";
         } else if (same(o, { x, y })) {
-          ch = "B";
+          icon = "bear";
           cls += " e-bear";
-          if (o.rest) c.dataset.intent = "z";
-          else if (o.mode === "hunt") c.dataset.intent = "!";
-          else if (o.mode === "search") c.dataset.intent = "?";
-        } else if (!b.gone && same(b, { x, y })) {
-          ch = "v";
+          intent = o.rest ? "z" : o.mode === "hunt" ? "!" : o.mode === "search" ? "?" : null;
+        } else if (!b.gone && same(b, { x, y }) && !roofed.has(k)) {
+          icon = "bird";
           cls += b.observed ? " e-bird is-observed" : " e-bird";
         }
-        c.textContent = ch;
-        c.className = cls;
+
+        // Si tocca il DOM solo se la casella è cambiata
+        const html = icon ? iconHtml(icon) : ch;
+        if (c._html !== html) { c.innerHTML = html; c._html = html; }
+        if (c.className !== cls) c.className = cls;
+        if (intent) c.dataset.intent = intent;
+        else delete c.dataset.intent;
       }
     }
 

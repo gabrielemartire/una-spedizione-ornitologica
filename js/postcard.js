@@ -1,69 +1,64 @@
-// La cartolina: il panorama della zona in ASCII, composto a layer dai tag della zona.
+// La cartolina: il panorama della zona, composto a layer dai tag della zona.
 // Regola d'oro: niente di ciò che si vede è inventato, tutto viene dai tag.
+//
+// La scena si disegna una volta sola in pixel (120 × 80) e si mostra in due modi:
+// - pixel art: i pixel così come sono;
+// - ASCII: ogni carattere copre 2 × 4 pixel e diventa un retino (░ ▒) o un simbolo.
 // Espone l'oggetto globale `Cartolina`.
 const Cartolina = (() => {
-  const W = 60;
-  const H = 20;
-  const HORIZON = 9; // prima riga sotto il cielo
+  const PW = 120;
+  const PH = 80;
+  const COLS = PW / 2;
+  const ROWS = PH / 4;
+  const HY = 36; // l'orizzonte, in pixel
+  const STORAGE_KEY = "spedizione.cartolina";
 
   // Una palette ridotta per ogni momento del giorno
   const PALETTES = {
     alba: {
-      sky: ["#3b2f5c", "#9a4f78", "#e8915a"], sun: "#ffe08a", star: "#f7c6a3", cloud: "#f2b49a",
-      far: "#6b5a8a", snow: "#f4e1ec", hill: "#4a5f45", stone: "#8f8090", roof: "#b8574a",
-      treeFar: "#384f38", tree: "#22382a", trunk: "#4a3326", water: "#7b8fb8", foam: "#f7d7c4",
-      ground: "#28331f", grass: "#7a9a50", rock: "#5e5662", bird: "#1e1a26",
+      sky: ["#2c2850", "#6a3f72", "#c45f6e", "#f2a35e"], glow: "#ffd08a", sun: "#fff0b0", moonShade: "#fff0b0",
+      star: "#f7c6a3", starDim: "#c4848a", cloud: "#f6b7a0", cloudShadow: "#9a5f7a",
+      far: "#7a5f8c", farShadow: "#56456e", snow: "#f7d8e0", snowShadow: "#b896b8", haze: "#d88a86",
+      near: "#4e4462", nearShadow: "#3a3350",
+      hillLight: "#6f7a4c", hill: "#55623e", hillShadow: "#3e4a30", ground: "#34402a", groundDark: "#262f1f",
+      treeFar: "#3a4a36", treeFarShadow: "#29362a", tree: "#26382a", treeShadow: "#18241c", trunk: "#4a3326",
+      stone: "#b39a9a", stoneShadow: "#7e6a74", roof: "#b8574a", roofShadow: "#7e3a38", window: "#2e2430", windowLit: "#ffcf7a",
+      water: "#7d86b8", waterLight: "#f2b08a", waterDark: "#5a5f8e", foam: "#f7d7c8",
+      rock: "#6e6070", rockLight: "#9a8494", rockDark: "#4a3f4c",
+      grass: "#8a9a5a", grassDark: "#5e6e3e", flower: "#f2c06a", flower2: "#e88aa0", bird: "#1e1a26",
     },
     pomeriggio: {
-      sky: ["#3f78b8", "#78aad6", "#bcdcec"], sun: "#fff4c2", star: "#ffffff", cloud: "#f4f8fa",
-      far: "#7489a0", snow: "#ffffff", hill: "#5f8a44", stone: "#b0a898", roof: "#a84a35",
-      treeFar: "#46703a", tree: "#2a5226", trunk: "#5a4030", water: "#4f8a9a", foam: "#e8f4f4",
-      ground: "#34522a", grass: "#a3c46a", rock: "#7e7e70", bird: "#1a1a1a",
+      sky: ["#2f6fb5", "#5b97d1", "#8fbfe3", "#cfe6f0"], glow: "#fff6d0", sun: "#fffbe6", moonShade: "#fffbe6",
+      star: "#ffffff", starDim: "#ffffff", cloud: "#ffffff", cloudShadow: "#c9d9e6",
+      far: "#7e95b0", farShadow: "#5f7591", snow: "#f4f8fb", snowShadow: "#c4d2e2", haze: "#b9d3e3",
+      near: "#5a7a7e", nearShadow: "#44605f",
+      hillLight: "#8bb556", hill: "#6a9a42", hillShadow: "#4f7a34", ground: "#3f6a2c", groundDark: "#2f5222",
+      treeFar: "#3f6b3a", treeFarShadow: "#2c5030", tree: "#2f5a2a", treeShadow: "#1e3e1e", trunk: "#5a4030",
+      stone: "#c2b8a3", stoneShadow: "#8f8676", roof: "#b5523b", roofShadow: "#7e3628", window: "#3a3a44", windowLit: "#3a3a44",
+      water: "#4f8fae", waterLight: "#9fd0e0", waterDark: "#336f8a", foam: "#f2fafa",
+      rock: "#8a8a7c", rockLight: "#b2b2a2", rockDark: "#5e5e54",
+      grass: "#a8cc6c", grassDark: "#6f9a44", flower: "#f2d04a", flower2: "#e88aa8", bird: "#1a1a1a",
     },
     notte: {
-      sky: ["#05080f", "#0b1528", "#16243e"], sun: "#e8ecd0", star: "#c8d0e0", cloud: "#22314a",
-      far: "#1a2538", snow: "#8a98b0", hill: "#14221e", stone: "#3c4250", roof: "#2e2632",
-      treeFar: "#0f1e1a", tree: "#091510", trunk: "#17120e", water: "#1e3650", foam: "#7f9fb8",
-      ground: "#0b130f", grass: "#284232", rock: "#2e323c", bird: "#c8d0e0",
+      sky: ["#03050c", "#08101f", "#0f1c33", "#1a2a45"], glow: "#2e3e5c", sun: "#eef0dc", moonShade: "#c4c8b4",
+      star: "#c8d0e0", starDim: "#5a6880", cloud: "#2a3a58", cloudShadow: "#1a253c",
+      far: "#26334a", farShadow: "#1a2438", snow: "#8a9ab4", snowShadow: "#5c6a84", haze: "#1e2c44",
+      near: "#18222e", nearShadow: "#111822",
+      hillLight: "#1e3028", hill: "#16241e", hillShadow: "#0f1a16", ground: "#0e1712", groundDark: "#09110d",
+      treeFar: "#10201a", treeFarShadow: "#0b1712", tree: "#0b1812", treeShadow: "#060f0b", trunk: "#16110d",
+      stone: "#4a5062", stoneShadow: "#33384a", roof: "#30283a", roofShadow: "#221c2a", window: "#141018", windowLit: "#ffc860",
+      water: "#1e3654", waterLight: "#8fa8c8", waterDark: "#142640", foam: "#8faac4",
+      rock: "#2e3240", rockLight: "#454a5c", rockDark: "#1e2230",
+      grass: "#2a4434", grassDark: "#1a2e22", flower: "#6a7a5a", flower2: "#5a5a70", bird: "#c8d0e0",
     },
   };
 
-  // Nei disegni: "#" = blocco pieno del colore, spazio = trasparente, il resto = carattere
-  const SPRITES = {
-    castle: [
-      "    ^        ",
-      "  #_#_#   #_#",
-      "  #####   ###",
-      "#_#####_#_###",
-      "#############",
-      "###:####:####",
-    ],
-    village: [
-      "  ^     ^   ",
-      " ###   ###  ",
-      "#####:#####:",
-      "#:#:# #:#:# ",
-    ],
-    ruins: [
-      "#     #   ",
-      "#  #  # # ",
-      "## # ## # ",
-    ],
-    pine: [
-      "   #   ",
-      "  ###  ",
-      "  ###  ",
-      " ##### ",
-      " ##### ",
-      "#######",
-      "   |   ",
-    ],
-    cloud: [
-      "  .--.   ",
-      ".(    ).-.",
-      " `-------'",
-    ],
-  };
+  // Retino ordinato 4 × 4: sfuma tra due colori senza inventarne di nuovi
+  const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]].map((row) => row.map((v) => (v + 0.5) / 16));
+
+  let mode = "ascii";
+  try { mode = localStorage.getItem(STORAGE_KEY) || mode; } catch (_) {}
+  let last = null;
 
   function rng(seed) {
     let a = seed >>> 0;
@@ -76,174 +71,389 @@ const Cartolina = (() => {
     };
   }
 
+  // --- Composizione della scena ---
+
   function compose(zone) {
     const r = rng(zone.seed ^ 0x5bd1e995);
     const P = PALETTES[zone.time];
-    const grid = Array.from({ length: H }, () => Array.from({ length: W }, () => ({ ch: " ", fg: null, bg: P.ground })));
-    const inside = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
+    const night = zone.time === "notte";
+    const buf = new Array(PW * PH).fill(P.ground);
+    const hints = new Array(COLS * ROWS).fill(null);
 
-    const put = (x, y, ch, fg, bg) => {
+    const inside = (x, y) => x >= 0 && y >= 0 && x < PW && y < PH;
+    // Ogni pixel disegnato cancella il simbolo ASCII della sua cella: il layer davanti copre quello dietro
+    const px = (x, y, c) => {
+      x = Math.round(x); y = Math.round(y);
       if (!inside(x, y)) return;
-      const c = grid[y][x];
-      c.ch = ch;
-      if (fg) c.fg = fg;
-      if (bg) c.bg = bg;
+      buf[y * PW + x] = c;
+      hints[(y >> 2) * COLS + (x >> 1)] = null;
     };
-    const fill = (x, y, color) => put(x, y, " ", null, color);
-    const sprite = (name, x, y, color, glyph = color) => {
-      SPRITES[name].forEach((line, dy) => [...line].forEach((ch, dx) => {
-        if (ch === "#") fill(x + dx, y + dy, color);
-        else if (ch !== " ") put(x + dx, y + dy, ch, glyph);
-      }));
+    const hint = (x, y, ch, fg) => {
+      const cx = Math.round(x) >> 1, cy = Math.round(y) >> 2;
+      if (cx >= 0 && cy >= 0 && cx < COLS && cy < ROWS) hints[cy * COLS + cx] = { ch, fg };
     };
-    // Una linea di cresta morbida: la somma di qualche onda con fasi casuali
-    const ridge = (base, amp, waves, period) => {
-      const ph = Array.from({ length: waves }, () => r() * Math.PI * 2);
-      return Array.from({ length: W }, (_, x) =>
-        Math.round(base - amp * ph.reduce((sum, p, i) => sum + Math.sin(x / (period + i * 4) + p) / (i + 1), 0) / 1.5));
+    const get = (x, y) => (inside(x, y) ? buf[y * PW + x] : null);
+    const mix = (a, b, t, x, y) => (t > BAYER[y & 3][x & 3] ? b : a);
+    const ramp = (stops, t, x, y) => {
+      const pos = Math.max(0, Math.min(0.999, t)) * (stops.length - 1);
+      const i = Math.floor(pos);
+      return mix(stops[i], stops[i + 1], pos - i, x, y);
     };
-
-    let rx = 18 + Math.floor(r() * 24);
-    const taken = [[rx - 6, rx + 8]];
-    // Sceglie una x libera per un disegno largo `width`, lontano da cascata ed edifici
-    const freeX = (width) => {
-      for (let i = 0; i < 40; i++) {
-        const x = 2 + Math.floor(r() * (W - width - 4));
-        if (taken.every(([a, b]) => x + width < a || x > b)) {
-          taken.push([x, x + width]);
-          return x;
+    // Rumore 1D morbido, per creste di montagne e colline
+    const noise = () => {
+      const pts = Array.from({ length: 64 }, r);
+      return (x) => {
+        const i = Math.floor(x), f = x - i, t = f * f * (3 - 2 * f);
+        return pts[i & 63] * (1 - t) + pts[(i + 1) & 63] * t;
+      };
+    };
+    const fbm = (scale) => {
+      const n = [noise(), noise(), noise()];
+      return (x) => n[0](x / scale) * 0.6 + n[1](x / (scale / 2.4)) * 0.3 + n[2](x / (scale / 6)) * 0.1;
+    };
+    const ellipse = (cx, cy, rx, ry, color) => {
+      for (let y = Math.floor(cy - ry); y <= cy + ry; y++) {
+        for (let x = Math.floor(cx - rx); x <= cx + rx; x++) {
+          if (((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1) px(x, y, color(x, y));
         }
       }
-      return -100; // nessun posto: meglio non disegnarlo che coprirlo
     };
 
-    // 1. Cielo, a tre fasce
-    for (let y = 0; y < HORIZON; y++) {
-      const band = P.sky[Math.min(2, Math.floor((y / HORIZON) * 3))];
-      for (let x = 0; x < W; x++) fill(x, y, band);
+    // Da dove viene la luce: decide il versante illuminato di montagne, alberi, edifici
+    const sunX = zone.time === "alba" ? 10 + r() * 100 : zone.time === "pomeriggio" ? 78 + r() * 30 : 14 + r() * 92;
+    const sunY = zone.time === "alba" ? HY - 3 : zone.time === "pomeriggio" ? 11 : 10;
+    const lightLeft = sunX < PW / 2;
+    // Rettangolo con un lato in ombra
+    const block = (x0, y0, w, h, lit, shadow) => {
+      for (let y = y0; y < y0 + h; y++) {
+        for (let x = x0; x < x0 + w; x++) {
+          const shaded = lightLeft ? x >= x0 + w * 0.62 : x < x0 + w * 0.38;
+          px(x, y, shaded ? shadow : lit);
+        }
+      }
+    };
+    const crenels = (x0, y, w, lit, shadow) => {
+      for (let x = x0; x < x0 + w; x += 2) block(x, y - 2, 1, 2, lit, shadow);
+    };
+
+    // Le posizioni orizzontali già occupate: niente si nasconde dietro qualcos'altro
+    let rx = 36 + r() * 48;
+    const taken = [[rx - 14, rx + 14]];
+    const freeX = (width) => {
+      const xs = Array.from({ length: PW - width - 4 }, (_, i) => i + 2).sort(() => r() - 0.5);
+      const x = xs.find((x) => taken.every(([a, b]) => x + width < a || x > b));
+      if (x === undefined) return null; // nessun posto: meglio non disegnarlo che coprirlo
+      taken.push([x - 2, x + width + 2]);
+      return x;
+    };
+
+    // 1. Cielo sfumato, con l'alone attorno al sole o alla luna
+    for (let y = 0; y < HY + 10; y++) {
+      for (let x = 0; x < PW; x++) px(x, y, ramp(P.sky, y / (HY + 4), x, y));
     }
-    if (zone.time === "notte") {
-      for (let i = 0; i < 26; i++) put(Math.floor(r() * W), Math.floor(r() * (HORIZON - 1)), r() < 0.2 ? "*" : "·", P.star);
-      const mx = 8 + Math.floor(r() * 40);
-      [" ## ", "####", " ## "].forEach((l, dy) => [...l].forEach((c, dx) => c === "#" && fill(mx + dx, 1 + dy, P.sun)));
-    } else if (zone.time === "alba") {
-      const sx = 6 + Math.floor(r() * 44);
-      ["  ####  ", " ###### ", "########"].forEach((l, dy) => [...l].forEach((c, dx) => c === "#" && fill(sx + dx, HORIZON - 3 + dy, P.sun)));
-    } else {
-      const sx = 40 + Math.floor(r() * 14);
-      [" ## ", "####", " ## "].forEach((l, dy) => [...l].forEach((c, dx) => c === "#" && fill(sx + dx, 1 + dy, P.sun)));
+    const haloR = zone.time === "alba" ? 30 : 16;
+    for (let y = 0; y < HY + 10; y++) {
+      for (let x = 0; x < PW; x++) {
+        const d = Math.hypot(x - sunX, (y - sunY) * 1.3);
+        if (d < haloR) px(x, y, mix(get(x, y), P.glow, (1 - d / haloR) * 0.85, x, y));
+      }
     }
 
-    // 2. Nuvole
+    // 2. Stelle, luna, sole
+    if (night) {
+      for (let i = 0; i < 70; i++) {
+        const x = Math.floor(r() * PW), y = Math.floor(r() * (HY - 6));
+        const bright = r() < 0.3;
+        px(x, y, bright ? P.star : P.starDim);
+        if (bright && r() < 0.6) hint(x, y, r() < 0.3 ? "*" : "·", P.star);
+      }
+    }
+    const discR = zone.time === "alba" ? 7 : 5;
+    ellipse(sunX, sunY, discR, discR, () => P.sun);
+    if (night) [[-2, -1], [1, 1], [2, -2], [-1, 2]].forEach(([dx, dy]) => px(sunX + dx, sunY + dy, P.moonShade));
+
+    // 3. Nuvole: luce in alto, ombra in basso
     const clouds = 1 + Math.floor(r() * 3);
-    for (let i = 0; i < clouds; i++) sprite("cloud", Math.floor(r() * (W - 10)), Math.floor(r() * 4), P.cloud);
+    for (let i = 0; i < clouds; i++) {
+      const cx = 8 + r() * (PW - 16), cy = 6 + r() * 14;
+      const puffs = Array.from({ length: 3 + Math.floor(r() * 3) }, (_, k) => ({
+        x: cx + (k - 2) * (4 + r() * 4), y: cy - r() * 3, rx: 5 + r() * 6, ry: 2.5 + r() * 2,
+      }));
+      for (const p of puffs) {
+        ellipse(p.x, p.y, p.rx, p.ry, (x, y) => mix(P.cloud, P.cloudShadow, (y - (p.y - p.ry)) / (p.ry * 2) - 0.2, x, y));
+      }
+    }
 
-    // 3. Montagne lontane, con la neve sulle cime più alte
+    // 4. Montagne: due catene, la lontana slavata dalla foschia, la vicina più scura
     if (zone.tags.has("montagne")) {
-      const peaks = ridge(HORIZON - 3, 3, 3, 2);
-      for (let x = 0; x < W; x++) {
-        for (let y = Math.max(2, peaks[x]); y <= HORIZON + 3; y++) fill(x, y, y === peaks[x] && peaks[x] <= 4 ? P.snow : P.far);
+      const far = fbm(26);
+      const top = Array.from({ length: PW }, (_, x) => Math.round(HY + 2 - 28 * far(x)));
+      for (let x = 0; x < PW; x++) {
+        const l = top[Math.max(0, x - 1)], rr = top[Math.min(PW - 1, x + 1)];
+        const lit = lightLeft ? l >= rr : l <= rr;
+        for (let y = Math.max(4, top[x]); y < HY + 8; y++) {
+          let c = lit ? P.far : P.farShadow;
+          if (y < 22 && y - top[x] < 4) c = mix(lit ? P.snow : P.snowShadow, c, (y - top[x]) / 4, x, y);
+          px(x, y, mix(c, P.haze, ((y - top[x]) / (HY + 8 - top[x])) * 0.7, x, y));
+        }
+      }
+      const near = fbm(18);
+      for (let x = 0; x < PW; x++) {
+        const t = Math.round(HY + 6 - 13 * near(x));
+        const lit = lightLeft ? near(x - 1) <= near(x + 1) : near(x - 1) >= near(x + 1);
+        for (let y = t; y < HY + 10; y++) px(x, y, lit ? P.near : P.nearShadow);
       }
     }
 
-    // 4. Il castello su un'altura lontana
-    if (zone.tags.has("castello")) sprite("castle", freeX(13), HORIZON - 4, P.stone, P.sky[0]);
+    // 5. Colline, illuminate in cima
+    const hillNoise = fbm(30);
+    const hillTop = Array.from({ length: PW }, (_, x) =>
+      zone.tags.has("colline") ? Math.round(HY + 4 - 9 * hillNoise(x)) : HY + 3);
+    for (let x = 0; x < PW; x++) {
+      for (let y = hillTop[x]; y < PH; y++) {
+        px(x, y, y < HY + 14
+          ? ramp([P.hillLight, P.hill, P.hillShadow], (y - hillTop[x]) / 10, x, y)
+          : ramp([P.ground, P.groundDark], (y - HY - 14) / 40, x, y));
+      }
+    }
+    const groundAt = (x0, w) => Math.max(...hillTop.slice(Math.max(0, x0), Math.min(PW, x0 + w))) + 2;
 
-    // 5. Colline
-    const hills = zone.tags.has("colline") ? ridge(HORIZON + 1, 2, 2, 6) : Array(W).fill(HORIZON);
-    for (let x = 0; x < W; x++) {
-      for (let y = hills[x]; y < H; y++) fill(x, y, y < HORIZON + 4 ? P.hill : P.ground);
+    // 6. Castello, villaggio, rovine: appoggiati sulle colline
+    if (zone.tags.has("castello")) {
+      const x0 = freeX(30);
+      if (x0 !== null) {
+        const base = groundAt(x0, 30);
+        block(x0, base - 10, 30, 10, P.stone, P.stoneShadow);
+        crenels(x0, base - 10, 30, P.stone, P.stoneShadow);
+        for (const [tx, th] of [[x0 - 2, 17], [x0 + 25, 17], [x0 + 11, 23]]) {
+          const tw = th > 20 ? 8 : 7;
+          block(tx, base - th, tw, th, P.stone, P.stoneShadow);
+          crenels(tx, base - th, tw, P.stone, P.stoneShadow);
+          px(tx + 3, base - th + 4, night ? P.windowLit : P.window);
+          px(tx + 3, base - th + 5, night ? P.windowLit : P.window);
+        }
+        block(x0 + 13, base - 5, 4, 5, P.window, P.window); // il portone
+        for (let y = 0; y < 5; y++) px(x0 + 15, base - 25 - y, P.stoneShadow); // l'asta
+        block(x0 + 16, base - 30, 4, 2, P.roof, P.roofShadow); // la bandiera
+      }
+    }
+    if (zone.tags.has("villaggio")) {
+      const x0 = freeX(34);
+      if (x0 !== null) {
+        let x = x0;
+        while (x < x0 + 30) {
+          const w = 6 + Math.floor(r() * 3), h = 4 + Math.floor(r() * 2), base = groundAt(x, w);
+          block(x, base - h, w, h, P.stone, P.stoneShadow);
+          for (let k = 0; k <= w / 2 + 1; k++) { // tetto a capanna
+            for (let xx = x - 1 + k; xx <= x + w - k; xx++) {
+              px(xx, base - h - 1 - k, (lightLeft ? xx > x + w / 2 : xx < x + w / 2) ? P.roofShadow : P.roof);
+            }
+          }
+          px(x + 2, base - h + 2, night ? P.windowLit : P.window);
+          if (w > 6) px(x + w - 3, base - h + 2, night ? P.windowLit : P.window);
+          x += w + 2 + Math.floor(r() * 3);
+        }
+      }
+    }
+    if (zone.tags.has("rovine")) {
+      const x0 = freeX(26);
+      if (x0 !== null) {
+        const base = groundAt(x0, 26) + 6;
+        for (let k = 0; k < 6; k++) {
+          const w = 2 + Math.floor(r() * 3), h = 5 + Math.floor(r() * 9), xx = x0 + k * 4 + Math.floor(r() * 2);
+          block(xx, base - h, w, h, P.stone, P.stoneShadow);
+          if (r() < 0.6) px(xx + Math.floor(r() * w), base - h, P.grassDark); // muschio
+        }
+        // Un arco rimasto in piedi
+        const ax = x0 + 8, ah = 14;
+        block(ax, base - ah, 2, ah, P.stone, P.stoneShadow);
+        block(ax + 8, base - ah, 2, ah, P.stone, P.stoneShadow);
+        for (let j = 0; j <= 8; j++) px(ax + 1 + j, base - ah - Math.round(Math.sin((j / 8) * Math.PI) * 3), P.stone);
+      }
     }
 
-    // 6. Villaggio e rovine sulle colline
-    if (zone.tags.has("villaggio")) sprite("village", freeX(12), HORIZON, P.roof, P.stone);
-    if (zone.tags.has("rovine")) sprite("ruins", freeX(10), HORIZON + 3, P.stone, P.stone);
-
-    // 7. La foresta lontana
-    for (let x = 0; x < W; x++) {
-      if (r() < 0.7) put(x, HORIZON + 4, "♣", P.treeFar);
-      if (r() < 0.4) put(x, HORIZON + 5, "♣", P.treeFar);
+    // 7. La foresta lontana: tanti piccoli abeti
+    const forestY = HY + 16;
+    for (let x = -2; x < PW + 2; x += 2 + Math.floor(r() * 2)) {
+      const h = 5 + Math.floor(r() * 5), base = forestY + Math.floor(r() * 3);
+      for (let k = 0; k < h; k++) {
+        const half = Math.floor(k / 2);
+        for (let j = -half; j <= half; j++) px(x + j, base - h + k, (lightLeft ? j > 0 : j < 0) ? P.treeFarShadow : P.treeFar);
+      }
     }
+    for (let x = 0; x < PW; x += 4) if (r() < 0.6) hint(x, forestY - 3, "♣", P.treeFar);
 
-    // 8. L'acqua: il ruscello che scende verso di noi, forse da una cascata
-    let top = HORIZON + 4;
+    // 8. L'acqua: un ruscello che scende verso di noi, forse da una cascata
+    let waterTop = forestY - 2;
     if (zone.tags.has("cascata")) {
-      for (let y = HORIZON; y <= HORIZON + 5; y++) {
-        for (let x = rx - 5; x <= rx + 6; x++) fill(x, y, P.rock);
+      const cliffTop = HY + 2;
+      for (let y = cliffTop; y < forestY + 4; y++) {
+        for (let x = rx - 12; x <= rx + 12; x++) {
+          if (Math.abs(x - rx) > 9 + Math.sin(y * 0.9) * 2) continue;
+          px(x, y, r() < 0.15 ? P.rockLight : (lightLeft ? x > rx : x < rx) ? P.rockDark : P.rock);
+        }
       }
-      for (let y = HORIZON; y <= HORIZON + 5; y++) {
-        for (let x = rx - 1; x <= rx + 2; x++) put(x, y, (x + y) % 3 ? "|" : "!", P.foam, P.water);
+      for (let y = cliffTop; y < forestY + 4; y++) {
+        for (let x = rx - 3; x <= rx + 3; x++) px(x, y, (x + Math.floor(y / 2)) % 3 === 0 ? P.foam : P.water);
+        hint(rx, y, "|", P.foam);
       }
-      for (let x = rx - 3; x <= rx + 4; x++) put(x, HORIZON + 6, x % 2 ? "*" : "~", P.foam, P.water);
-      top = HORIZON + 7;
+      ellipse(rx, forestY + 5, 8, 2.5, (x, y) => mix(P.foam, P.water, r(), x, y)); // la schiuma alla base
+      hint(rx - 4, forestY + 5, "~", P.foam);
+      hint(rx + 4, forestY + 5, "*", P.foam);
+      waterTop = forestY + 6;
     }
-    for (let y = top; y < H; y++) {
-      const half = 1 + Math.floor((y - top) * 0.7);
-      rx += r() < 0.3 ? -1 : r() < 0.4 ? 1 : 0;
-      for (let x = rx - half; x <= rx + half + 1; x++) put(x, y, r() < 0.25 ? "~" : " ", P.foam, P.water);
+    const isWater = (c) => c === P.water || c === P.waterDark || c === P.waterLight;
+    for (let y = waterTop; y < PH; y++) {
+      const half = 1.5 + (y - waterTop) * 0.45;
+      rx += Math.sin(y * 0.25) * 0.6;
+      for (let x = Math.round(rx - half); x <= rx + half; x++) {
+        const edge = x <= rx - half + 1 || x >= rx + half - 1;
+        // Increspature: brevi lineette orizzontali di luce
+        let c = edge ? P.waterDark : (y * 7 + Math.floor((x + y * 2) / 3) * 5) % 13 === 0 ? P.waterLight : P.water;
+        if (Math.abs(x - sunX) < 3 && r() < 0.6) c = P.waterLight; // il riflesso del sole o della luna
+        px(x, y, c);
+      }
+      if (y % 8 === 0) hint(rx + (r() - 0.5) * half, y, "~", P.waterLight);
     }
 
-    // 9. I pini in primo piano fanno da cornice
-    sprite("pine", -2 + Math.floor(r() * 3), H - 9, P.tree);
-    sprite("pine", W - 6 - Math.floor(r() * 3), H - 8, P.tree);
-    for (let y = H - 2; y < H; y++) {
-      put(1 + Math.floor(r() * 3), y, "|", P.trunk);
-    }
+    // 9. Pini in primo piano, a fare da cornice
+    const pine = (x, base, h) => {
+      for (let tier = 0; tier < 3; tier++) {
+        const top = base - h + tier * (h / 4), height = h / 2.2;
+        for (let k = 0; k < height; k++) {
+          const half = Math.floor(1 + k * 0.6);
+          for (let j = -half; j <= half; j++) {
+            px(x + j, top + k, (lightLeft ? j > half / 3 : j < -half / 3) ? P.treeShadow : P.tree);
+          }
+        }
+      }
+      for (let y = base - 3; y <= base; y++) { px(x, y, P.trunk); px(x + 1, y, P.trunk); }
+    };
+    pine(4 + r() * 5, PH - 4, 34 + r() * 8);
+    pine(PW - 6 - r() * 5, PH - 3, 30 + r() * 8);
+    if (r() < 0.6) pine(14 + r() * 10, PH - 2, 16 + r() * 6);
 
-    // 10. Primo piano: erba e rocce
-    for (let x = 0; x < W; x++) {
-      const y = H - 1 - (r() < 0.4 ? 1 : 0);
-      if (grid[y][x].bg !== P.water && r() < 0.55) put(x, y, r() < 0.5 ? '"' : ",", P.grass);
+    // 10. Primo piano: erba, fiori, rocce
+    for (let x = 0; x < PW; x++) {
+      if (isWater(get(x, PH - 1))) continue;
+      const blades = 1 + Math.floor(r() * 4);
+      for (let y = PH - blades; y < PH; y++) px(x, y, r() < 0.5 ? P.grass : P.grassDark);
+      if (!night && r() < 0.04) px(x, PH - blades - 1, r() < 0.5 ? P.flower : P.flower2);
     }
     for (let i = 0; i < 3; i++) {
-      const x = Math.floor(r() * (W - 3)), y = H - 2 + Math.floor(r() * 2);
-      if (grid[y][x].bg !== P.water) { fill(x, y, P.rock); fill(x + 1, y, P.rock); }
+      const x = 20 + r() * (PW - 40), y = PH - 3;
+      if (Math.abs(x - rx) < 12) continue;
+      ellipse(x, y, 3 + r() * 2, 2, (xx, yy) => (yy < y - 0.5 ? P.rockLight : P.rock));
     }
+    for (let x = 0; x < PW; x += 2) if (r() < 0.35 && !isWater(get(x, PH - 2))) hint(x, PH - 2, r() < 0.5 ? '"' : ",", P.grass);
 
-    // 11. L'uccello della zona, in volo, solo se c'è ancora
+    // 11. L'uccello della zona in volo, solo se c'è ancora
     if (zone.bird) {
-      const bx = 10 + Math.floor(r() * (W - 20)), by = 2 + Math.floor(r() * 4);
-      put(bx, by, "v", P.bird);
-      if (r() < 0.6) put(bx + 3, by + 1, "v", P.bird);
+      const flock = r() < 0.6 ? 2 : 1;
+      for (let i = 0; i < flock; i++) {
+        const bx = 20 + r() * (PW - 40), by = 8 + r() * 16;
+        [[0, 0], [1, 1], [2, 1], [3, 0], [-1, -1], [4, -1]].forEach(([dx, dy]) => px(bx + dx, by + dy, P.bird));
+        hint(bx + 1.5, by, "v", P.bird);
+      }
     }
 
-    return grid;
+    return { buf, hints };
   }
 
-  function toHtml(grid) {
-    const esc = (c) => (c === "<" ? "&lt;" : c === "&" ? "&amp;" : c === ">" ? "&gt;" : c);
-    return grid.map((row) => {
-      let html = "", run = "", style = null;
-      for (const c of row) {
-        const st = `color:${c.fg || "inherit"};background:${c.bg}`;
-        if (st !== style) {
-          if (run) html += `<span style="${style}">${run}</span>`;
-          run = "";
-          style = st;
+  // --- Disegno ---
+
+  const rgbCache = new Map();
+  function rgb(hex) {
+    if (!rgbCache.has(hex)) rgbCache.set(hex, [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)));
+    return rgbCache.get(hex);
+  }
+
+  function canvasFor(container) {
+    let canvas = container.querySelector("canvas");
+    if (!canvas) {
+      container.innerHTML = "";
+      canvas = document.createElement("canvas");
+      container.appendChild(canvas);
+    }
+    const width = container.clientWidth || 440;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${(width * PH) / PW}px`;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(((width * PH) / PW) * dpr);
+    return canvas;
+  }
+
+  function drawPixels(scene, canvas) {
+    const small = document.createElement("canvas");
+    small.width = PW;
+    small.height = PH;
+    const sctx = small.getContext("2d");
+    const img = sctx.createImageData(PW, PH);
+    scene.buf.forEach((hex, i) => img.data.set([...rgb(hex), 255], i * 4));
+    sctx.putImageData(img, 0, 0);
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(small, 0, 0, canvas.width, canvas.height);
+  }
+
+  // Ogni carattere riassume 2 × 4 pixel: colore di fondo, retino col secondo colore, o un simbolo
+  function drawAscii(scene, canvas) {
+    const ctx = canvas.getContext("2d");
+    const cw = canvas.width / COLS, ch = canvas.height / ROWS;
+    ctx.font = `${Math.round(ch * 1.05)}px VT323, ui-monospace, monospace`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (let cy = 0; cy < ROWS; cy++) {
+      for (let cx = 0; cx < COLS; cx++) {
+        const counts = new Map();
+        for (let y = cy * 4; y < cy * 4 + 4; y++) {
+          for (let x = cx * 2; x < cx * 2 + 2; x++) {
+            const c = scene.buf[y * PW + x];
+            counts.set(c, (counts.get(c) || 0) + 1);
+          }
         }
-        run += esc(c.ch);
+        const [[bg], second] = [...counts].sort((a, b) => b[1] - a[1]);
+        ctx.fillStyle = bg;
+        ctx.fillRect(Math.floor(cx * cw), Math.floor(cy * ch), Math.ceil(cw), Math.ceil(ch));
+
+        const h = scene.hints[cy * COLS + cx];
+        let glyph = null, fg = null;
+        if (h) { glyph = h.ch; fg = h.fg; }
+        else if (second && second[1] >= 3) { glyph = second[1] >= 4 ? "▒" : "░"; fg = second[0]; }
+        if (glyph) {
+          ctx.fillStyle = fg;
+          ctx.fillText(glyph, cx * cw + cw / 2, cy * ch + ch / 2 + ch * 0.05);
+        }
       }
-      return html + `<span style="${style}">${run}</span>`;
-    }).join("\n");
+    }
   }
 
-  function render(zone, el) {
-    el.innerHTML = toHtml(compose(zone));
-    fit(el);
+  function draw() {
+    if (!last) return;
+    const canvas = canvasFor(last.container);
+    if (mode === "pixel") drawPixels(last.scene, canvas);
+    else drawAscii(last.scene, canvas);
+    const toggle = document.getElementById("postcard-mode");
+    if (toggle) toggle.textContent = mode === "pixel" ? "pixel ▸ ascii" : "ascii ▸ pixel";
   }
 
-  // Adatta la dimensione del carattere perché la cartolina riempia il riquadro
-  function fit(el) {
-    const probe = document.createElement("span");
-    probe.textContent = "M".repeat(20);
-    probe.style.visibility = "hidden";
-    probe.style.position = "absolute";
-    el.appendChild(probe);
-    const ratio = probe.getBoundingClientRect().width / 20 / parseFloat(getComputedStyle(el).fontSize);
-    probe.remove();
-    const width = el.parentElement.clientWidth - 20;
-    el.style.fontSize = `${Math.max(8, width / (W * ratio))}px`;
+  function render(zone, container) {
+    last = { scene: compose(zone), container };
+    draw();
+    // Il font VT323 può arrivare dopo il primo disegno
+    if (document.fonts) document.fonts.load("16px VT323").then(draw);
   }
 
-  return { render, W, H };
+  function setMode(next) {
+    mode = next;
+    try { localStorage.setItem(STORAGE_KEY, mode); } catch (_) {}
+    draw();
+  }
+
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("#postcard-mode")) setMode(mode === "pixel" ? "ascii" : "pixel");
+  });
+
+  return { render, setMode };
 })();

@@ -130,6 +130,8 @@ body.in-game .frame { width: min(1200px, 100%); padding: 12px; }
   user-select: none;
 }
 .cell { display: grid; place-items: center; position: relative; cursor: default; }
+.cell .ic { width: 86%; height: 86%; fill: currentColor; display: block; }
+.cell.t-grass, .cell.t-floor { font-size: 0.7em; }
 
 .t-grass { color: var(--f-dark); }
 .t-tall  { color: var(--f-mid); }
@@ -141,7 +143,10 @@ body.in-game .frame { width: min(1200px, 100%); padding: 12px; }
 .t-sea   { color: #3f6680; background: var(--f-sea); }
 .t-ship  { color: var(--f-light); background: var(--f-sea); }
 .t-fall  { color: #ffffff; background: var(--f-water); }
-.t-ruin  { color: #a89f8c; background: #26261e; }
+.t-wall   { color: #a89f8c; background: #2e2c24; }
+.t-floor  { color: #5e5a4c; background: #1e1d18; }
+.t-rubble { color: #8a8270; }
+.t-roof   { color: #6e6656; background: #3a362c; }
 
 /* Il momento del giorno cambia la palette della zona */
 .game[data-time="alba"] {
@@ -239,7 +244,19 @@ body.in-game .frame { width: min(1200px, 100%); padding: 12px; }
 .log li::before { content: "› "; color: var(--dark); }
 .keys { margin: 8px 0 0; color: var(--dark); font-size: 18px; }
 
-.postcard { margin: 0; line-height: 1; font-size: 12px; white-space: pre; overflow: hidden; }
+.postcard { line-height: 0; }
+.postcard canvas { display: block; image-rendering: pixelated; }
+.panel-title:has(.mode-toggle) { display: flex; justify-content: space-between; align-items: center; }
+.mode-toggle {
+  font: inherit;
+  font-size: 16px;
+  color: var(--ink);
+  background: none;
+  border: 1px solid var(--ink);
+  padding: 0 6px;
+  cursor: pointer;
+}
+.mode-toggle:hover { background: var(--paper); }
 
 @media (max-width: 860px) {
   .game-top, .game-bottom { grid-template-columns: 1fr; }

@@ -132,6 +132,10 @@ const Suoni = (() => {
       noise({ dur: 0.25, filter: "lowpass", freq: 1400, to: 300, vol: 0.35 });
       tone({ freq: 280, to: 700, dur: 0.08, vol: 0.08, at: 0.05 });
     },
+    macerie: () => {
+      for (let i = 0; i < 3; i++) noise({ dur: 0.05, filter: "highpass", freq: 2500 + i * 700, vol: 0.25, at: i * 0.045 });
+      tone({ freq: 320, to: 200, dur: 0.06, type: "square", vol: 0.03, at: 0.02 });
+    },
     cespuglio: () => {
       for (let i = 0; i < 5; i++) noise({ dur: 0.07, freq: 4200, q: 2, vol: 0.18, at: i * 0.05 });
     },

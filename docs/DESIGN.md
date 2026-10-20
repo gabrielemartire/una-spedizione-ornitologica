@@ -148,6 +148,8 @@ Il panorama della zona come lo vedrebbe una persona appena sbarcata: **vista fro
 
 Ogni layer ha 3–5 varianti, ognuna è un piccolo disegno ASCII con trasparenza (lo spazio non copre ciò che sta dietro).
 
+**Due modi di vederla (switch nel riquadro):** la scena viene disegnata una volta sola in **pixel art 120 × 80**, con retino ordinato per le sfumature, luce e ombra decise dalla posizione del sole o della luna, foschia sulle montagne lontane e riflessi sull'acqua. In modalità **ASCII** ogni carattere riassume 2 × 4 pixel e diventa un retino (`░ ▒`) o un simbolo (stelle, uccelli, erba, cascata). Le due versioni mostrano sempre la stessa scena.
+
 **Dimensioni:** **60 × 20 caratteri**, quanto una schermata di Game Boy: abbastanza per leggere le forme, abbastanza piccolo da restare "vintage".
 
 **Colore:** **3–4 colori per bioma**, applicati per profondità: il fondo più chiaro e desaturato, il primo piano più scuro. La nebbia schiarisce tutto.
@@ -158,7 +160,7 @@ Una griglia fitta (**40 × 24 caselle**) generata dallo stesso seed della cartol
 
 **Grafica:** icone monocromatiche da [game-icons.net](https://game-icons.net), colorate con la palette della zona. Una casella, un'icona leggibile.
 
-**Contenuto:** terreno (erba, erba alta, cespugli, alberi, rocce, acqua bassa, acqua profonda), la **casella nave** (punto di arrivo e di partenza), uccelli, mostri, risorse, a volte un tesoro.
+**Contenuto:** terreno (erba, erba alta, cespugli, alberi, rocce, acqua bassa, acqua profonda), **rovine**, la **casella nave** (punto di arrivo e di partenza), uccelli, mostri, risorse, a volte un tesoro.
 
 **Round "a scacchi".** Il giocatore ha **3 passi** per round: ogni passo è un'azione (muoversi di una casella, osservare, usare uno strumento, raccogliere). Può chiudere il round prima. Poi **si muovono tutti gli animali**, ognuno con il suo movimento tipico, come i pezzi degli scacchi.
 
@@ -169,6 +171,8 @@ Una griglia fitta (**40 × 24 caselle**) generata dallo stesso seed della cartol
 **Animali non stupidi.** Le creature non si fanno male da sole (niente cariche contro gli alberi): aggirano gli ostacoli, ti seguono, cercano dove ti hanno visto l'ultima volta. Si battono con le trappole, le esche e il terreno, non con i loro errori.
 
 **Tempo a terra.** Ogni sbarco costa **1 giorno**; restare oltre i **15 round** ne costa un altro.
+
+**Rovine.** Un edificio diroccato di circa 8 × 6 caselle: muri spessi, un varco e un crollo pieno di macerie (rumorose), a volte un pilastro. **Da fuori si vede solo il tetto: l'interno si scopre entrando.** I muri bloccano la vista, l'orso può entrare dai varchi. A volte l'uccello nidifica dentro.
 
 ### 9.1 Rumore e visione
 Un unico sistema regola uccelli e mostri.
