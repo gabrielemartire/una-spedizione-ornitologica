@@ -28,9 +28,13 @@ const Gioco = (() => {
     water: { ch: "≈", cls: "t-water", walk: true,  sight: true, noise: 4, sound: "passoAcqua" },
     deep:  { ch: "≈", cls: "t-deep",  walk: false, sight: true },
     ship:  { ch: "⚓", cls: "t-ship",  walk: true,  sight: true, noise: 0 },
+    fall:  { ch: "‖", cls: "t-fall",  walk: false, sight: true },
+    ruin:  { ch: "#", cls: "t-ruin",  walk: false, sight: false },
   };
 
   const BIRD = { id: 17, nome: "Becco Blu" };
+  const TIMES = ["alba", "pomeriggio", "notte"];
+  const NIGHT_SIGHT = 6; // di notte l'orso vede meno lontano
 
   let s = null;
   let el = null;
@@ -114,14 +118,33 @@ const Gioco = (() => {
 
   // --- Generazione della zona ---
 
-  function generate(seed) {
+  // I tag della zona decidono sia la cartolina sia la battlemap
+  function zoneTags(seed) {
+    const r = rng(seed ^ 0x9e3779b9);
+    const tags = new Set(["foresta", "fiume"]);
+    if (r() < 0.45) tags.add("cascata");
+    if (r() < 0.35) tags.add("rovine");
+    if (r() < 0.7) tags.add("colline");
+    if (r() < 0.55) tags.add("montagne");
+    if (r() < 0.25) tags.add("castello");
+    if (r() < 0.3) tags.add("villaggio");
+    return { tags, time: TIMES[Math.floor(r() * TIMES.length)] };
+  }
+
+  function zoneName(tags) {
+    if (tags.has("cascata")) return "Radura della cascata";
+    if (tags.has("rovine")) return "Rovine nel bosco";
+    return "Radura sul ruscello";
+  }
+
+  function generate(seed, tags) {
     for (let attempt = 0; ; attempt++) {
-      const zone = tryGenerate(rng(seed + attempt * 7919));
+      const zone = tryGenerate(rng(seed + attempt * 7919), tags);
       if (zone) return zone;
     }
   }
 
-  function tryGenerate(r) {
+  function tryGenerate(r, tags) {
     const map = Array.from({ length: H }, () => Array(W).fill("grass"));
     const pick = (arr) => arr[Math.floor(r() * arr.length)];
     const shipY = 4 + Math.floor(r() * (H - 8));
@@ -137,8 +160,10 @@ const Gioco = (() => {
 
     // Un ruscello che scende da nord a sud, con qualche pozza profonda
     let sx = 16 + Math.floor(r() * 12);
+    const streamX = [];
     for (let y = 0; y < H; y++) {
       sx = Math.max(10, Math.min(W - 4, sx + (r() < 0.3 ? -1 : r() < 0.45 ? 1 : 0)));
+      streamX.push(sx);
       map[y][sx] = "water";
       if (r() < 0.5) map[y][sx + 1] = "water";
       else if (r() < 0.12) map[y][sx] = "deep";
@@ -156,6 +181,17 @@ const Gioco = (() => {
         }
       }
     };
+    // La cascata scende da una parete di roccia a nord
+    if (tags.has("cascata")) {
+      const fallX = streamX[2];
+      for (let y = 0; y <= 1; y++) {
+        for (let x = fallX - 3; x <= fallX + 4; x++) if (inside(x, y)) map[y][x] = "rock";
+        map[y][fallX] = "fall";
+        map[y][fallX + 1] = "fall";
+      }
+      map[2][fallX] = "deep";
+    }
+    if (tags.has("rovine")) blob("ruin", 4, 1, 0.55);
     blob("tree", 16, 2, 0.6);
     blob("tall", 12, 2, 0.7);
     blob("bush", 40, 0, 1);
@@ -189,9 +225,12 @@ const Gioco = (() => {
 
   function start() {
     const seed = Math.floor(Math.random() * 1e9);
-    const zone = generate(seed);
+    const { tags, time } = zoneTags(seed);
+    const zone = generate(seed, tags);
     s = {
       seed,
+      tags,
+      time,
       map: zone.map,
       free: zone.free,
       startPos: zone.start,
@@ -207,9 +246,17 @@ const Gioco = (() => {
       over: false,
     };
     buildDom();
-    log("Sbarchi in una radura. Da qualche parte, vicino all'acqua, canta un uccello.");
+    document.getElementById("screen-game").dataset.time = time;
+    document.getElementById("zone-title").textContent = `${zoneName(tags)} · ${time}`;
+    document.getElementById("postcard-title").textContent = `Cartolina · ${time}`;
+    drawPostcard();
+    log(`Sbarchi ${time === "notte" ? "di notte" : time === "alba" ? "all'alba" : "nel pomeriggio"}. Da qualche parte, vicino all'acqua, canta un uccello.`);
     Suoni.toggleAmbient("vento");
     render();
+  }
+
+  function drawPostcard() {
+    Cartolina.render({ seed: s.seed, tags: s.tags, time: s.time, bird: !s.bird.gone }, document.getElementById("postcard"));
   }
 
   function log(msg) {
@@ -337,6 +384,7 @@ const Gioco = (() => {
     const spots = s.free.filter((c) => dist(c, s.player) >= 8 && dist(c, s.bear) >= 4 && bandCells(s.map, c).length >= 3);
     if (!spots.length || Math.random() < BIRD_LEAVE) {
       b.gone = true;
+      drawPostcard();
       log(`${reason}: il ${BIRD.nome} vola via dalla zona. :(`);
       return;
     }
@@ -379,7 +427,8 @@ const Gioco = (() => {
   function bearSees() {
     const o = s.bear, p = s.player, d = dist(o, p);
     if (hidden()) return d < 1.5;
-    return d <= BEAR_SMELL || (d <= BEAR_SIGHT && los(s.map, o, p));
+    const sight = s.time === "notte" ? NIGHT_SIGHT : BEAR_SIGHT;
+    return d <= BEAR_SMELL || (d <= sight && los(s.map, o, p));
   }
 
   function bearHears() {
@@ -610,7 +659,10 @@ const Gioco = (() => {
     }
   });
 
-  window.addEventListener("resize", fitMap);
+  window.addEventListener("resize", () => {
+    fitMap();
+    if (s) drawPostcard();
+  });
 
   return { start };
 })();

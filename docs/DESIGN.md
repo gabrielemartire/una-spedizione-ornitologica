@@ -148,7 +148,7 @@ Il panorama della zona come lo vedrebbe una persona appena sbarcata: **vista fro
 
 Ogni layer ha 3–5 varianti, ognuna è un piccolo disegno ASCII con trasparenza (lo spazio non copre ciò che sta dietro).
 
-**Dimensioni:** circa **64 × 22 caratteri**, quanto una schermata di Game Boy: abbastanza per leggere le forme, abbastanza piccolo da restare "vintage".
+**Dimensioni:** **60 × 20 caratteri**, quanto una schermata di Game Boy: abbastanza per leggere le forme, abbastanza piccolo da restare "vintage".
 
 **Colore:** **3–4 colori per bioma**, applicati per profondità: il fondo più chiaro e desaturato, il primo piano più scuro. La nebbia schiarisce tutto.
 

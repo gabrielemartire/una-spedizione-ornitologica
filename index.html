@@ -35,7 +35,7 @@
     <section id="screen-game" class="screen game">
       <div class="game-top">
         <div class="panel panel-a">
-          <div class="panel-title">Radura sul ruscello</div>
+          <div class="panel-title" id="zone-title">Radura</div>
           <div class="map-wrap">
             <div id="map" class="map" aria-label="Mappa della zona"></div>
             <div id="phase-banner" class="phase-banner" hidden></div>
@@ -61,15 +61,8 @@ in arrivo</pre>
           <p class="keys">3 passi a round, poi si muovono gli animali · frecce/WASD muovi · spazio/O osserva · Invio fine round · ⚓ salpa · Esc menu</p>
         </div>
         <div class="panel panel-d">
-          <div class="panel-title">Cartolina</div>
-          <pre class="postcard">   .      ~~        .     /\
-      /\      ~~~       /  \   /\
- /\  /  \  /\      /\  /    \ /  \
-/  \/    \/  \ /\ /  \/      \    \
- ♣ ♣♣  ♣   ♣  ~~~  ♣♣  ♣ ♣  ♣♣  ♣
-♣♣  ♣ ♣ ♣♣  ♣ ~~~~ ♣  ♣♣ ♣ ♣  ♣ ♣
-  ▲    ""  ♠   ~~~   ""  ♠   ▲ ""</pre>
-          <p class="placeholder-note">segnaposto · la cartolina a layer arriverà</p>
+          <div class="panel-title" id="postcard-title">Cartolina</div>
+          <pre id="postcard" class="postcard" aria-label="Panorama della zona"></pre>
         </div>
       </div>
     </section>
@@ -164,6 +157,7 @@ in arrivo</pre>
 
   </main>
   <script src="js/audio.js"></script>
+  <script src="js/postcard.js"></script>
   <script src="js/game.js"></script>
   <script src="js/menu.js"></script>
 </body>

@@ -107,7 +107,7 @@ body.in-game .frame { width: min(1200px, 100%); padding: 12px; }
 .screen.game.is-active { display: grid; gap: 8px; text-align: left; align-content: start; }
 
 .game-top { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 8px; }
-.game-bottom { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 8px; }
+.game-bottom { display: grid; grid-template-columns: minmax(0, 1fr) 460px; gap: 8px; }
 
 .panel { border: 1px solid var(--dark); padding: 6px 10px 10px; min-width: 0; }
 .panel-title {
@@ -140,6 +140,29 @@ body.in-game .frame { width: min(1200px, 100%); padding: 12px; }
 .t-deep  { color: var(--f-water); background: var(--f-deep); }
 .t-sea   { color: #3f6680; background: var(--f-sea); }
 .t-ship  { color: var(--f-light); background: var(--f-sea); }
+.t-fall  { color: #ffffff; background: var(--f-water); }
+.t-ruin  { color: #a89f8c; background: #26261e; }
+
+/* Il momento del giorno cambia la palette della zona */
+.game[data-time="alba"] {
+  --f-ground: #1c1612;
+  --f-dark: #4a4630;
+  --f-mid: #9a9a5c;
+  --f-light: #f2d8b8;
+  --f-water: #7b8fb8;
+  --f-deep: #3d4a70;
+  --f-sea: #2a3050;
+}
+.game[data-time="notte"] {
+  --f-ground: #080d0b;
+  --f-dark: #1a2e26;
+  --f-mid: #3e6250;
+  --f-light: #9fb8c0;
+  --f-water: #24405a;
+  --f-deep: #142438;
+  --f-sea: #0e1828;
+}
+.game[data-time="notte"] .t-tree { background: #0b1612; }
 
 .band { box-shadow: inset 0 0 0 100px rgba(242, 194, 48, 0.1); }
 .reach { box-shadow: inset 0 0 0 100px rgba(210, 85, 43, 0.12); }
@@ -216,8 +239,7 @@ body.in-game .frame { width: min(1200px, 100%); padding: 12px; }
 .log li::before { content: "› "; color: var(--dark); }
 .keys { margin: 8px 0 0; color: var(--dark); font-size: 18px; }
 
-.postcard { margin: 0; color: var(--mid); font-size: 17px; line-height: 1.05; overflow: hidden; }
-.placeholder-note { margin: 6px 0 0; color: var(--dark); font-size: 16px; }
+.postcard { margin: 0; line-height: 1; font-size: 12px; white-space: pre; overflow: hidden; }
 
 @media (max-width: 860px) {
   .game-top, .game-bottom { grid-template-columns: 1fr; }
