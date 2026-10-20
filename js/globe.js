@@ -7,12 +7,13 @@ const Globo = (() => {
   const TH = 180;
   const DEG = Math.PI / 180;
 
-  // Tipi di texel, dal mare profondo alla neve
-  const T = { DEEP: 0, OCEAN: 1, SHALLOW: 2, SAND: 3, GRASS: 4, FOREST: 5, HILL: 6, ROCK: 7, SNOW: 8 };
+  // Tipi di texel: tre profondità di mare, poi la terra (riva, piano, alture) che prende i colori del bioma
+  const T = { DEEP: 0, OCEAN: 1, SHALLOW: 2, SHORE: 3, LOW: 4, HIGH: 5, ROCK: 6, SNOW: 7 };
+  const LEVEL = { [T.SHORE]: "shore", [T.LOW]: "low", [T.HIGH]: "high" };
+  const BIOME_KEYS = Object.keys(BIOMI);
 
   const BASE = {
-    [T.DEEP]: "#1d4a73", [T.OCEAN]: "#2a6896", [T.SHALLOW]: "#4c90b5", [T.SAND]: "#d6c288",
-    [T.GRASS]: "#6f9a44", [T.FOREST]: "#3e6a2f", [T.HILL]: "#8c9a5c", [T.ROCK]: "#8a8478", [T.SNOW]: "#eef2f4",
+    [T.DEEP]: "#1d4a73", [T.OCEAN]: "#2a6896", [T.SHALLOW]: "#4c90b5", [T.ROCK]: "#8a8478", [T.SNOW]: "#eef2f4",
   };
   // Il momento del giorno tinge tutto il globo
   const TINTS = {
@@ -68,24 +69,29 @@ const Globo = (() => {
 
   // --- Generazione del mondo ---
 
-  // tagger(seed) → { tags } decide i tag di ogni zona (lo fa il gioco, così cartolina e mappa coincidono)
+  // tagger(seed, bioma) → { tags, name } decide i tag di ogni zona (lo fa il gioco, così cartolina e mappa coincidono)
   function createWorld(seed, tagger) {
     const r = rng(seed);
     const noise = noise3(seed);
 
-    // Un'isola grande e qualche isola minore, raccolte nell'emisfero di partenza
-    const islands = [{ c: vec(r() * 16 - 8, r() * 20 - 10), rad: 15 + r() * 4 }];
-    while (islands.length < 5 + Math.floor(r() * 2)) {
-      const c = vec(-30 + r() * 60, -45 + r() * 90), rad = 4 + r() * 5;
-      if (islands.every((is) => angle(is.c, c) > is.rad + rad + 4)) islands.push({ c, rad });
+    // Un'isola grande, temperata, e tante isole minori sparse su tutto il globo
+    // (il pianeta è piccolo: le isole occupano tanti gradi, e tra l'una e l'altra c'è poco mare)
+    const islands = [{ c: vec(22 + r() * 8, r() * 20 - 10), rad: 18 + r() * 4 }];
+    for (let tries = 0; islands.length < 12 + Math.floor(r() * 3) && tries < 3000; tries++) {
+      const c = vec(-64 + r() * 128, -180 + r() * 360), rad = 7 + r() * 7;
+      if (islands.every((is) => angle(is.c, c) > is.rad + rad + 5)) islands.push({ c, rad });
     }
 
     const height = new Float32Array(TW * TH);
+    const owner = new Uint8Array(TW * TH); // l'isola che "domina" ogni texel, anche in mare
     for (let i = 0; i < TW * TH; i++) {
       const { lat, lon } = texelLatLon(i);
       const p = vec(lat, lon);
       let h = -1;
-      for (const is of islands) h = Math.max(h, 1 - angle(p, is.c) / is.rad);
+      islands.forEach((is, k) => {
+        const v = 1 - angle(p, is.c) / is.rad;
+        if (v > h) { h = v; owner[i] = k; }
+      });
       height[i] = h + (noise(p) - 0.5) * 0.9;
     }
 
@@ -99,6 +105,7 @@ const Globo = (() => {
     };
     let islandCount = 0;
     const islandSize = [];
+    const islandOwner = []; // da quale isola generata nasce ogni gruppo
     for (let i = 0; i < TW * TH; i++) {
       if (height[i] <= 0 || island[i] >= 0) continue;
       const stack = [i];
@@ -110,8 +117,12 @@ const Globo = (() => {
         for (const n of neighbors(c)) if (height[n] > 0 && island[n] < 0) { island[n] = islandCount; stack.push(n); }
       }
       islandSize.push(size);
+      islandOwner.push(owner[i]);
       islandCount++;
     }
+
+    // Il bioma è deciso per ogni isola generata, dalla sua latitudine; l'isola grande è la foresta del Forte
+    const biomeOf = islands.map((is, k) => (k === 0 ? "foresta" : biomaPerLatitudine(toLatLon(is.c).lat, r)));
 
     // Zone: punti di terra ben distanziati, ognuno con il suo seed e i suoi tag
     const land = [];
@@ -120,9 +131,10 @@ const Globo = (() => {
     const shuffled = land.slice().sort(() => r() - 0.5);
     for (const i of shuffled) {
       const { lat, lon } = texelLatLon(i), p = vec(lat, lon);
-      if (zones.every((z) => z.island !== island[i] || angle(z.p, p) > 7)) {
+      if (zones.every((z) => z.island !== island[i] || angle(z.p, p) > 9)) {
         const zSeed = Math.floor(r() * 1e9);
-        zones.push({ id: zones.length, p, lat, lon, island: island[i], seed: zSeed, ...tagger(zSeed) });
+        const biome = biomeOf[islandOwner[island[i]]];
+        zones.push({ id: zones.length, p, lat, lon, island: island[i], seed: zSeed, biome, ...tagger(zSeed, biome) });
       }
     }
 
@@ -139,33 +151,41 @@ const Globo = (() => {
       zone[i] = best;
     }
 
-    // Tipo di ogni texel: la profondità del mare, la spiaggia, il bosco, le montagne
+    // Tipo e bioma di ogni texel: la profondità del mare, la riva, il piano, le alture
     const type = new Uint8Array(TW * TH);
+    const biome = new Uint8Array(TW * TH);
     const border = new Uint8Array(TW * TH);
     const coast = [];
     for (let i = 0; i < TW * TH; i++) {
       const h = height[i];
       const { lat, lon } = texelLatLon(i), p = vec(lat, lon);
+      biome[i] = BIOME_KEYS.indexOf(biomeOf[owner[i]]);
       if (zone[i] < 0) {
         type[i] = h > -0.12 ? T.SHALLOW : h > -0.5 ? T.OCEAN : T.DEEP;
         continue;
       }
       const z = zones[zone[i]];
+      biome[i] = BIOME_KEYS.indexOf(z.biome);
       const wet = neighbors(i).some((n) => zone[n] < 0);
       if (wet) coast.push({ i, p, zone: zone[i] });
-      if (h < 0.08 || wet) type[i] = T.SAND;
+      if (h < 0.08 || wet) type[i] = T.SHORE;
       else if (z.tags.has("montagne") && h > 0.55) type[i] = h > 0.8 ? T.SNOW : T.ROCK;
-      else if (h > 0.45) type[i] = T.HILL;
-      else type[i] = noise(p.map((v) => v * 3)) > 0.5 ? T.FOREST : T.GRASS;
+      else if (h > 0.45) type[i] = T.HIGH;
+      else type[i] = noise(p.map((v) => v * 3)) > 0.5 ? T.HIGH : T.LOW;
       border[i] = neighbors(i).some((n) => zone[n] >= 0 && zone[n] !== zone[i]) ? 1 : 0;
     }
 
     // Le due città: il Forte sull'isola grande, il Porto del fiordo su un'isola minore
     const byIsland = (id) => coast.filter((c) => island[c.i] === id);
     const bigIsland = islandSize.indexOf(Math.max(...islandSize));
-    const otherIslands = [...new Set(zones.map((z) => z.island))].filter((id) => id !== bigIsland);
+    // Il Porto del fiordo sta su un'isola fredda, la più vicina al Forte
+    const coldFirst = (id) => (["ghiaccio", "taiga"].includes(zones.find((z) => z.island === id).biome) ? 0 : 1);
+    const otherIslands = [...new Set(zones.map((z) => z.island))].filter((id) => id !== bigIsland)
+      .sort((a, b) => coldFirst(a) - coldFirst(b));
     const forteSpot = byIsland(bigIsland)[Math.floor(r() * byIsland(bigIsland).length)];
-    const portoIsland = otherIslands.length ? otherIslands[Math.floor(r() * otherIslands.length)] : bigIsland;
+    const colds = otherIslands.filter((id) => coldFirst(id) === 0);
+    const pool = colds.length ? colds : otherIslands;
+    const portoIsland = pool.length ? pool.sort((a, b) => angle(zones.find((z) => z.island === a).p, forteSpot.p) - angle(zones.find((z) => z.island === b).p, forteSpot.p))[0] : bigIsland;
     const portoCandidates = byIsland(portoIsland).filter((c) => angle(c.p, forteSpot.p) > 10);
     const portoSpot = portoCandidates[Math.floor(r() * portoCandidates.length)] || byIsland(portoIsland)[0];
     const cities = [
@@ -175,7 +195,7 @@ const Globo = (() => {
 
     // La nave parte in mare, poco fuori dal Forte
     const start = startAtSea(forteSpot.p, type);
-    return { seed, height, type, zone, border, zones, coast, cities, start };
+    return { seed, height, type, biome, zone, border, zones, coast, cities, start };
   }
 
   // Cerca un punto di mare aperto vicino alla città di partenza
@@ -238,11 +258,17 @@ const Globo = (() => {
   function palette(time) {
     if (paletteCache.has(time)) return paletteCache.get(time);
     const tint = TINTS[time];
-    const pal = {};
-    for (const [k, hex] of Object.entries(BASE)) {
+    const tone = (hex) => {
       const lit = blend(rgb(hex), rgb(tint.color), tint.amount).map((v) => v * tint.light);
-      pal[k] = { lit, shade: lit.map((v) => v * 0.62), border: lit.map((v) => v * 0.75) };
-    }
+      return { lit, shade: lit.map((v) => v * 0.62), border: lit.map((v) => v * 0.75) };
+    };
+    const pal = {};
+    for (const [k, hex] of Object.entries(BASE)) pal[k] = tone(hex);
+    // pal.biomes[b][tipo]: riva, piano e alture di ogni bioma, più il basso fondale (turchese ai tropici)
+    pal.biomes = BIOME_KEYS.map((key) => {
+      const g = BIOMI[key].globo;
+      return { [T.SHORE]: tone(g.shore), [T.LOW]: tone(g.low), [T.HIGH]: tone(g.high), [T.SHALLOW]: tone(g.shallow || BASE[T.SHALLOW]) };
+    });
     pal.rim = blend(rgb("#9fd0e0"), rgb(tint.color), tint.amount).map((v) => v * tint.light);
     paletteCache.set(time, pal);
     return pal;
@@ -281,7 +307,7 @@ const Globo = (() => {
         const t = texel(lat, lon);
         const kind = world.type[t];
         const lightness = x * L[0] + y * L[1] + z * L[2];
-        const tone = pal[kind];
+        const tone = pal.biomes[world.biome[t]][kind] || pal[kind];
         let col = lightness > 0.35 + BAYER[j & 3][i & 3] * 0.3 ? tone.lit : tone.shade;
         if (world.border[t]) col = tone.border;
         if (opts.highlight != null && world.zone[t] === opts.highlight && (i + j) % 2 === 0) col = blend(col, [255, 240, 180], 0.45);

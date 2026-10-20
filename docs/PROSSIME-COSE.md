@@ -3,6 +3,8 @@
 Lista di lavoro, in ordine sparso. Le idee nascono nella chat di progetto; il quadro completo è nel [documento di design](DESIGN.md).
 
 ## Fatto di recente
+- [x] **Biomi**: foresta, taiga, isole ghiacciate, palude, tropicale, deserto, su un pianeta più piccolo con isole sparse ovunque.
+- [x] **Tempo più clemente**: sbarcare costa un giorno, i passi a terra non consumano tempo; in mare i giorni durano di più.
 - [x] **Ritmo della battlemap**: niente più round e banner. Il tempo scorre solo quando agisci, gli animali si muovono insieme a te con velocità frazionarie (l'orso 4 passi ogni 3 tuoi).
 
 ## Città
@@ -26,7 +28,8 @@ Lista di lavoro, in ordine sparso. Le idee nascono nella chat di progetto; il qu
 - [ ] **Nome del giocatore** scelto all'inizio.
 
 ## Mondo e navigazione
-- [ ] **Altri biomi** oltre alla foresta (taiga, palude, scogliera, tundra, deserto, isola tropicale…), ognuno con palette, cartolina e mappa.
+- [ ] **Altri biomi**: scogliera, montagna, foresta d'autunno, vulcanica (lava), bosco di cristallo, foresta di funghi.
+- [ ] **Creature per bioma**: orso polare al nord, coccodrillo in palude, scorpione nel deserto…
 - [ ] **Puntatori delle voci** sul globo.
 - [ ] Tarare velocità della nave, durata del giorno, costo dello sbarco.
 

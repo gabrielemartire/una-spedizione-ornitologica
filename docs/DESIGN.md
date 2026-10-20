@@ -82,7 +82,7 @@ Barra menu in stile anni '90: `Spedizione · Taccuino · Inventario · Ciurma ·
 
 ## 6. Il globo
 
-**Generazione.** Ogni spedizione genera un arcipelago: **un'isola grande e 4–5 isole minori**, da un seed, su un mondo sferico (una texture di 360 × 180 gradi). Ogni isola è divisa in **zone** (punti distanti almeno 7°, ognuno con il suo territorio); ogni zona ha un seed e dei tag (§ 7), quindi la stessa cartolina e la stessa mappa a ogni visita. Le zone ricordano se il loro uccello è già stato osservato o è volato via. **Non tutti i biomi sono presenti in ogni partita**: alcuni uccelli in certi viaggi semplicemente non ci sono.
+**Generazione.** Ogni spedizione genera un **pianeta piccolo**: un'isola grande (la foresta del Forte) e **11–13 isole sparse su tutta la sfera**, da un seed, su una texture di 360 × 180 gradi. **Il bioma di ogni isola dipende dalla latitudine**: ghiaccio verso i poli, taiga, foresta e palude alle medie latitudini, tropicale e deserto verso l'equatore. Ogni isola è divisa in **zone** (punti distanti almeno 9°, ognuno con il suo territorio); ogni zona ha un seed e dei tag (§ 7), quindi la stessa cartolina e la stessa mappa a ogni visita. Le zone ricordano se il loro uccello è già stato osservato o è volato via. **Non tutti i biomi sono presenti in ogni partita**: alcuni uccelli in certi viaggi semplicemente non ci sono.
 
 **Navigazione (tempo reale).** In mare il riquadro A mostra il globo grande; a terra il riquadro B ne mostra uno piccolo.
 - ← → cambiano la rotta, ↑ ↓ le vele (4 livelli). Indicatori di rotta in gradi e punti cardinali.
@@ -94,7 +94,7 @@ Barra menu in stile anni '90: `Spedizione · Taccuino · Inventario · Ciurma ·
 
 **Puntatori.** Le voci comprate in città compaiono sul globo come segni: un cerchio largo per le voci vaghe, una croce precisa per quelle care.
 
-**Tempo.** Un unico orologio per tutta la spedizione. In mare scorre **solo mentre navighi**: un giorno ogni ~20 secondi a vele spiegate. Sbarcare costa un momento della giornata; a terra ogni azione è 1/45 di giorno. All'inizio di ogni giorno suona la campana e paghi la ciurma.
+**Tempo.** Un unico orologio per tutta la spedizione. In mare scorre **solo mentre navighi**: un giorno ogni ~45 secondi a vele spiegate. **Sbarcare costa un giorno intero**, pagato allo sbarco; a terra poi i passi non consumano tempo. All'inizio di ogni giorno suona la campana e paghi la ciurma.
 
 **Momenti del giorno.** Ogni giorno ha tre momenti: **alba**, **pomeriggio** e **notte**, che tingono anche il globo. Sbarchi nel momento in cui arrivi, e il momento resta fisso per tutta la visita a terra.
 - La cartolina cambia cielo e luce; la palette della zona si scurisce di notte.
@@ -106,7 +106,7 @@ Barra menu in stile anni '90: `Spedizione · Taccuino · Inventario · Ciurma ·
 
 Ogni zona ha **un bioma** e **0–3 caratteristiche**. Insieme formano i **tag** della zona.
 
-**Biomi** (lista iniziale, realistici con qualche tocco fantastico):
+**Biomi.** I primi sei sono nel gioco (dati in `js/biomes.js`): **foresta, taiga, isola ghiacciata, palude, isola tropicale, deserto**. Ognuno cambia il globo (colori, bassi fondali turchesi ai tropici), la cartolina (palette, alberi: pini, palme, cactus, alberi secchi; neve sui rami, nebbia, dune) e la battlemap (icone di alberi ed erbe, densità, pozze della palude, ruscello ghiacciato al nord). Lista completa, realistici con qualche tocco fantastico:
 
 | Bioma | Palette indicativa | Note |
 |---|---|---|
@@ -176,7 +176,7 @@ Una griglia fitta (**40 × 24 caselle**) generata dallo stesso seed della cartol
 
 **Animali non stupidi.** Le creature non si fanno male da sole (niente cariche contro gli alberi): aggirano gli ostacoli, ti seguono, cercano dove ti hanno visto l'ultima volta. Si battono con le trappole, le esche e il terreno, non con i loro errori.
 
-**Tempo a terra.** Ogni sbarco costa **un momento della giornata**. A terra una **clessidra** conta le azioni: dopo **45 azioni** passa un giorno. Il passaggio è sempre visibile: campana, banner *Giorno N*, paga della ciurma nel diario (con la sua icona). Se non puoi pagare, la ciurma ti abbandona e la spedizione finisce.
+**Tempo a terra.** Ogni sbarco costa **un giorno**, pagato subito: a terra puoi muoverti quanto vuoi senza clessidra (contare i passi era troppo punitivo). Il passaggio dei giorni è sempre visibile: campana, banner *Giorno N*, paga della ciurma nel diario. Se non puoi pagare, la ciurma ti abbandona e la spedizione finisce.
 
 **Rovine.** Un edificio diroccato di circa 8 × 6 caselle: muri spessi, un varco e un crollo pieno di macerie (rumorose), a volte un pilastro. **Da fuori si vede solo il tetto: l'interno si scopre entrando.** I muri bloccano la vista, l'orso può entrare dai varchi. A volte l'uccello nidifica dentro.
 

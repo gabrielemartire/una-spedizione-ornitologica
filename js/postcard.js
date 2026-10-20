@@ -64,11 +64,21 @@ const Cartolina = (() => {
     };
   }
 
+  // I colori dei biomi sono quelli del pomeriggio: l'alba li scalda, la notte li spegne
+  const TINTS = { alba: ["#f2a35e", 0.22, 0.95], pomeriggio: ["#ffffff", 0, 1], notte: ["#1a2a55", 0.5, 0.5] };
+  function tintHex(hex, time) {
+    const [tc, amount, light] = TINTS[time];
+    const a = rgb(hex), b = rgb(tc);
+    return "#" + a.map((v, i) => Math.round((v + (b[i] - v) * amount) * light).toString(16).padStart(2, "0")).join("");
+  }
+
   // --- Composizione della scena ---
 
   function compose(zone) {
     const r = rng(zone.seed ^ 0x5bd1e995);
-    const P = PALETTES[zone.time];
+    const biome = BIOMI[[...zone.tags].find((t) => BIOMI[t]) || "foresta"];
+    const P = { ...PALETTES[zone.time] };
+    for (const [k, hex] of Object.entries(biome.cartolina)) P[k] = tintHex(hex, zone.time);
     const night = zone.time === "notte";
     const buf = new Array(PW * PH).fill(P.ground);
 
@@ -287,13 +297,35 @@ const Cartolina = (() => {
       }
     }
 
-    // 7. La foresta lontana: tanti piccoli abeti
+    // 7. La vegetazione lontana: abeti, palme, alberi secchi; nel deserto solo dune
     const forestY = HY + 16;
     for (let x = -2; x < PW + 2; x += 2 + Math.floor(r() * 2)) {
       const h = 5 + Math.floor(r() * 5), base = forestY + Math.floor(r() * 3);
+      const shade = (j) => ((lightLeft ? j > 0 : j < 0) ? P.treeFarShadow : P.treeFar);
+      if (biome.albero === "cactus") {
+        if (r() < 0.12) for (let k = 0; k < 4; k++) px(x, base - k, P.treeFar); // un cactus lontano, raro
+        continue;
+      }
+      if (biome.neve && r() < 0.55) continue; // al nord gli alberi sono radi
+      if (biome.albero === "palma") {
+        for (let k = 0; k < h; k++) px(x, base - k, P.trunk);
+        for (let j = -3; j <= 3; j++) px(x + j, base - h + Math.abs(j) / 2, shade(j));
+        continue;
+      }
+      if (biome.albero === "secco") {
+        for (let k = 0; k < h; k++) px(x, base - k, P.treeFarShadow);
+        px(x - 1, base - h + 2, P.treeFarShadow); px(x + 1, base - h + 1, P.treeFarShadow);
+        continue;
+      }
       for (let k = 0; k < h; k++) {
         const half = Math.floor(k / 2);
-        for (let j = -half; j <= half; j++) px(x + j, base - h + k, (lightLeft ? j > 0 : j < 0) ? P.treeFarShadow : P.treeFar);
+        for (let j = -half; j <= half; j++) px(x + j, base - h + k, k < 2 && biome.neve ? P.snow : shade(j));
+      }
+    }
+    // Nebbia bassa su taiga e palude
+    if (biome.nebbia) {
+      for (let y = HY + 4; y < forestY + 4; y++) {
+        for (let x = 0; x < PW; x++) px(x, y, mix(get(x, y), P.haze, 0.45 - Math.abs(y - forestY + 4) / 30, x, y));
       }
     }
 
@@ -339,15 +371,53 @@ const Cartolina = (() => {
       }
       for (let y = base - 3; y <= base; y++) { px(x, y, P.trunk); px(x + 1, y, P.trunk); }
     };
-    pine(4 + r() * 5, PH - 4, 34 + r() * 8);
-    pine(PW - 6 - r() * 5, PH - 3, 30 + r() * 8);
-    if (r() < 0.6) pine(14 + r() * 10, PH - 2, 16 + r() * 6);
+    const palm = (x, base, h) => {
+      const lean = r() < 0.5 ? -1 : 1;
+      for (let k = 0; k < h; k++) { const xx = x + Math.round(lean * (k / h) ** 2 * 4); px(xx, base - k, P.trunk); px(xx + 1, base - k, P.trunk); }
+      const tx = x + lean * 4, ty = base - h;
+      for (let f = 0; f < 7; f++) { // le fronde ricadono ad arco, spesse due pixel
+        const dir = (f / 6) * Math.PI;
+        // fronde scure con il bordo superiore in luce, per staccarsi dal verde delle colline
+        for (let k = 1; k < 14; k++) {
+          const fx = tx + Math.cos(dir) * k, fy = ty - Math.sin(dir) * k * 0.55 + (k * k) / 22;
+          px(fx, fy, P.tree);
+          px(fx, fy + 1, P.treeShadow);
+          px(fx, fy + 2, P.treeShadow);
+        }
+      }
+      ellipse(tx, ty + 1, 2, 1.5, () => P.trunk); // le noci di cocco
+    };
+    const cactus = (x, base, h) => {
+      const body = (x0, y0, len) => { for (let k = 0; k < len; k++) for (let j = 0; j < 3; j++) px(x0 + j, y0 - k, j === (lightLeft ? 2 : 0) ? P.treeShadow : P.tree); };
+      body(x, base, h);
+      body(x - 4, base - h / 3, h / 3); for (let j = -3; j < 0; j++) px(x + j, base - h / 3, P.tree);
+      body(x + 4, base - h / 2, h / 4); for (let j = 3; j < 5; j++) px(x + j, base - h / 2, P.tree);
+    };
+    const deadTree = (x, base, h) => {
+      for (let k = 0; k < h; k++) { px(x, base - k, P.trunk); px(x + 1, base - k, P.trunk); }
+      for (const [y0, dir, len] of [[0.55, -1, 7], [0.7, 1, 6], [0.85, -1, 4], [0.4, 1, 5]]) {
+        for (let k = 0; k < len; k++) px(x + dir * k, base - h * y0 - k * 0.7, P.trunk);
+      }
+    };
+    const near = { pino: pine, palma: palm, cactus, secco: deadTree }[biome.albero];
+    const inset = biome.albero === "palma" ? 10 : 0; // le fronde larghe non devono uscire dal bordo
+    near(4 + inset + r() * 5, PH - 4, 34 + r() * 8);
+    near(PW - 8 - inset - r() * 5, PH - 3, 30 + r() * 8);
+    if (r() < 0.6) near(14 + r() * 10, PH - 2, 16 + r() * 6);
+    // La neve sui rami
+    if (biome.neve) {
+      for (let y = HY; y < PH; y++) {
+        for (let x = 0; x < PW; x++) if (get(x, y) === P.tree && get(x, y - 1) !== P.tree && r() < 0.7) px(x, y, P.snow);
+      }
+    }
 
     // 10. Primo piano: erba, fiori, rocce
     for (let x = 0; x < PW; x++) {
       if (isWater(get(x, PH - 1))) continue;
-      const blades = 1 + Math.floor(r() * 4);
+      // Canne alte in palude, poche erbe secche nel deserto, ciuffi altrove
+      const blades = biome.albero === "secco" ? 2 + Math.floor(r() * 7) : biome.secco ? (r() < 0.3 ? 1 + Math.floor(r() * 2) : 0) : 1 + Math.floor(r() * 4);
       for (let y = PH - blades; y < PH; y++) px(x, y, r() < 0.5 ? P.grass : P.grassDark);
+      if (biome.albero === "secco" && blades > 6) px(x, PH - blades, P.trunk); // la spiga della canna
       if (!night && r() < 0.04) px(x, PH - blades - 1, r() < 0.5 ? P.flower : P.flower2);
     }
     for (let i = 0; i < 3; i++) {

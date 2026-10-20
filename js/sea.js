@@ -3,13 +3,13 @@
 // Vicino a una costa si può guardare col cannocchiale (gratis) o sbarcare (costa un momento del giorno).
 // Espone l'oggetto globale `Mare`.
 const Mare = (() => {
-  const DAY_SECONDS = 20;     // secondi di navigazione per un giorno
+  const DAY_SECONDS = 45;     // secondi di navigazione per un giorno
   const MAX_SAILS = 4;
-  const SAIL_SPEED = 1.1;     // gradi al secondo per ogni livello di vela
+  const SAIL_SPEED = 1.8;     // gradi al secondo per ogni livello di vela
   const TURN_RATE = 100;      // gradi di rotta al secondo
-  const LAND_RANGE = 2.4;     // gradi: abbastanza vicino per sbarcare
-  const SCOPE_RANGE = 9;      // gradi: abbastanza vicino per il cannocchiale
-  const CITY_RANGE = 3.2;
+  const LAND_RANGE = 3;       // gradi: abbastanza vicino per sbarcare
+  const SCOPE_RANGE = 12;     // gradi: abbastanza vicino per il cannocchiale
+  const CITY_RANGE = 4;
   const BIG_RES = 200;
   const MINI_RES = 90;
 
@@ -123,7 +123,7 @@ const Mare = (() => {
       <span>Vele <b>${sails}</b></span>`;
     let msg = "Mare aperto. Cerca una costa.";
     if (city) msg = `<b>${city.name}</b> · Invio per attraccare in città`;
-    else if (canLand) msg = `<b>${near.zone.name}</b> · Invio sbarca (costa un momento del giorno) · T cannocchiale`;
+    else if (canLand) msg = `<b>${near.zone.name}</b> · Invio sbarca (costa un giorno) · T cannocchiale`;
     else if (near) msg = `Una costa all'orizzonte · T cannocchiale`;
     el.prompt.innerHTML = msg;
   }

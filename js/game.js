@@ -15,7 +15,6 @@ const Gioco = (() => {
   const BEAR_DAMAGE = 4;
   const MAX_HP = 10;
   const HEAL_COST = 5;        // monete per punto vita, in città
-  const TICKS_PER_DAY = 45;   // a terra, dopo tante azioni passa un giorno
   const START_MONEY = 100;
   const CREW_PAY = 8;         // la paga giornaliera della ciurma
   const TIME_ICONS = { alba: "sunrise", pomeriggio: "sun", notte: "moon" };
@@ -33,6 +32,7 @@ const Gioco = (() => {
     rock:   { icon: "rock",      cls: "t-rock",   walk: false, sight: false },
     water:  { icon: "waves",     cls: "t-water",  walk: true,  sight: true, noise: 4, sound: "passoAcqua" },
     deep:   { icon: "waves",     cls: "t-deep",   walk: false, sight: true },
+    ice:    { icon: "ice",       cls: "t-ice",    walk: true,  sight: true, noise: 1, sound: "passoErba" },
     ship:   { icon: "ship",      cls: "t-ship",   walk: true,  sight: true, noise: 0 },
     fall:   { icon: "waterfall", cls: "t-fall",   walk: false, sight: true },
     // Le rovine: muri, pavimento coperto dal tetto finché non entri, macerie rumorose
@@ -128,24 +128,26 @@ const Gioco = (() => {
   // --- Generazione della zona ---
 
   // I tag della zona decidono sia la cartolina sia la battlemap
-  function zoneTags(seed) {
+  function zoneTags(seed, biome) {
     const r = rng(seed ^ 0x9e3779b9);
-    const tags = new Set(["foresta", "fiume"]);
-    if (r() < 0.45) tags.add("cascata");
+    const tags = new Set([biome, "fiume"]);
+    if (biome !== "deserto" && r() < 0.45) tags.add("cascata");
     if (r() < 0.35) tags.add("rovine");
     if (r() < 0.7) tags.add("colline");
-    if (r() < 0.55) tags.add("montagne");
+    if (r() < (biome === "ghiaccio" || biome === "taiga" ? 0.8 : 0.5)) tags.add("montagne");
     if (r() < 0.25) tags.add("castello");
-    if (r() < 0.3) tags.add("villaggio");
-    return { tags, time: TIMES[Math.floor(r() * TIMES.length)] };
+    if (biome !== "ghiaccio" && r() < 0.3) tags.add("villaggio");
+    return { tags, place: BIOMI[biome].luoghi[Math.floor(r() * BIOMI[biome].luoghi.length)] };
   }
 
-  function zoneName(tags) {
-    if (tags.has("cascata")) return "Radura della cascata";
-    if (tags.has("rovine")) return "Rovine nel bosco";
-    if (tags.has("villaggio")) return "Radura presso il villaggio";
-    return "Radura sul ruscello";
+  function zoneName(tags, place) {
+    if (tags.has("cascata")) return `${place} della cascata`;
+    if (tags.has("rovine")) return `${place} con le rovine`;
+    if (tags.has("villaggio")) return `${place} presso il villaggio`;
+    return place;
   }
+
+  const biomeOf = (tags) => Object.keys(BIOMI).find((b) => tags.has(b)) || "foresta";
 
   function generate(seed, tags) {
     for (let attempt = 0; ; attempt++) {
@@ -179,6 +181,10 @@ const Gioco = (() => {
       else if (r() < 0.12) map[y][sx] = "deep";
     }
 
+    const look = BIOMI[biomeOf(tags)].mappa;
+    if (look.water === "ice") streamX.forEach((x, y) => {
+      for (let dx = 0; dx <= 1; dx++) if (["water", "deep"].includes(map[y][x + dx])) map[y][x + dx] = "ice";
+    });
     const blob = (type, count, radius, density) => {
       for (let i = 0; i < count; i++) {
         const cx = 3 + Math.floor(r() * (W - 3)), cy = Math.floor(r() * H);
@@ -203,10 +209,13 @@ const Gioco = (() => {
     }
     const ruin = tags.has("rovine") ? placeRuin(map, r) : null;
     if (tags.has("villaggio")) placeHamlet(map, r);
-    blob("tree", 16, 2, 0.6);
-    blob("tall", 12, 2, 0.7);
-    blob("bush", 40, 0, 1);
-    blob("rock", 20, 0, 1);
+    // Le pozze della palude, poi la vegetazione del bioma
+    blob("water", look.pools, 1, 0.75);
+    blob("deep", Math.floor(look.pools / 3), 0, 1);
+    blob("tree", look.trees, 2, 0.6);
+    if (look.tall) blob("tall", look.talls, 2, 0.7);
+    blob("bush", look.bushes, 0, 1);
+    blob("rock", look.rocks, 0, 1);
 
     // Spazio libero allo sbarco
     for (let y = shipY - 1; y <= shipY + 1; y++) {
@@ -219,7 +228,7 @@ const Gioco = (() => {
       .filter((c) => map[c.y][c.x] === "grass" || map[c.y][c.x] === "tall");
 
     // L'uccello ama stare vicino all'acqua o agli alberi
-    const nearWater = (c) => DIRS.some(([dx, dy]) => inside(c.x + dx, c.y + dy) && ["water", "tree"].includes(map[c.y + dy][c.x + dx]));
+    const nearWater = (c) => DIRS.some(([dx, dy]) => inside(c.x + dx, c.y + dy) && ["water", "ice", "tree"].includes(map[c.y + dy][c.x + dx]));
     const observable = (c) => bandCells(map, c).filter((b) => reach.has(key(b))).length >= 3;
     // Nelle rovine, a volte, l'uccello nidifica dentro: lo scopri solo entrando
     const insideSpots = ruin && r() < 0.5
@@ -297,9 +306,9 @@ const Gioco = (() => {
 
   function start() {
     const seed = Math.floor(Math.random() * 1e9);
-    const world = Globo.createWorld(seed, (zSeed) => {
-      const { tags } = zoneTags(zSeed);
-      return { tags, name: zoneName(tags) };
+    const world = Globo.createWorld(seed, (zSeed, biome) => {
+      const { tags, place } = zoneTags(zSeed, biome);
+      return { tags, name: zoneName(tags, place) };
     });
     trip = {
       seed, world, clock: 0, money: START_MONEY, hp: MAX_HP, log: [], zones: {}, mode: "sea",
@@ -322,8 +331,8 @@ const Gioco = (() => {
   const day = () => Math.floor(trip.clock) + 1;
 
   function landAt(zone) {
-    // Calare la scialuppa e organizzare lo sbarco richiede un momento della giornata
-    if (!advanceClock(1 / 3)) return;
+    // Una visita a terra costa un giorno intero, pagato allo sbarco: poi i passi non consumano tempo
+    if (!advanceClock(1)) return;
     trip.mode = "land";
     const time = timeOf(trip.clock);
     const gen = generate(zone.seed, zone.tags);
@@ -347,6 +356,9 @@ const Gioco = (() => {
       over: false,
     };
     showView("land");
+    const screen = document.getElementById("screen-game");
+    screen.dataset.time = time;
+    for (const [k, v] of Object.entries(BIOMI[zone.biome].mappa.colors)) screen.style.setProperty(`--f-${k}`, v);
     buildDom();
     el.zoneTitle.textContent = `${zone.name} · ${time}`;
     drawPostcard();
@@ -476,7 +488,6 @@ const Gioco = (() => {
     birdTick();
     bearTick();
     if (s.over) return;
-    if (!advanceClock(1 / TICKS_PER_DAY)) return;
     render();
   }
 
@@ -808,6 +819,7 @@ const Gioco = (() => {
     const hunting = o.mode === "hunt";
     const roofed = s.ruin && !insideRuin() ? s.ruin.interior : new Set(); // il tetto si apre solo se entri
 
+    const look = BIOMI[biomeOf(s.tags)].mappa;
     const roofCenter = s.ruin ? [...s.ruin.interior][Math.floor(s.ruin.interior.size / 2)] : null;
 
     for (let y = 0; y < H; y++) {
@@ -815,8 +827,9 @@ const Gioco = (() => {
         const t = TILES[map[y][x]];
         const c = el.cells[y][x];
         const k = `${x},${y}`;
-        // Gli alberi alternano faggi e pini, sempre uguali nella stessa casella
-        let icon = t === TILES.tree && (x * 7 + y * 13) % 3 === 0 ? "pine" : t.icon;
+        // Alberi ed erbe alte del bioma; dove ce n'è più d'uno si alternano, sempre uguali nella stessa casella
+        let icon = t === TILES.tree ? look.tree[(x * 7 + y * 13) % 3 === 0 ? look.tree.length - 1 : 0]
+          : t === TILES.tall ? look.tall : t.icon;
         let ch = t.ch || "";
         let cls = `cell ${t.cls}`;
 
@@ -859,12 +872,12 @@ const Gioco = (() => {
     const time = land ? s.time : timeOf(trip.clock);
     const hp = land ? s.player.hp : trip.hp;
     const frac = trip.clock % 1;
-    const left = Math.ceil((1 - frac) * TICKS_PER_DAY - 1e-9);
     const sand = "▰".repeat(Math.ceil((1 - frac) * 5)) + "▱".repeat(5 - Math.ceil((1 - frac) * 5));
     const hearts = "♥".repeat(Math.ceil(hp / 2)) + "♡".repeat(Math.ceil(MAX_HP / 2) - Math.ceil(hp / 2));
     let html = `
       <div class="status-day">${iconHtml(TIME_ICONS[time])}<b>Giorno ${day()}</b><span>${time}</span></div>
-      <div title="Quante azioni mancano al prossimo giorno">${iconHtml("hourglass")}<span>Clessidra</span><b>${sand}${land ? ` ${left}` : ""}</b></div>
+      ${land ? `<div title="La visita a terra costa un giorno, già pagato">${iconHtml("hourglass")}<span>A terra</span><b>giornata pagata</b></div>`
+        : `<div title="Quanto manca al prossimo giorno di navigazione">${iconHtml("hourglass")}<span>Clessidra</span><b>${sand}</b></div>`}
       <div title="La ciurma costa ${CREW_PAY} monete al giorno">${iconHtml("coins")}<span>Monete</span><b>${trip.money} <small>(−${CREW_PAY}/g)</small></b></div>
       <hr>
       <div><span>Vita</span><b class="hearts">${hearts}</b></div>`;
