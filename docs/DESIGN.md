@@ -154,15 +154,19 @@ Ogni layer ha 3–5 varianti, ognuna è un piccolo disegno ASCII con trasparenza
 
 ## 9. La battlemap (A)
 
-Una griglia (indicativamente **24 × 16 caselle**) generata dallo stesso seed della cartolina.
+Una griglia fitta (**40 × 24 caselle**) generata dallo stesso seed della cartolina.
 
 **Grafica:** icone monocromatiche da [game-icons.net](https://game-icons.net), colorate con la palette della zona. Una casella, un'icona leggibile.
 
 **Contenuto:** terreno (erba, erba alta, cespugli, alberi, rocce, acqua bassa, acqua profonda), la **casella nave** (punto di arrivo e di partenza), uccelli, mostri, risorse, a volte un tesoro.
 
-**Turni.** Il giocatore fa **un'azione**: muoversi di una casella, usare uno strumento, osservare, raccogliere, aspettare. Poi agiscono tutte le creature.
+**Round "a scacchi".** Il giocatore ha **3 passi** per round: ogni passo è un'azione (muoversi di una casella, osservare, usare uno strumento, raccogliere). Può chiudere il round prima. Poi **si muovono tutti gli animali**, ognuno con il suo movimento tipico, come i pezzi degli scacchi.
 
-**Tempo a terra.** Ogni sbarco costa **1 giorno**; restare oltre i **40 turni** ne costa un altro.
+**Si vede dove arrivano gli animali.** Le caselle che una creatura può raggiungere nel suo turno sono evidenziate in rosso (tenue se non ti ha notato, acceso se ti insegue). Finire il round lì dentro significa farsi prendere.
+
+**Animali non stupidi.** Le creature non si fanno male da sole (niente cariche contro gli alberi): aggirano gli ostacoli, ti seguono, cercano dove ti hanno visto l'ultima volta. Si battono con le trappole, le esche e il terreno, non con i loro errori.
+
+**Tempo a terra.** Ogni sbarco costa **1 giorno**; restare oltre i **15 round** ne costa un altro.
 
 ### 9.1 Rumore e visione
 Un unico sistema regola uccelli e mostri.
@@ -176,25 +180,27 @@ Un unico sistema regola uccelli e mostri.
 | Camminare nell'acqua | 4 |
 | Petardo | 6, nel punto in cui esplode |
 
-- Il rumore **fa fuggire gli uccelli** nel raggio e **attira i mostri** (l'orso sente 3 caselle più lontano). L'erba alta è la via silenziosa.
+- Il rumore **fa fuggire gli uccelli** nel raggio e **attira i mostri** (l'orso sente 2 caselle più lontano). L'erba alta è la via silenziosa.
 - **Cespugli ed erba alta** ti nascondono: sei visibile solo da una casella adiacente.
 - **Alberi e rocce** bloccano la linea di vista.
 
 ### 9.2 Osservare un uccello
 Ogni uccello ha **due anelli**:
-- **anello di fuga** (es. 2 caselle): se lo attraversi, vola via;
-- **anello di osservazione** (es. 5 caselle, ampliato dal binocolo).
+- **anello di fuga** (le caselle accanto, ~1,5): se ci entri, vola via;
+- **anello di osservazione** (~3,5 caselle, ampliato dal binocolo).
 
-Devi restare **nella fascia tra i due**, con l'uccello in linea di vista, **senza fare rumore** per N turni. Una barra si riempie; al termine l'uccello entra nel taccuino.
+Basta **un'azione di osservazione** dalla fascia tra i due anelli, con l'uccello in vista: l'uccello entra nel taccuino. La difficoltà sta nell'arrivarci senza farlo scappare.
+
+**Se si spaventa** (troppo vicino, troppo rumore, l'orso che gli passa accanto) vola **in un altro punto della radura**, oppure, con meno probabilità, **lascia la zona per sempre**. Ogni tanto saltella da una casella all'altra.
 
 Comportamenti possibili: *timido* (fuga ampia), *curioso* (si avvicina se stai fermo), *nomade* (cambia posatoio), *notturno*, *mattiniero*, *ghiotto* (attirato dai semi).
 
 ### 9.3 Creature
-Ogni creatura mostra la sua **intenzione** per il turno successivo (freccia, `!` ti ha visto, `?` ha sentito qualcosa): non si viene mai colpiti a sorpresa.
+Ogni creatura mostra il suo stato (`!` ti insegue, `?` ti cerca, `z` si riposa) e la sua portata: non si viene mai colpiti a sorpresa.
 
 | Creatura | Comportamento | Come la gestisci |
 |---|---|---|
-| Orso | Se ti vede carica in linea retta finché non sbatte | Fallo schiantare contro un albero o una roccia: stordito 3 turni |
+| Orso | Lento (2 passi a round) ma tenace: ti fiuta da vicino, ti vede da lontano, aggira gli ostacoli e ti segue. Se ti perde va dove ti ha visto l'ultima volta. Fa la guardia al territorio dell'uccello | Mantieni la distanza, nasconditi nell'erba alta e nei cespugli, usa esche e trappole |
 | Lupi | In branco, cercano di circondarti | Separali con l'acqua; il petardo li mette in fuga |
 | Cinghiale | Ti insegue, 2 caselle a turno, solo in linea retta | Portalo nella tagliola |
 | Serpente | Fermo nell'erba alta, morde chi è adiacente | Va notato ed evitato |

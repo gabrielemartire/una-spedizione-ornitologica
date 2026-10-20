@@ -1,13 +1,20 @@
 // Prototipo della battlemap: una zona, un uccello da osservare, un orso da evitare.
+// Si gioca "a scacchi": il giocatore fa i suoi passi, poi si muovono gli animali.
 // Espone l'oggetto globale `Gioco`.
 const Gioco = (() => {
-  const W = 24;
-  const H = 16;
-  const OBSERVE = 5.5;    // portata del binocolo
-  const BEAR_SIGHT = 8;
-  const BEAR_HEARING = 3; // l'orso sente un po' più lontano del rumore stesso
+  const W = 40;
+  const H = 24;
+  const STEPS = 3;            // passi del giocatore per round
+  const FLEE = 1.5;           // più vicino di così l'uccello scappa
+  const OBSERVE = 3.5;        // portata del binocolo
+  const BIRD_LEAVE = 0.35;    // probabilità che, spaventato, lasci la zona invece di spostarsi
+  const BEAR_SPEED = 2;
+  const BEAR_SIGHT = 10;
+  const BEAR_SMELL = 6;       // ti fiuta entro questa distanza, se non sei nascosto
+  const BEAR_HEARING = 2;     // l'orso sente un po' più lontano del rumore stesso
   const BEAR_DAMAGE = 4;
   const MAX_HP = 10;
+  const ANIMAL_DELAY = 260;   // ms, per vedere gli animali muoversi
 
   // noise = raggio del rumore in caselle; hide = chi ci sta dentro si vede solo da vicino
   const TILES = {
@@ -15,14 +22,14 @@ const Gioco = (() => {
     grass: { ch: ".", cls: "t-grass", walk: true,  sight: true, noise: 2, sound: "passoErba" },
     tall:  { ch: '"', cls: "t-tall",  walk: true,  sight: true, noise: 1, sound: "passoErba", hide: true },
     bush:  { ch: "♠", cls: "t-bush",  walk: true,  sight: true, noise: 3, sound: "cespuglio", hide: true },
-    tree:  { ch: "♣", cls: "t-tree",  walk: false, sight: false, name: "un albero" },
-    rock:  { ch: "▲", cls: "t-rock",  walk: false, sight: false, name: "una roccia" },
+    tree:  { ch: "♣", cls: "t-tree",  walk: false, sight: false },
+    rock:  { ch: "▲", cls: "t-rock",  walk: false, sight: false },
     water: { ch: "≈", cls: "t-water", walk: true,  sight: true, noise: 4, sound: "passoAcqua" },
     deep:  { ch: "≈", cls: "t-deep",  walk: false, sight: true },
     ship:  { ch: "⚓", cls: "t-ship",  walk: true,  sight: true, noise: 0 },
   };
 
-  const BIRD = { id: 17, nome: "Becco Blu", flee: 2.5, need: 4 };
+  const BIRD = { id: 17, nome: "Becco Blu" };
 
   let s = null;
   let el = null;
@@ -43,7 +50,9 @@ const Gioco = (() => {
   const inside = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
   const same = (a, b) => a.x === b.x && a.y === b.y;
+  const key = (c) => `${c.x},${c.y}`;
   const tile = (map, x, y) => TILES[map[y][x]];
+  const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
   const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 
   // Linea di vista (Bresenham): alberi e rocce intermedi bloccano la vista
@@ -61,29 +70,41 @@ const Gioco = (() => {
     }
   }
 
-  function reachable(map, from) {
-    const seen = new Set([`${from.x},${from.y}`]);
+  // Ricerca in ampiezza: la distanza in passi di ogni casella raggiungibile, e da dove ci si arriva
+  function bfs(map, from, maxDepth = Infinity, passable = (c) => tile(map, c.x, c.y).walk) {
+    const depth = new Map([[key(from), 0]]);
+    const prev = new Map();
     const queue = [from];
     while (queue.length) {
       const c = queue.shift();
+      const d = depth.get(key(c));
+      if (d >= maxDepth) continue;
       for (const [dx, dy] of DIRS) {
-        const x = c.x + dx, y = c.y + dy, key = `${x},${y}`;
-        if (inside(x, y) && tile(map, x, y).walk && !seen.has(key)) {
-          seen.add(key);
-          queue.push({ x, y });
+        const n = { x: c.x + dx, y: c.y + dy };
+        if (inside(n.x, n.y) && !depth.has(key(n)) && passable(n)) {
+          depth.set(key(n), d + 1);
+          prev.set(key(n), c);
+          queue.push(n);
         }
       }
     }
-    return seen;
+    return { depth, prev };
+  }
+
+  function pathFrom(prev, from, to) {
+    const path = [];
+    for (let c = to; c && !same(c, from); c = prev.get(key(c))) path.unshift(c);
+    return path.length && prev.has(key(to)) ? path : null;
   }
 
   // Le caselle da cui si può osservare l'uccello: fuori dall'anello di fuga, dentro la portata, in vista
   function bandCells(map, bird) {
     const cells = [];
-    for (let y = 0; y < H; y++) {
-      for (let x = 0; x < W; x++) {
+    for (let y = Math.floor(bird.y - OBSERVE); y <= bird.y + OBSERVE; y++) {
+      for (let x = Math.floor(bird.x - OBSERVE); x <= bird.x + OBSERVE; x++) {
+        if (!inside(x, y)) continue;
         const d = dist({ x, y }, bird);
-        if (d > BIRD.flee && d <= OBSERVE && tile(map, x, y).walk && los(map, { x, y }, bird)) cells.push({ x, y });
+        if (d > FLEE && d <= OBSERVE && tile(map, x, y).walk && los(map, { x, y }, bird)) cells.push({ x, y });
       }
     }
     return cells;
@@ -101,29 +122,29 @@ const Gioco = (() => {
   function tryGenerate(r) {
     const map = Array.from({ length: H }, () => Array(W).fill("grass"));
     const pick = (arr) => arr[Math.floor(r() * arr.length)];
-    const shipY = 3 + Math.floor(r() * (H - 6));
+    const shipY = 4 + Math.floor(r() * (H - 8));
 
     // Il mare a ovest, la nave ormeggiata sulla costa
+    let shore = 2;
     for (let y = 0; y < H; y++) {
-      const shore = Math.abs(y - shipY) <= 1 ? 1 : 1 + (r() < 0.4 ? 1 : 0);
+      shore = Math.abs(y - shipY) <= 1 ? 1 : Math.max(1, Math.min(4, shore + (r() < 0.3 ? -1 : r() < 0.45 ? 1 : 0)));
       for (let x = 0; x < shore; x++) map[y][x] = "sea";
     }
     map[shipY][0] = "ship";
-    const ship = { x: 0, y: shipY };
     const start = { x: 1, y: shipY };
 
     // Un ruscello che scende da nord a sud, con qualche pozza profonda
-    let sx = 11 + Math.floor(r() * 7);
+    let sx = 16 + Math.floor(r() * 12);
     for (let y = 0; y < H; y++) {
-      sx = Math.max(7, Math.min(W - 3, sx + (r() < 0.3 ? -1 : r() < 0.45 ? 1 : 0)));
+      sx = Math.max(10, Math.min(W - 4, sx + (r() < 0.3 ? -1 : r() < 0.45 ? 1 : 0)));
       map[y][sx] = "water";
-      if (r() < 0.45) map[y][sx + 1] = "water";
+      if (r() < 0.5) map[y][sx + 1] = "water";
       else if (r() < 0.12) map[y][sx] = "deep";
     }
 
     const blob = (type, count, radius, density) => {
       for (let i = 0; i < count; i++) {
-        const cx = 2 + Math.floor(r() * (W - 2)), cy = Math.floor(r() * H);
+        const cx = 3 + Math.floor(r() * (W - 3)), cy = Math.floor(r() * H);
         for (let y = cy - radius; y <= cy + radius; y++) {
           for (let x = cx - radius; x <= cx + radius; x++) {
             if (inside(x, y) && map[y][x] === "grass" && Math.hypot(x - cx, y - cy) <= radius + 0.3 && r() < density) {
@@ -133,32 +154,33 @@ const Gioco = (() => {
         }
       }
     };
-    blob("tree", 7, 2, 0.6);
-    blob("tall", 5, 2, 0.7);
-    blob("bush", 14, 0, 1);
-    blob("rock", 8, 0, 1);
+    blob("tree", 16, 2, 0.6);
+    blob("tall", 12, 2, 0.7);
+    blob("bush", 40, 0, 1);
+    blob("rock", 20, 0, 1);
 
     // Spazio libero allo sbarco
     for (let y = shipY - 1; y <= shipY + 1; y++) {
-      for (let x = 1; x <= 2; x++) if (inside(x, y) && map[y][x] !== "sea") map[y][x] = "grass";
+      for (let x = 1; x <= 3; x++) if (inside(x, y) && map[y][x] !== "sea") map[y][x] = "grass";
     }
 
-    const ok = reachable(map, start);
-    const free = [...ok].map((k) => { const [x, y] = k.split(",").map(Number); return { x, y }; })
+    const reach = bfs(map, start).depth;
+    const free = [...reach.keys()].map((k) => { const [x, y] = k.split(",").map(Number); return { x, y }; })
       .filter((c) => map[c.y][c.x] === "grass" || map[c.y][c.x] === "tall");
 
     // L'uccello ama stare vicino all'acqua o agli alberi
     const nearWater = (c) => DIRS.some(([dx, dy]) => inside(c.x + dx, c.y + dy) && ["water", "tree"].includes(map[c.y + dy][c.x + dx]));
-    const birdSpots = free.filter((c) => dist(c, start) >= 9 && nearWater(c)
-      && bandCells(map, c).filter((b) => ok.has(`${b.x},${b.y}`)).length >= 4);
+    const birdSpots = free.filter((c) => dist(c, start) >= 14 && nearWater(c)
+      && bandCells(map, c).filter((b) => reach.has(key(b))).length >= 3);
     if (!birdSpots.length) return null;
     const bird = pick(birdSpots);
 
-    const bearSpots = free.filter((c) => dist(c, start) >= 10 && dist(c, bird) >= 4);
+    // L'orso fa la guardia al territorio dell'uccello
+    const bearSpots = free.filter((c) => dist(c, start) >= 12 && dist(c, bird) >= 5 && dist(c, bird) <= 9);
     if (!bearSpots.length) return null;
     const bear = pick(bearSpots);
 
-    return { map, ship, start, bird, bear };
+    return { map, start, bird, bear, free };
   }
 
   // --- Partita ---
@@ -169,14 +191,17 @@ const Gioco = (() => {
     s = {
       seed,
       map: zone.map,
-      ship: zone.ship,
+      free: zone.free,
       startPos: zone.start,
       player: { ...zone.start, hp: MAX_HP },
-      bird: { ...zone.bird, progress: 0, observed: false, flights: 0, gone: false },
-      bear: { ...zone.bear, state: "idle", dir: null, stun: 0, target: null },
-      turn: 0,
+      bird: { ...zone.bird, observed: false, gone: false },
+      bear: { ...zone.bear, mode: "wander", last: null, searchLeft: 0, rest: 0 },
+      round: 1,
+      steps: STEPS,
       noise: 0,
+      heard: [],
       log: [],
+      busy: false,
       over: false,
     };
     buildDom();
@@ -194,161 +219,181 @@ const Gioco = (() => {
     return !!tile(s.map, s.player.x, s.player.y).hide;
   }
 
-  function bearSees() {
-    const o = s.bear, p = s.player, d = dist(o, p);
-    return d <= BEAR_SIGHT && los(s.map, o, p) && (!hidden() || d < 1.5);
+  function canAct() {
+    return s && !s.over && !s.busy;
   }
 
-  function act(dx, dy) {
-    if (!s || s.over) return;
+  // --- Azioni del giocatore ---
+
+  function move(dx, dy) {
+    if (!canAct()) return;
     const p = s.player;
-    let noise = 0;
+    const n = { x: p.x + dx, y: p.y + dy };
+    if (!inside(n.x, n.y) || !tile(s.map, n.x, n.y).walk || same(s.bear, n) || (!s.bird.gone && same(s.bird, n))) return;
 
-    if (dx || dy) {
-      const nx = p.x + dx, ny = p.y + dy;
-      if (!inside(nx, ny) || !tile(s.map, nx, ny).walk || same(s.bear, { x: nx, y: ny })) return;
-      p.x = nx;
-      p.y = ny;
-      const t = tile(s.map, nx, ny);
-      if (t === TILES.ship) return endZone();
-      noise = t.noise;
-      Suoni.play(t.sound);
+    Object.assign(p, n);
+    const t = tile(s.map, n.x, n.y);
+    if (t === TILES.ship) return endZone();
+    Suoni.play(t.sound);
+    s.noise = t.noise;
+    s.heard.push({ ...n, r: t.noise });
+
+    // L'uccello reagisce subito: troppo vicino o troppo rumore
+    const b = s.bird;
+    if (!b.gone && !b.observed) {
+      const d = dist(p, b);
+      if (d <= FLEE) scare("Troppo vicino");
+      else if (d <= t.noise) scare("Troppo rumore");
     }
+    spendStep();
+  }
 
-    s.turn++;
-    s.noise = noise;
-    birdTurn(!dx && !dy);
-    bearTurn();
+  function observe() {
+    if (!canAct()) return;
+    const b = s.bird, p = s.player;
+    s.noise = 0;
+    if (b.gone || b.observed) {
+      log("Non c'è più niente da osservare qui. Torna alla nave.");
+      return render();
+    }
+    const d = dist(p, b);
+    if (d <= OBSERVE && los(s.map, p, b)) {
+      b.observed = true;
+      Suoni.play("osservato");
+      log(`✎ ${BIRD.nome} osservato e annotato nel taccuino! Torna alla nave.`);
+    } else if (d <= OBSERVE) {
+      log("Qualcosa ti copre la vista.");
+    } else {
+      log("Troppo lontano: il binocolo non basta.");
+    }
+    spendStep();
+  }
+
+  function spendStep() {
+    s.steps--;
+    if (s.steps <= 0) endRound();
+    else render();
+  }
+
+  function endRound() {
+    if (!canAct()) return;
+    s.busy = true;
     render();
+    setTimeout(() => {
+      birdTurn();
+      bearTurn();
+      s.round++;
+      s.steps = STEPS;
+      s.noise = 0;
+      s.heard = [];
+      s.busy = false;
+      if (!s.over) render();
+    }, ANIMAL_DELAY);
   }
 
   // --- Uccello ---
 
-  function birdTurn(waited) {
-    const b = s.bird, p = s.player;
+  function birdTurn() {
+    const b = s.bird;
     if (b.gone || b.observed) return;
-    const d = dist(p, b);
+    if (dist(s.bear, b) <= 2) return scare("L'orso è passato troppo vicino");
 
-    if (d <= BIRD.flee || (s.noise > 0 && d <= s.noise)) return flyAway(d <= BIRD.flee ? "Troppo vicino" : "Troppo rumore");
-
-    if (waited && d <= OBSERVE && los(s.map, p, b)) {
-      b.progress++;
-      if (b.progress >= BIRD.need) {
-        b.observed = true;
-        Suoni.play("osservato");
-        log(`✎ ${BIRD.nome} osservato e annotato nel taccuino! Torna alla nave.`);
-      } else {
-        log(`Osservi il ${BIRD.nome}… (${b.progress}/${BIRD.need})`);
-      }
-    } else if (d <= 10 && s.turn % 3 === 0) {
-      Suoni.play("cinguettio", BIRD.id); // lo senti prima di vederlo
+    // Ogni tanto saltella su una casella vicina
+    if (Math.random() < 0.25) {
+      const hops = DIRS.map(([dx, dy]) => ({ x: b.x + dx, y: b.y + dy }))
+        .filter((c) => inside(c.x, c.y) && ["grass", "tall"].includes(s.map[c.y][c.x])
+          && !same(c, s.bear) && dist(c, s.player) > FLEE);
+      if (hops.length) Object.assign(b, pickRandom(hops));
     }
+    if (dist(s.player, b) <= 12 && s.round % 2 === 0) Suoni.play("cinguettio", BIRD.id); // lo senti prima di vederlo
   }
 
-  function flyAway(reason) {
+  function scare(reason) {
     const b = s.bird;
-    b.flights++;
-    b.progress = 0;
     Suoni.play("cinguettio", BIRD.id);
-    if (b.flights >= 3) {
+    const spots = s.free.filter((c) => dist(c, s.player) >= 8 && dist(c, s.bear) >= 4 && bandCells(s.map, c).length >= 3);
+    if (!spots.length || Math.random() < BIRD_LEAVE) {
       b.gone = true;
-      log(`${reason}: il ${BIRD.nome} vola via dalla zona per sempre.`);
+      log(`${reason}: il ${BIRD.nome} vola via dalla zona. :(`);
       return;
     }
-    const spots = [];
-    for (let y = 0; y < H; y++) {
-      for (let x = 0; x < W; x++) {
-        const c = { x, y };
-        if (["grass", "tall"].includes(s.map[y][x]) && dist(c, s.player) >= 6 && !same(c, s.bear)) spots.push(c);
-      }
-    }
-    Object.assign(b, spots[Math.floor(Math.random() * spots.length)]);
-    log(`${reason}: il ${BIRD.nome} si sposta altrove. (${3 - b.flights} possibilità)`);
+    Object.assign(b, pickRandom(spots));
+    log(`${reason}: il ${BIRD.nome} vola in un altro punto della radura.`);
   }
 
   // --- Orso ---
 
+  const bearPassable = (c) => tile(s.map, c.x, c.y).walk && s.map[c.y][c.x] !== "ship";
+
+  function bearSees() {
+    const o = s.bear, p = s.player, d = dist(o, p);
+    if (hidden()) return d < 1.5;
+    return d <= BEAR_SMELL || (d <= BEAR_SIGHT && los(s.map, o, p));
+  }
+
+  function bearHears() {
+    return s.heard.some((n) => n.r > 0 && dist(s.bear, n) <= n.r + BEAR_HEARING);
+  }
+
+  // Le caselle che l'orso può raggiungere nel suo turno
+  function bearReach() {
+    if (s.bear.rest) return new Map();
+    return bfs(s.map, s.bear, BEAR_SPEED, bearPassable).depth;
+  }
+
   function bearTurn() {
     const o = s.bear, p = s.player;
+    if (o.rest) { o.rest--; return; }
 
-    if (o.stun > 0) {
-      o.stun--;
-      if (!o.stun) { o.state = "idle"; log("L'orso si riprende, scuotendo la testa."); }
+    if (bearSees() || bearHears()) {
+      if (o.mode !== "hunt") Suoni.play("orso");
+      o.mode = "hunt";
+      o.last = { x: p.x, y: p.y };
+    } else if (o.mode === "hunt") {
+      o.mode = "search";
+      o.searchLeft = 3;
+      log("L'orso ti ha perso di vista e annusa l'aria.");
+    }
+
+    const { prev } = bfs(s.map, o, Infinity, bearPassable);
+
+    if (o.mode === "hunt") {
+      const path = pathFrom(prev, o, p);
+      if (path && path.length <= BEAR_SPEED) return attack(path);
+      return walk(path, BEAR_SPEED);
+    }
+
+    if (o.mode === "search") {
+      walk(pathFrom(prev, o, o.last), BEAR_SPEED);
+      if (same(o, o.last) && --o.searchLeft <= 0) o.mode = "wander";
       return;
     }
-    if (o.state === "charge") return charge();
-    if (bearSees()) return aim();
 
-    if (s.noise > 0 && dist(o, p) <= s.noise + BEAR_HEARING) {
-      if (o.state !== "alert") log("L'orso ha sentito qualcosa e si avvicina.");
-      o.state = "alert";
-      o.target = { x: p.x, y: p.y };
-    }
-    if (o.state === "alert" && o.target) {
-      step(o, o.target);
-      if (same(o, o.target)) { o.state = "idle"; o.target = null; }
-    } else if (Math.random() < 0.35) {
-      step(o, null);
-    }
+    // Vagando, tende comunque a fiutare la tua direzione
+    if (Math.random() < 0.6) return walk(pathFrom(prev, o, p), 1);
+    const around = DIRS.map(([dx, dy]) => ({ x: o.x + dx, y: o.y + dy }))
+      .filter((c) => inside(c.x, c.y) && bearPassable(c) && !same(c, p));
+    if (around.length) walk([pickRandom(around)], 1);
   }
 
-  function aim() {
-    const o = s.bear, p = s.player;
-    const dx = p.x - o.x, dy = p.y - o.y;
-    o.dir = Math.abs(dx) >= Math.abs(dy) ? { x: Math.sign(dx), y: 0 } : { x: 0, y: Math.sign(dy) };
-    o.state = "charge";
-    Suoni.play("orso");
-    log("L'orso ti ha visto! Caricherà in linea retta: spostati!");
-  }
-
-  // Le caselle che l'orso attraverserà caricando, e cosa lo fermerà
-  function chargePath() {
-    const o = s.bear, cells = [];
-    let x = o.x, y = o.y;
-    for (;;) {
-      const nx = x + o.dir.x, ny = y + o.dir.y;
-      if (!inside(nx, ny)) return { cells, stop: null };
-      const t = tile(s.map, nx, ny);
-      if (!t.walk || t === TILES.ship) return { cells, stop: t };
-      cells.push({ x: nx, y: ny });
-      x = nx;
-      y = ny;
+  function walk(path, steps) {
+    if (!path) return;
+    const o = s.bear;
+    for (const c of path.slice(0, steps)) {
+      if (same(c, s.player)) break;
+      o.x = c.x;
+      o.y = c.y;
     }
   }
 
-  function charge() {
-    const o = s.bear, p = s.player;
-    const { cells, stop } = chargePath();
-    const hit = cells.findIndex((c) => same(c, p));
-    const end = hit >= 0 ? cells[hit - 1] || { x: o.x, y: o.y } : cells[cells.length - 1] || { x: o.x, y: o.y };
-    o.x = end.x;
-    o.y = end.y;
-    o.dir = null;
-    o.state = "idle";
-
-    if (hit >= 0) {
-      Suoni.play("tonfo");
-      p.hp = Math.max(0, p.hp - BEAR_DAMAGE);
-      log(`L'orso ti travolge! −${BEAR_DAMAGE} vita.`);
-      if (!p.hp) die();
-    } else if (stop && !stop.sight) {
-      o.stun = 3;
-      Suoni.play("tonfo");
-      log(`L'orso si schianta contro ${stop.name}! È stordito per 3 turni.`);
-    } else {
-      log("L'orso carica a vuoto e si ferma, confuso.");
-    }
-  }
-
-  function step(o, target) {
-    const options = DIRS.map(([dx, dy]) => ({ x: o.x + dx, y: o.y + dy }))
-      .filter((c) => inside(c.x, c.y) && tile(s.map, c.x, c.y).walk && s.map[c.y][c.x] !== "ship" && !same(c, s.player));
-    if (!options.length) return;
-    const next = target
-      ? options.sort((a, b) => dist(a, target) - dist(b, target))[0]
-      : options[Math.floor(Math.random() * options.length)];
-    o.x = next.x;
-    o.y = next.y;
+  function attack(path) {
+    const p = s.player;
+    walk(path.slice(0, -1), BEAR_SPEED);
+    s.bear.rest = 1;
+    p.hp = Math.max(0, p.hp - BEAR_DAMAGE);
+    Suoni.play("tonfo");
+    log(`L'orso ti raggiunge e ti colpisce! −${BEAR_DAMAGE} vita.`);
+    if (!p.hp) die();
   }
 
   // --- Fine zona ---
@@ -359,13 +404,13 @@ const Gioco = (() => {
     const esito = b.observed ? `Hai annotato il <strong>${BIRD.nome}</strong> nel taccuino.`
       : b.gone ? `Il ${BIRD.nome} è volato via. Andrà meglio la prossima volta.`
       : `Torni a bordo senza aver osservato il ${BIRD.nome}.`;
-    showOverlay("Di nuovo a bordo", `${esito}<br>Turni a terra: ${s.turn} · Vita: ${s.player.hp}/${MAX_HP}`, true);
+    showOverlay("Di nuovo a bordo", `${esito}<br>Round a terra: ${s.round} · Vita: ${s.player.hp}/${MAX_HP}`, true);
     Suoni.play("campana");
   }
 
   function die() {
     s.over = true;
-    showOverlay("Sbranato", `L'orso ha avuto la meglio.<br>Nel gioco completo qui finirebbe la spedizione.`, false);
+    showOverlay("Sbranato", "L'orso ha avuto la meglio.<br>Nel gioco completo qui finirebbe la spedizione.", false);
   }
 
   function showOverlay(title, html, canStay) {
@@ -401,6 +446,7 @@ const Gioco = (() => {
     };
     el.overlay.hidden = true;
     el.map.innerHTML = "";
+    el.map.style.gridTemplateColumns = `repeat(${W}, var(--cell))`;
     el.cells = [];
     for (let y = 0; y < H; y++) {
       el.cells.push([]);
@@ -418,26 +464,27 @@ const Gioco = (() => {
   function fitMap() {
     if (!el) return;
     const box = el.map.parentElement.getBoundingClientRect();
-    const cell = Math.max(14, Math.min(36, Math.floor(Math.min(box.width / W, (window.innerHeight * 0.62) / H))));
+    const cell = Math.max(10, Math.min(24, Math.floor(Math.min(box.width / W, (window.innerHeight * 0.62) / H))));
     el.map.style.setProperty("--cell", `${cell}px`);
   }
 
   function render() {
     const { map, player: p, bird: b, bear: o } = s;
-    const band = !b.observed && !b.gone ? new Set(bandCells(map, b).map((c) => `${c.x},${c.y}`)) : new Set();
-    const danger = o.state === "charge" && o.dir ? new Set(chargePath().cells.map((c) => `${c.x},${c.y}`)) : new Set();
+    const band = !b.observed && !b.gone ? new Set(bandCells(map, b).map(key)) : new Set();
+    const reach = bearReach();
+    const hunting = o.mode === "hunt";
 
     for (let y = 0; y < H; y++) {
       for (let x = 0; x < W; x++) {
         const t = TILES[map[y][x]];
         const c = el.cells[y][x];
-        const key = `${x},${y}`;
+        const k = `${x},${y}`;
         let ch = t.ch;
         let cls = `cell ${t.cls}`;
         delete c.dataset.intent;
 
-        if (band.has(key)) cls += " band";
-        if (danger.has(key)) cls += " danger";
+        if (band.has(k)) cls += " band";
+        if (reach.get(k) > 0) cls += hunting ? " danger" : " reach";
 
         if (same(p, { x, y })) {
           ch = "@";
@@ -445,9 +492,9 @@ const Gioco = (() => {
         } else if (same(o, { x, y })) {
           ch = "B";
           cls += " e-bear";
-          if (o.stun) c.dataset.intent = "z";
-          else if (o.state === "charge") c.dataset.intent = "!";
-          else if (o.state === "alert") c.dataset.intent = "?";
+          if (o.rest) c.dataset.intent = "z";
+          else if (o.mode === "hunt") c.dataset.intent = "!";
+          else if (o.mode === "search") c.dataset.intent = "?";
         } else if (!b.gone && same(b, { x, y })) {
           ch = "v";
           cls += b.observed ? " e-bird is-observed" : " e-bird";
@@ -458,37 +505,39 @@ const Gioco = (() => {
     }
 
     const hearts = "♥".repeat(Math.ceil(p.hp / 2)) + "♡".repeat(Math.ceil(MAX_HP / 2) - Math.ceil(p.hp / 2));
+    const steps = s.busy ? "animali…" : "●".repeat(s.steps) + "○".repeat(STEPS - s.steps);
     const noise = "●".repeat(s.noise) + "○".repeat(4 - s.noise);
-    const bar = "▰".repeat(b.progress) + "▱".repeat(BIRD.need - b.progress);
-    const bearState = o.stun ? `stordito (${o.stun})` : { idle: "tranquillo", alert: "in allerta", charge: "sta per caricare!" }[o.state];
+    const bearState = o.rest ? "si riposa" : { wander: "fiuta in giro", search: "ti cerca", hunt: "ti insegue!" }[o.mode];
     el.status.innerHTML = `
       <div><span>Vita</span><b class="hearts">${hearts}</b></div>
-      <div><span>Turno</span><b>${s.turn}</b></div>
+      <div><span>Round</span><b>${s.round}</b></div>
+      <div><span>Passi</span><b>${steps}</b></div>
       <div><span>Rumore</span><b>${noise}</b></div>
       <div><span>Nascosto</span><b>${hidden() ? "sì" : "no"}</b></div>
       <div><span>Orso</span><b>${bearState}</b></div>
       <div><span>Seed</span><b>${s.seed}</b></div>`;
 
-    const birdState = b.observed ? "✔ osservato" : b.gone ? "✗ volato via" : `${bar} ${b.progress}/${BIRD.need}`;
+    const birdState = b.observed ? "✔ osservato" : b.gone ? "✗ volato via" : "da osservare";
     el.notebook.innerHTML = `<div class="nb-row"><span>${b.observed ? "v" : "?"} ${BIRD.nome}</span><b>${birdState}</b></div>`;
     el.log.innerHTML = s.log.map((m, i) => `<li${i ? "" : ' class="is-new"'}>${m}</li>`).join("");
   }
 
   // --- Comandi ---
 
-  const KEYS = {
+  const MOVES = {
     ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0],
     w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0],
-    " ": [0, 0], ".": [0, 0],
   };
 
   document.addEventListener("keydown", (e) => {
     if (!document.body.classList.contains("in-game") || !s || s.over) return;
-    const k = KEYS[e.key.length === 1 ? e.key.toLowerCase() : e.key];
-    if (!k) return;
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (!MOVES[k] && k !== " " && k !== "o" && k !== "Enter") return;
     e.preventDefault();
     e.stopImmediatePropagation(); // le frecce muovono l'esploratore, non il menu
-    act(...k);
+    if (MOVES[k]) move(...MOVES[k]);
+    else if (k === "Enter") endRound();
+    else observe();
   });
 
   document.addEventListener("click", (e) => {
@@ -497,9 +546,12 @@ const Gioco = (() => {
     if (action === "stay") stay();
 
     const cell = e.target.closest("#map > div");
-    if (cell && s && !s.over) {
-      const dx = cell.dataset.x - s.player.x, dy = cell.dataset.y - s.player.y;
-      if (Math.abs(dx) + Math.abs(dy) <= 1) act(dx, dy);
+    if (cell && canAct()) {
+      const x = +cell.dataset.x, y = +cell.dataset.y;
+      const dx = x - s.player.x, dy = y - s.player.y;
+      if (!s.bird.gone && same(s.bird, { x, y })) observe();
+      else if (!dx && !dy) endRound();
+      else if (Math.abs(dx) + Math.abs(dy) === 1) move(dx, dy);
     }
   });
 
