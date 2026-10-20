@@ -94,7 +94,7 @@ Barra menu in stile anni '90: `Spedizione · Taccuino · Inventario · Ciurma ·
 
 **Puntatori.** Le voci comprate in città compaiono sul globo come segni: un cerchio largo per le voci vaghe, una croce precisa per quelle care.
 
-**Tempo.** Un unico orologio per tutta la spedizione. In mare scorre **solo mentre navighi**: un giorno ogni ~20 secondi a vele spiegate. Sbarcare costa un momento della giornata; a terra ogni round è 1/15 di giorno. All'inizio di ogni giorno suona la campana e paghi la ciurma.
+**Tempo.** Un unico orologio per tutta la spedizione. In mare scorre **solo mentre navighi**: un giorno ogni ~20 secondi a vele spiegate. Sbarcare costa un momento della giornata; a terra ogni azione è 1/45 di giorno. All'inizio di ogni giorno suona la campana e paghi la ciurma.
 
 **Momenti del giorno.** Ogni giorno ha tre momenti: **alba**, **pomeriggio** e **notte**, che tingono anche il globo. Sbarchi nel momento in cui arrivi, e il momento resta fisso per tutta la visita a terra.
 - La cartolina cambia cielo e luce; la palette della zona si scurisce di notte.
@@ -168,15 +168,15 @@ Una griglia fitta (**40 × 24 caselle**) generata dallo stesso seed della cartol
 
 **Contenuto:** terreno (erba, erba alta, cespugli, alberi, rocce, acqua bassa, acqua profonda), **rovine**, la **casella nave** (punto di arrivo e di partenza), uccelli, mostri, risorse, a volte un tesoro.
 
-**Round "a scacchi".** Il giocatore ha **3 passi** per round: ogni passo è un'azione (muoversi di una casella, osservare, usare uno strumento, raccogliere). Può chiudere il round prima. Poi **si muovono tutti gli animali**, ognuno con il suo movimento tipico, come i pezzi degli scacchi.
+**Il tempo scorre solo quando agisci.** Ogni azione (un passo, un'osservazione, aspettare) è un **battito**: in quel battito si muovono anche gli animali, nella stessa animazione, scivolando di casella in casella. Se non fai niente il mondo resta fermo e puoi pensare quanto vuoi; non ci sono turni né annunci che interrompono il gioco. (Il primo prototipo usava round "3 passi, poi gli animali" con il banner *Turno degli animali*: spezzava il ritmo ed è stato scartato.)
 
-**Il tempo è scandito.** Alla fine dei tuoi passi compare il banner *Turno degli animali* con un suono grave e la mappa si scurisce; gli animali si muovono una casella alla volta, poi *Tocca a te*.
+**Velocità come frazioni del tuo passo.** Ogni animale accumula slancio a ogni battito e si muove quando ne ha abbastanza: l'orso che ti insegue fa **4 passi ogni 3 tuoi**, quando ti cerca va al tuo passo, quando vaga fa un passo ogni due. L'acqua gli costa doppio.
 
-**Si vede dove arrivano gli animali.** Le caselle che una creatura può raggiungere nel suo turno sono evidenziate in rosso (tenue se non ti ha notato, acceso se ti insegue). Finire il round lì dentro significa farsi prendere.
+**Si vede dove arrivano gli animali.** Le caselle che l'orso può raggiungere al prossimo battito sono evidenziate in rosso (tenue se non ti ha notato, acceso se ti insegue), e la casella dove sta per andare è segnata più forte. Restarci dentro significa farsi prendere.
 
 **Animali non stupidi.** Le creature non si fanno male da sole (niente cariche contro gli alberi): aggirano gli ostacoli, ti seguono, cercano dove ti hanno visto l'ultima volta. Si battono con le trappole, le esche e il terreno, non con i loro errori.
 
-**Tempo a terra.** Ogni sbarco costa **1 giorno**. A terra una **clessidra** conta i round: dopo **15 round** passa un giorno. Il passaggio è sempre visibile: campana, banner *Giorno N*, paga della ciurma nel diario (con la sua icona). Se non puoi pagare, la ciurma ti abbandona e la spedizione finisce.
+**Tempo a terra.** Ogni sbarco costa **un momento della giornata**. A terra una **clessidra** conta le azioni: dopo **45 azioni** passa un giorno. Il passaggio è sempre visibile: campana, banner *Giorno N*, paga della ciurma nel diario (con la sua icona). Se non puoi pagare, la ciurma ti abbandona e la spedizione finisce.
 
 **Rovine.** Un edificio diroccato di circa 8 × 6 caselle: muri spessi, un varco e un crollo pieno di macerie (rumorose), a volte un pilastro. **Da fuori si vede solo il tetto: l'interno si scopre entrando.** I muri bloccano la vista, l'orso può entrare dai varchi. A volte l'uccello nidifica dentro.
 

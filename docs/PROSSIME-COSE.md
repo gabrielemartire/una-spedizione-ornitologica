@@ -2,8 +2,8 @@
 
 Lista di lavoro, in ordine sparso. Le idee nascono nella chat di progetto; il quadro completo è nel [documento di design](DESIGN.md).
 
-## In discussione adesso
-- [ ] **Ritmo della battlemap.** Il banner "Turno degli animali" spezza il gioco, e gli animali che si muovono di una casella dopo l'attesa deludono. Serve un modo diverso di scandire il tempo a terra.
+## Fatto di recente
+- [x] **Ritmo della battlemap**: niente più round e banner. Il tempo scorre solo quando agisci, gli animali si muovono insieme a te con velocità frazionarie (l'orso 4 passi ogni 3 tuoi).
 
 ## Città
 - [ ] **Mercato**: vendere le risorse raccolte a terra (piume, erbe, funghi, legno, pelli, tesori), con prezzi diversi tra il Forte e il Porto del fiordo.

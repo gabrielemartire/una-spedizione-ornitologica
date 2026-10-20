@@ -1,26 +1,26 @@
 // Prototipo della battlemap: una zona, un uccello da osservare, un orso da evitare.
-// Si gioca "a scacchi": il giocatore fa i suoi passi, poi si muovono gli animali.
+// Il tempo scorre solo quando ti muovi: ogni tua azione è un battito, e in ogni battito
+// gli animali avanzano secondo la loro velocità, scivolando sulla mappa insieme a te.
 // Espone l'oggetto globale `Gioco`.
 const Gioco = (() => {
   const W = 40;
   const H = 24;
-  const STEPS = 3;            // passi del giocatore per round
   const FLEE = 1.5;           // più vicino di così l'uccello scappa
   const OBSERVE = 3.5;        // portata del binocolo
   const BIRD_LEAVE = 0.35;    // probabilità che, spaventato, lasci la zona invece di spostarsi
-  const BEAR_SPEED = { hunt: 4, search: 3, wander: 1 }; // passi a round; l'acqua ne costa 2
+  const BEAR_SPEED = { hunt: 4 / 3, search: 1, wander: 0.5 }; // passi per ogni tuo passo; l'acqua ne costa 2
   const BEAR_SIGHT = 10;
   const BEAR_SMELL = 6;       // ti fiuta entro questa distanza, se non sei nascosto
   const BEAR_HEARING = 2;     // l'orso sente un po' più lontano del rumore stesso
   const BEAR_DAMAGE = 4;
   const MAX_HP = 10;
   const HEAL_COST = 5;        // monete per punto vita, in città
-  const ROUNDS_PER_DAY = 15;  // a terra, dopo tanti round passa un giorno
+  const TICKS_PER_DAY = 45;   // a terra, dopo tante azioni passa un giorno
   const START_MONEY = 100;
   const CREW_PAY = 8;         // la paga giornaliera della ciurma
   const TIME_ICONS = { alba: "sunrise", pomeriggio: "sun", notte: "moon" };
-  const PHASE_PAUSE = 550;    // ms: annuncio del turno degli animali
-  const STEP_DELAY = 170;     // ms: ogni passo di un animale
+  const SLIDE_MS = 110;       // durata dello scivolamento di una pedina
+  const ACT_INTERVAL = 110;   // ms minimi tra due azioni, anche tenendo premuto
 
   // noise = raggio del rumore in caselle; hide = chi ci sta dentro si vede solo da vicino
   // icon = icona di game-icons.net (js/icons.js); ch = carattere per le caselle senza icona
@@ -69,7 +69,6 @@ const Gioco = (() => {
   const tile = (map, x, y) => TILES[map[y][x]];
   const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
   const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   // Linea di vista (Bresenham): alberi e rocce intermedi bloccano la vista
   function los(map, a, b) {
@@ -340,12 +339,11 @@ const Gioco = (() => {
       startPos: gen.start,
       player: { ...gen.start, hp: trip.hp },
       bird: { ...gen.bird, observed: memory.observed, gone: memory.gone },
-      bear: { ...gen.bear, mode: "wander", last: null, searchLeft: 0, rest: 0 },
-      round: 1,
-      steps: STEPS,
+      bear: { ...gen.bear, mode: "wander", last: null, searchLeft: 0, rest: 0, energy: 0, next: null },
+      ticks: 0,
       noise: 0,
       heard: [],
-      busy: false,
+      lastAct: 0,
       over: false,
     };
     showView("land");
@@ -413,20 +411,33 @@ const Gioco = (() => {
   }
 
   function canAct() {
-    return s && !s.over && !s.busy;
+    return s && !s.over;
   }
 
   // --- Azioni del giocatore ---
 
-  function move(dx, dy) {
+  // Ogni azione (muoversi, osservare, aspettare) è un battito del mondo
+  function act(kind, dx = 0, dy = 0) {
     if (!canAct()) return;
+    const now = performance.now();
+    if (now - s.lastAct < ACT_INTERVAL) return;
+
+    s.noise = 0;
+    s.heard = [];
+    if (kind === "move" && !move(dx, dy)) return;
+    if (kind === "observe") observe();
+    s.lastAct = now;
+    if (!s.over) tick();
+  }
+
+  function move(dx, dy) {
     const p = s.player;
     const n = { x: p.x + dx, y: p.y + dy };
-    if (!inside(n.x, n.y) || !tile(s.map, n.x, n.y).walk || same(s.bear, n) || (!s.bird.gone && same(s.bird, n))) return;
+    if (!inside(n.x, n.y) || !tile(s.map, n.x, n.y).walk || same(s.bear, n) || (!s.bird.gone && same(s.bird, n))) return false;
 
     Object.assign(p, n);
     const t = tile(s.map, n.x, n.y);
-    if (t === TILES.ship) return endZone();
+    if (t === TILES.ship) { endZone(); return true; }
     Suoni.play(t.sound);
     s.noise = t.noise;
     s.heard.push({ ...n, r: t.noise });
@@ -438,16 +449,14 @@ const Gioco = (() => {
       if (d <= FLEE) scare("Troppo vicino");
       else if (d <= t.noise) scare("Troppo rumore");
     }
-    spendStep();
+    return true;
   }
 
   function observe() {
-    if (!canAct()) return;
     const b = s.bird, p = s.player;
-    s.noise = 0;
     if (b.gone || b.observed) {
       log("Non c'è più niente da osservare qui. Torna alla nave.");
-      return render();
+      return;
     }
     const d = dist(p, b);
     if (d <= OBSERVE && los(s.map, p, b)) {
@@ -459,45 +468,15 @@ const Gioco = (() => {
     } else {
       log("Troppo lontano: il binocolo non basta.");
     }
-    spendStep();
   }
 
-  function spendStep() {
-    s.steps--;
-    if (s.steps <= 0) endRound();
-    else render();
-  }
-
-  async function endRound() {
-    if (!canAct()) return;
-    const run = s; // se nel frattempo si torna al menu, l'animazione si ferma
-    s.busy = true;
-    phase("animals");
-    render();
-    await sleep(PHASE_PAUSE);
-    if (s !== run) return;
-
-    birdTurn();
-    render();
-    await sleep(STEP_DELAY);
-    if (s !== run) return;
-
-    await bearTurn();
-    if (s !== run || s.over) return;
-
-    s.round++;
-    s.steps = STEPS;
-    s.noise = 0;
-    s.heard = [];
-    const today = day();
-    if (!advanceClock(1 / ROUNDS_PER_DAY)) return;
-    if (day() !== today) {
-      render();
-      await sleep(1100);
-      if (s !== run) return;
-    }
-    s.busy = false;
-    phase("player");
+  // Il mondo avanza di un battito: l'uccello, l'orso, l'orologio
+  function tick() {
+    s.ticks++;
+    birdTick();
+    bearTick();
+    if (s.over) return;
+    if (!advanceClock(1 / TICKS_PER_DAY)) return;
     render();
   }
 
@@ -509,43 +488,36 @@ const Gioco = (() => {
       return false;
     }
     trip.money -= CREW_PAY;
-    phase("day");
+    showDayBanner();
     log(`Giorno ${day()}. Paghi la ciurma: −${CREW_PAY} monete.`, "pay");
     Suoni.play("monete");
     return true;
   }
 
-  const PHASES = {
-    animals: { text: () => "Turno degli animali", sound: "turnoAnimali" },
-    player: { text: () => "Tocca a te", sound: "tuoTurno" },
-    day: { text: () => `Giorno ${day()}`, sound: "campana" },
-  };
-
-  function phase(kind) {
-    el.banner.textContent = PHASES[kind].text();
-    el.banner.className = `phase-banner is-${kind}`;
+  // Il nuovo giorno si annuncia, senza fermare il gioco
+  function showDayBanner() {
+    el.banner.textContent = `Giorno ${day()}`;
+    el.banner.className = "phase-banner is-day";
     el.banner.hidden = false;
-    el.map.classList.toggle("is-animals", kind === "animals");
-    Suoni.play(PHASES[kind].sound);
+    Suoni.play("campana");
     clearTimeout(el.bannerTimer);
-    if (kind !== "animals") el.bannerTimer = setTimeout(() => { el.banner.hidden = true; }, 700);
+    el.bannerTimer = setTimeout(() => { el.banner.hidden = true; }, 1300);
   }
 
   // --- Uccello ---
 
-  function birdTurn() {
+  function birdTick() {
     const b = s.bird;
     if (b.gone || b.observed) return;
-    if (dist(s.bear, b) <= 2) return scare("L'orso è passato troppo vicino");
 
     // Ogni tanto saltella su una casella vicina
-    if (Math.random() < 0.25) {
+    if (Math.random() < 0.08) {
       const hops = DIRS.map(([dx, dy]) => ({ x: b.x + dx, y: b.y + dy }))
         .filter((c) => inside(c.x, c.y) && ["grass", "tall"].includes(s.map[c.y][c.x])
           && !same(c, s.bear) && dist(c, s.player) > FLEE);
       if (hops.length) Object.assign(b, pickRandom(hops));
     }
-    if (dist(s.player, b) <= 12 && s.round % 2 === 0) Suoni.play("cinguettio", BIRD.id); // lo senti prima di vederlo
+    if (dist(s.player, b) <= 12 && s.ticks % 6 === 0) Suoni.play("cinguettio", BIRD.id); // lo senti prima di vederlo
   }
 
   function scare(reason) {
@@ -605,15 +577,15 @@ const Gioco = (() => {
     return s.heard.some((n) => n.r > 0 && dist(s.bear, n) <= n.r + BEAR_HEARING);
   }
 
-  // Le caselle che l'orso raggiunge se si mette a inseguirti
+  // Le caselle che l'orso può raggiungere al prossimo battito, se si mette a inseguirti
   function bearReach() {
     if (s.bear.rest) return new Map();
-    return bearPaths(BEAR_SPEED.hunt).cost;
+    return bearPaths(Math.floor(s.bear.energy + BEAR_SPEED.hunt)).cost;
   }
 
-  async function bearTurn() {
-    const run = s, o = s.bear, p = s.player;
-    if (o.rest) { o.rest--; return; }
+  function bearTick() {
+    const o = s.bear, p = s.player;
+    if (o.rest) { o.rest--; o.next = null; return; }
 
     if (bearSees() || bearHears()) {
       if (o.mode !== "hunt") { Suoni.play("orso"); log("L'orso ti ha fiutato e ti insegue!", "bear"); }
@@ -621,12 +593,12 @@ const Gioco = (() => {
       o.last = { x: p.x, y: p.y };
     } else if (o.mode === "hunt") {
       o.mode = "search";
-      o.searchLeft = 3;
+      o.searchLeft = 6;
       log("L'orso ti ha perso e va a cercarti dove ti ha visto.", "bear");
     }
 
-    const speed = BEAR_SPEED[o.mode];
-    const { cost, prev } = bearPaths();
+    o.energy += BEAR_SPEED[o.mode];
+    const { prev } = bearPaths();
     let target = o.mode === "hunt" ? p : o.mode === "search" ? o.last : null;
     // Vagando, tende comunque a fiutare la tua direzione
     if (!target) {
@@ -634,29 +606,34 @@ const Gioco = (() => {
         .filter((c) => inside(c.x, c.y) && bearCost(c) < Infinity && !same(c, p));
       target = Math.random() < 0.6 ? p : pickRandom(around);
     }
-    const path = target ? pathFrom(prev, o, target) || [] : [];
+    const path = (target && pathFrom(prev, o, target)) || [];
 
-    let spent = 0;
+    const steps = [];
     for (const c of path) {
-      if (same(c, p)) break;
-      spent += bearCost(c);
-      if (spent > speed) break;
+      if (same(c, p)) {
+        if (o.mode === "hunt" && o.energy >= 1) { slideBear(steps); return attack(); }
+        break;
+      }
+      if (o.energy < bearCost(c)) break;
+      o.energy -= bearCost(c);
       o.x = c.x;
       o.y = c.y;
+      steps.push(c);
       if (!s.bird.gone && !s.bird.observed && dist(o, s.bird) <= 2) scare("L'orso è passato troppo vicino");
-      Suoni.play("passoOrso");
-      render();
-      await sleep(STEP_DELAY);
-      if (s !== run) return;
     }
+    if (!steps.length) o.energy = Math.min(o.energy, 1); // fermo non accumula slancio
+    slideBear(steps);
+    if (steps.length && dist(o, p) < 14) Suoni.play("passoOrso");
 
-    if (o.mode === "hunt" && cost.get(key(p)) <= speed) return attack();
     if (o.mode === "search" && same(o, o.last) && --o.searchLeft <= 0) o.mode = "wander";
+    o.next = o.mode === "wander" ? null : (pathFrom(bearPaths().prev, o, o.mode === "hunt" ? p : o.last) || [])[0] || null;
   }
 
   function attack() {
     const p = s.player;
-    s.bear.rest = 1;
+    s.bear.rest = 3;
+    s.bear.energy = 0;
+    s.bear.next = null;
     p.hp = Math.max(0, p.hp - BEAR_DAMAGE);
     Suoni.play("tonfo");
     el.map.classList.remove("is-hit");
@@ -683,7 +660,7 @@ const Gioco = (() => {
   function endTrip(title, html) {
     trip.over = true;
     Mare.stop();
-    if (s) { s.over = true; s.busy = false; }
+    if (s) s.over = true;
     showOverlay(title, html, "end");
   }
 
@@ -700,7 +677,6 @@ const Gioco = (() => {
   // kind: "zone" = riprendi il mare o resta; "city" = in porto; "end" = la spedizione è finita
   function showOverlay(title, html, kind, healLabel = null) {
     el.banner.hidden = true;
-    el.map.classList.remove("is-animals");
     if (s && trip.mode === "land") render();
     const buttons = {
       zone: `<button class="menu-item" data-game-action="sail">Riprendi il mare</button>
@@ -760,7 +736,7 @@ const Gioco = (() => {
   }
 
   const KEYS_HELP = {
-    land: "3 passi a round, poi si muovono gli animali · frecce/WASD muovi · spazio/O osserva · Invio fine round · ⚓ torna a bordo · Esc menu",
+    land: "il tempo scorre solo quando agisci · frecce/WASD muovi · spazio/O osserva · Invio aspetta · ⚓ torna a bordo · Esc menu",
     sea: "← → rotta · ↑ ↓ vele · T cannocchiale · Invio sbarca o attracca in città · Esc menu",
   };
 
@@ -778,7 +754,7 @@ const Gioco = (() => {
   }
 
   function buildDom() {
-    el.map.classList.remove("is-animals", "is-hit");
+    el.map.classList.remove("is-hit");
     el.map.innerHTML = "";
     el.map.style.gridTemplateColumns = `repeat(${W}, var(--cell))`;
     el.cells = [];
@@ -792,7 +768,30 @@ const Gioco = (() => {
         el.cells[y].push(c);
       }
     }
+    // Le pedine stanno su un livello sopra le caselle e scivolano da una all'altra
+    el.ents = {};
+    for (const [name, icon] of [["bird", "bird"], ["bear", "bear"], ["player", "binoculars"]]) {
+      const e = document.createElement("div");
+      e.className = `entity e-${name} no-slide`;
+      e.innerHTML = iconHtml(icon);
+      el.map.appendChild(e);
+      el.ents[name] = e;
+    }
+    s.bearSlideEnd = 0;
     fitMap();
+    requestAnimationFrame(() => Object.values(el.ents).forEach((e) => e.classList.remove("no-slide")));
+  }
+
+  function place(e, c) {
+    e.style.setProperty("--x", c.x);
+    e.style.setProperty("--y", c.y);
+  }
+
+  // L'orso percorre i suoi passi uno dopo l'altro, anche quando in un battito ne fa due
+  function slideBear(steps) {
+    if (!steps.length) return;
+    s.bearSlideEnd = performance.now() + steps.length * SLIDE_MS;
+    steps.forEach((c, i) => setTimeout(() => place(el.ents.bear, c), i * SLIDE_MS));
   }
 
   function fitMap() {
@@ -820,7 +819,6 @@ const Gioco = (() => {
         let icon = t === TILES.tree && (x * 7 + y * 13) % 3 === 0 ? "pine" : t.icon;
         let ch = t.ch || "";
         let cls = `cell ${t.cls}`;
-        let intent = null;
 
         if (roofed.has(k)) {
           icon = k === roofCenter ? "ruins" : null;
@@ -829,26 +827,25 @@ const Gioco = (() => {
         } else if (band.has(k)) cls += " band";
         if (reach.get(k) > 0) cls += hunting ? " danger" : " reach";
 
-        if (same(p, { x, y })) {
-          icon = "binoculars";
-          cls += hidden() ? " e-player is-hidden" : " e-player";
-        } else if (same(o, { x, y })) {
-          icon = "bear";
-          cls += " e-bear";
-          intent = o.rest ? "z" : o.mode === "hunt" ? "!" : o.mode === "search" ? "?" : null;
-        } else if (!b.gone && same(b, { x, y }) && !roofed.has(k)) {
-          icon = "bird";
-          cls += b.observed ? " e-bird is-observed" : " e-bird";
-        }
+        if (o.next && same(o.next, { x, y })) cls += " bear-next";
 
         // Si tocca il DOM solo se la casella è cambiata
         const html = icon ? iconHtml(icon) : ch;
         if (c._html !== html) { c.innerHTML = html; c._html = html; }
         if (c.className !== cls) c.className = cls;
-        if (intent) c.dataset.intent = intent;
-        else delete c.dataset.intent;
       }
     }
+
+    // Le pedine
+    place(el.ents.player, p);
+    el.ents.player.classList.toggle("is-hidden", hidden());
+    if (performance.now() >= s.bearSlideEnd) place(el.ents.bear, o);
+    const intent = o.rest ? "z" : o.mode === "hunt" ? "!" : o.mode === "search" ? "?" : null;
+    if (intent) el.ents.bear.dataset.intent = intent;
+    else delete el.ents.bear.dataset.intent;
+    el.ents.bird.hidden = b.gone || roofed.has(key(b));
+    el.ents.bird.classList.toggle("is-observed", b.observed);
+    place(el.ents.bird, b);
 
     renderStatus();
     renderNotebook();
@@ -862,22 +859,20 @@ const Gioco = (() => {
     const time = land ? s.time : timeOf(trip.clock);
     const hp = land ? s.player.hp : trip.hp;
     const frac = trip.clock % 1;
-    const left = Math.ceil((1 - frac) * ROUNDS_PER_DAY - 1e-9);
+    const left = Math.ceil((1 - frac) * TICKS_PER_DAY - 1e-9);
     const sand = "▰".repeat(Math.ceil((1 - frac) * 5)) + "▱".repeat(5 - Math.ceil((1 - frac) * 5));
     const hearts = "♥".repeat(Math.ceil(hp / 2)) + "♡".repeat(Math.ceil(MAX_HP / 2) - Math.ceil(hp / 2));
     let html = `
       <div class="status-day">${iconHtml(TIME_ICONS[time])}<b>Giorno ${day()}</b><span>${time}</span></div>
-      <div title="Quanto manca al prossimo giorno">${iconHtml("hourglass")}<span>Clessidra</span><b>${sand}${land ? ` ${left}` : ""}</b></div>
+      <div title="Quante azioni mancano al prossimo giorno">${iconHtml("hourglass")}<span>Clessidra</span><b>${sand}${land ? ` ${left}` : ""}</b></div>
       <div title="La ciurma costa ${CREW_PAY} monete al giorno">${iconHtml("coins")}<span>Monete</span><b>${trip.money} <small>(−${CREW_PAY}/g)</small></b></div>
       <hr>
       <div><span>Vita</span><b class="hearts">${hearts}</b></div>`;
     if (land) {
       const o = s.bear;
-      const steps = s.busy ? "aspetta…" : "●".repeat(s.steps) + "○".repeat(STEPS - s.steps);
       const noise = "●".repeat(s.noise) + "○".repeat(4 - s.noise);
       const bearState = o.rest ? "si riposa" : { wander: "fiuta in giro", search: "ti cerca", hunt: "ti insegue!" }[o.mode];
       html += `
-      <div><span>Passi</span><b>${steps}</b></div>
       <div><span>Rumore</span><b>${noise}</b></div>
       <div><span>Nascosto</span><b>${hidden() ? "sì" : "no"}</b></div>
       <div><span>Orso</span><b>${bearState}</b></div>`;
@@ -915,12 +910,12 @@ const Gioco = (() => {
   document.addEventListener("keydown", (e) => {
     if (!document.body.classList.contains("in-game") || !trip || trip.mode !== "land" || !s || s.over) return;
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
-    if (!MOVES[k] && k !== " " && k !== "o" && k !== "Enter") return;
+    if (!MOVES[k] && k !== " " && k !== "o" && k !== "Enter" && k !== ".") return;
     e.preventDefault();
     e.stopImmediatePropagation(); // le frecce muovono l'esploratore, non il menu
-    if (MOVES[k]) move(...MOVES[k]);
-    else if (k === "Enter") endRound();
-    else observe();
+    if (MOVES[k]) act("move", ...MOVES[k]);
+    else if (k === "Enter" || k === ".") act("wait");
+    else act("observe");
   });
 
   document.addEventListener("click", (e) => {
@@ -934,9 +929,9 @@ const Gioco = (() => {
     if (cell && canAct()) {
       const x = +cell.dataset.x, y = +cell.dataset.y;
       const dx = x - s.player.x, dy = y - s.player.y;
-      if (!s.bird.gone && same(s.bird, { x, y })) observe();
-      else if (!dx && !dy) endRound();
-      else if (Math.abs(dx) + Math.abs(dy) === 1) move(dx, dy);
+      if (!s.bird.gone && same(s.bird, { x, y })) act("observe");
+      else if (!dx && !dy) act("wait");
+      else if (Math.abs(dx) + Math.abs(dy) === 1) act("move", dx, dy);
     }
   });
 
