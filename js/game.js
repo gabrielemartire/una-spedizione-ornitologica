@@ -716,7 +716,7 @@ const Gioco = (() => {
     if (document.getElementById("icon-sprite")) return;
     const symbols = Object.entries(ICONS)
       .map(([name, d]) => `<symbol id="i-${name}" viewBox="0 0 512 512"><path d="${d}"/></symbol>`).join("");
-    document.body.insertAdjacentHTML("afterbegin", `<svg id="icon-sprite" hidden>${symbols}</svg>`);
+    document.body.insertAdjacentHTML("afterbegin", `<svg id="icon-sprite" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">${symbols}</svg>`);
   }
 
   const iconHtml = (name) => `<svg class="ic" aria-hidden="true"><use href="#i-${name}"/></svg>`;

@@ -35,6 +35,12 @@ ICONS = {
     "sunrise": "delapouite/sunrise",
     "sun": "lorc/sun",
     "moon": "lorc/moon",
+    "palm": "delapouite/palm-tree",
+    "cactus": "delapouite/cactus",
+    "reed": "delapouite/reed",
+    "fern": "delapouite/fern",
+    "ice": "lorc/frozen-block",
+    "deadtree": "lorc/tree-branch",
 }
 
 BASE = "https://raw.githubusercontent.com/game-icons/icons/master/{}.svg"
