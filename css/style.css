@@ -69,6 +69,25 @@ body {
 
 .hint { color: var(--dark); margin-top: 16px; }
 
+.volume { color: var(--mid); letter-spacing: 2px; }
+
+.sound-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 8px 16px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 8px 0;
+  border-top: 1px dashed var(--dark);
+  border-bottom: 1px dashed var(--dark);
+  text-align: left;
+}
+.sound-group { display: grid; align-content: start; }
+.sound-group h3 { margin: 4px 0; color: var(--mid); font-weight: normal; font-size: 22px; text-transform: uppercase; }
+.sound-group .menu-item { text-align: left; padding: 2px 8px; }
+.menu-item.is-playing { color: var(--mid); }
+.menu-item.is-playing::after { content: "  ♪ in ascolto"; color: var(--mid); }
+
 .credits {
   max-height: 360px;
   overflow-y: auto;

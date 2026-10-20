@@ -22,10 +22,58 @@
       <nav class="menu">
         <button class="menu-item" disabled>Nuova spedizione <span class="tag">presto</span></button>
         <button class="menu-item" disabled>Riprendi un taccuino <span class="tag">presto</span></button>
+        <button class="menu-item" data-action="toggle-sound">Suoni: <span data-label="sound">ON</span></button>
+        <button class="menu-item" data-action="volume" aria-label="Volume">Volume <span class="volume" data-label="volume"></span></button>
+        <button class="menu-item" data-goto="screen-sounds">Ascolta i suoni</button>
         <button class="menu-item" data-goto="screen-credits">Crediti</button>
       </nav>
 
-      <p class="hint">↑ ↓ per scegliere · Invio per confermare</p>
+      <p class="hint">↑ ↓ per scegliere · ← → volume · Invio per confermare</p>
+    </section>
+
+    <!-- Prova dei suoni proposti -->
+    <section id="screen-sounds" class="screen">
+      <h2 class="heading">~ Suoni ~</h2>
+      <p class="subtitle">proposte da ascoltare · gli ambienti restano accesi finché li fermi</p>
+
+      <div class="sound-groups">
+        <div class="sound-group">
+          <h3>Ambiente</h3>
+          <button class="menu-item" data-ambient="vento">Vento</button>
+          <button class="menu-item" data-ambient="mare">Mare</button>
+          <button class="menu-item" data-ambient="foresta">Foresta</button>
+          <button class="menu-item" data-ambient="notte">Notte e grilli</button>
+        </div>
+        <div class="sound-group">
+          <h3>Interfaccia</h3>
+          <button class="menu-item" data-sound="blip">Spostamento</button>
+          <button class="menu-item" data-sound="conferma">Conferma</button>
+          <button class="menu-item" data-sound="pagina">Pagina del taccuino</button>
+          <button class="menu-item" data-sound="monete">Monete</button>
+        </div>
+        <div class="sound-group">
+          <h3>Battlemap</h3>
+          <button class="menu-item" data-sound="passoErba">Passo nell'erba</button>
+          <button class="menu-item" data-sound="passoAcqua">Passo nell'acqua</button>
+          <button class="menu-item" data-sound="cespuglio">Fruscio di cespuglio</button>
+          <button class="menu-item" data-sound="tagliola">Tagliola</button>
+          <button class="menu-item" data-sound="petardo">Petardo</button>
+          <button class="menu-item" data-sound="orso">Orso</button>
+          <button class="menu-item" data-sound="lupo">Lupo</button>
+          <button class="menu-item" data-sound="cinguettio">Cinguettio (casuale)</button>
+          <button class="menu-item" data-sound="osservato">Uccello osservato!</button>
+        </div>
+        <div class="sound-group">
+          <h3>Mare</h3>
+          <button class="menu-item" data-sound="campana">Campana di bordo</button>
+          <button class="menu-item" data-sound="gabbiano">Gabbiani</button>
+          <button class="menu-item" data-sound="legno">Scafo che scricchiola</button>
+        </div>
+      </div>
+
+      <nav class="menu">
+        <button class="menu-item" data-goto="screen-menu">← Torna al menu</button>
+      </nav>
     </section>
 
     <!-- Crediti -->
@@ -68,6 +116,7 @@
     </section>
 
   </main>
+  <script src="js/audio.js"></script>
   <script src="js/menu.js"></script>
 </body>
 </html>

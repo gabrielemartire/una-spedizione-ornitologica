@@ -45,6 +45,7 @@ Una partita tipica dura **20–40 minuti**.
 
 **Inizio**
 - Schermata titolo → *Nuova spedizione* oppure *Riprendi un taccuino* (inserisci il codice).
+- Il giocatore **sceglie il suo nome**: compare nel taccuino, sull'attestato e nei dialoghi in città ("Ah, siete voi il naturalista Martire!").
 - Viene generato un nuovo globo da un seed casuale.
 - Parti ormeggiato nella **città grande** con soldi iniziali, il binocolo e pochi strumenti.
 
@@ -91,7 +92,13 @@ Barra menu in stile anni '90: `Spedizione · Taccuino · Inventario · Ciurma ·
 
 **Puntatori.** Le voci comprate in città compaiono sul globo come segni: un cerchio largo per le voci vaghe, una croce precisa per quelle care.
 
-**Tempo.** In mare **un giorno passa ogni ~20 secondi** di navigazione (valore da tarare). A fine giornata paghi la ciurma.
+**Tempo.** In mare **un giorno passa ogni ~20 secondi** di navigazione (valore da tarare). A fine giornata suona la campana di bordo e paghi la ciurma.
+
+**Momenti del giorno.** Ogni giorno ha tre momenti: **alba**, **pomeriggio** e **notte**. Sbarchi nel momento in cui arrivi, e il momento resta fisso per tutta la visita a terra.
+- La cartolina cambia cielo e luce; la palette della zona si scurisce di notte.
+- Alcuni uccelli compaiono solo in certi momenti (*mattinieri* all'alba, *notturni* di notte).
+- Di notte la visione si accorcia per tutti e alcune creature sono più attive.
+- Tornare in una zona già visitata in un altro momento può valerne la pena.
 
 ## 7. Zone, biomi e caratteristiche
 
@@ -303,7 +310,24 @@ Il checksum intercetta gli errori di battitura. Il codice è falsificabile da ch
 - **Logo:** un binocolo dorato da cui spunta un'ala di pappagallo rossa, gialla e blu, in pixel art.
 - **Riferimenti:** Pioneers (Eigen Lenk) per interfaccia e tono; scene a due toni stile Game Boy per la dimensione e la densità dell'ASCII; Brogue e Caves of Qud per l'uso del colore in modalità testo.
 
-## 16. Tecnologia
+## 16. Audio
+
+**Niente musica:** solo suoni d'ambiente ed effetti, sintetizzati nel browser (nessun file audio). Il silenzio fa parte dell'osservazione.
+
+Nel menu: **Suoni ON/OFF** e **Volume da 1 a 5** (frecce ← → o clic). Le impostazioni audio sono l'unica cosa che il browser ricorda tra una sessione e l'altra.
+
+Proposte, ascoltabili dal menu in *Ascolta i suoni* (da scegliere):
+
+| Gruppo | Suoni |
+|---|---|
+| Ambiente (continui) | vento, mare, foresta con uccelli lontani, notte con grilli |
+| Interfaccia | spostamento, conferma, pagina del taccuino, monete |
+| Battlemap | passo nell'erba, passo nell'acqua, fruscio di cespuglio, tagliola, petardo, orso, lupo, cinguettio, "uccello osservato!" |
+| Mare | campana di bordo (fine giornata), gabbiani, scafo che scricchiola |
+
+Idea: **ogni uccello ha il suo verso**, generato dal suo ID. Lo stesso uccello canta sempre allo stesso modo, e un giocatore attento lo riconosce prima di vederlo.
+
+## 17. Tecnologia
 
 - **Solo browser:** HTML, CSS e JavaScript (moduli ES), nessun server.
 - **Generatore casuale con seed**: lo stesso seed produce sempre lo stesso globo, la stessa zona, la stessa cartolina.
@@ -311,7 +335,7 @@ Il checksum intercetta gli errori di battitura. Il codice è falsificabile da ch
 - **Pubblicazione:** sito statico su Cloudflare Pages.
 - Un server servirebbe solo per classifiche o codici non falsificabili: per ora no.
 
-## 17. Tabella di marcia
+## 18. Tabella di marcia
 
 1. **Prototipo battlemap:** griglia, movimento a turni, un uccello da osservare, un orso da evitare. *Se non è divertente qui, il resto non conta.*
 2. **Cartolina:** layer ASCII composti dai tag, stesso seed della battlemap.
@@ -321,10 +345,10 @@ Il checksum intercetta gli errori di battitura. Il codice è falsificabile da ch
 6. **Fine partita:** resoconto, codice, PDF, ripresa del taccuino.
 7. **Contenuti:** 60 uccelli, tutti i biomi, bilanciamento.
 
-## 18. Domande aperte
+## 19. Decisioni prese
 
-- Il giocatore ha un nome scelto all'inizio, o lo si scrive solo sull'attestato?
-- Meteo e ora del giorno (alba, pioggia, nebbia) cambiano durante la partita o sono fissi per zona?
-- Il binocolo migliorato resta tra un viaggio e l'altro, o il taccuino è l'unica cosa che sopravvive?
-- La ciurma ha eventi (ammutinamento, malattia, morale) o è solo un costo?
-- Musica ed effetti sonori: chiptune? silenzio e vento?
+- **Nome del giocatore:** si sceglie all'inizio della partita.
+- **Momenti del giorno:** alba, pomeriggio e notte, che cambiano con il passare dei giorni (§ 6).
+- **Cosa sopravvive al viaggio:** solo il taccuino. Strumenti, soldi e binocolo migliorato si perdono.
+- **Ciurma:** per ora è solo un costo giornaliero, senza eventi.
+- **Audio:** niente musica, suoni d'ambiente ed effetti; la scelta definitiva dei suoni è in corso (§ 16).
