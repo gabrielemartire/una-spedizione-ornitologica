@@ -20,7 +20,7 @@
       <p class="subtitle">isole, nebbie e piume · a turni</p>
 
       <nav class="menu">
-        <button class="menu-item" disabled>Nuova spedizione <span class="tag">presto</span></button>
+        <button class="menu-item" data-goto="screen-game">Nuova spedizione <span class="tag">prototipo</span></button>
         <button class="menu-item" disabled>Riprendi un taccuino <span class="tag">presto</span></button>
         <button class="menu-item" data-action="toggle-sound">Suoni: <span data-label="sound">ON</span></button>
         <button class="menu-item" data-action="volume" aria-label="Volume">Volume <span class="volume" data-label="volume"></span></button>
@@ -29,6 +29,48 @@
       </nav>
 
       <p class="hint">↑ ↓ per scegliere · ← → volume · Invio per confermare</p>
+    </section>
+
+    <!-- Partita: A battlemap · B globo e stato · C taccuino · D cartolina -->
+    <section id="screen-game" class="screen game">
+      <div class="game-top">
+        <div class="panel panel-a">
+          <div class="panel-title">Radura sul ruscello</div>
+          <div class="map-wrap">
+            <div id="map" class="map" aria-label="Mappa della zona"></div>
+            <div id="map-overlay" class="map-overlay" hidden></div>
+          </div>
+        </div>
+        <div class="panel panel-b">
+          <div class="panel-title">Globo</div>
+          <pre class="placeholder">  .-~~~-.
+ /  ∙ ⌂  \
+|  ≈≈  ∙  |
+ \ ≈≈≈   /
+  '-~~~-'
+in arrivo</pre>
+          <div id="status" class="status"></div>
+        </div>
+      </div>
+      <div class="game-bottom">
+        <div class="panel panel-c">
+          <div class="panel-title">Taccuino</div>
+          <div id="notebook" class="notebook"></div>
+          <ul id="log" class="log"></ul>
+          <p class="keys">frecce/WASD muovi · spazio aspetta e osserva · torna su ⚓ per salpare · Esc menu</p>
+        </div>
+        <div class="panel panel-d">
+          <div class="panel-title">Cartolina</div>
+          <pre class="postcard">   .      ~~        .     /\
+      /\      ~~~       /  \   /\
+ /\  /  \  /\      /\  /    \ /  \
+/  \/    \/  \ /\ /  \/      \    \
+ ♣ ♣♣  ♣   ♣  ~~~  ♣♣  ♣ ♣  ♣♣  ♣
+♣♣  ♣ ♣ ♣♣  ♣ ~~~~ ♣  ♣♣ ♣ ♣  ♣ ♣
+  ▲    ""  ♠   ~~~   ""  ♠   ▲ ""</pre>
+          <p class="placeholder-note">segnaposto · la cartolina a layer arriverà</p>
+        </div>
+      </div>
     </section>
 
     <!-- Prova dei suoni proposti -->
@@ -59,6 +101,7 @@
           <button class="menu-item" data-sound="tagliola">Tagliola</button>
           <button class="menu-item" data-sound="petardo">Petardo</button>
           <button class="menu-item" data-sound="orso">Orso</button>
+          <button class="menu-item" data-sound="tonfo">Orso contro l'albero</button>
           <button class="menu-item" data-sound="lupo">Lupo</button>
           <button class="menu-item" data-sound="cinguettio">Cinguettio (casuale)</button>
           <button class="menu-item" data-sound="osservato">Uccello osservato!</button>
@@ -117,6 +160,7 @@
 
   </main>
   <script src="js/audio.js"></script>
+  <script src="js/game.js"></script>
   <script src="js/menu.js"></script>
 </body>
 </html>

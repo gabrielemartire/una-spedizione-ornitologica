@@ -88,6 +88,112 @@ body {
 .menu-item.is-playing { color: var(--mid); }
 .menu-item.is-playing::after { content: "  ♪ in ascolto"; color: var(--mid); }
 
+/* --- Partita --- */
+
+/* Palette della foresta temperata */
+.game {
+  --f-ground: #121c10;
+  --f-dark: #2c4a24;
+  --f-mid: #6f9a4c;
+  --f-light: #d9e4b0;
+  --f-water: #4f8a9a;
+  --f-deep: #24485a;
+  --f-sea: #1c3448;
+  --bird: #f2c230;
+  --danger: #d2552b;
+}
+
+body.in-game .frame { width: min(1200px, 100%); padding: 12px; }
+.screen.game.is-active { display: grid; gap: 8px; text-align: left; align-content: start; }
+
+.game-top { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 8px; }
+.game-bottom { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 8px; }
+
+.panel { border: 1px solid var(--dark); padding: 6px 10px 10px; min-width: 0; }
+.panel-title {
+  color: var(--ink);
+  background: var(--mid);
+  margin: -6px -10px 8px;
+  padding: 0 10px;
+  text-transform: uppercase;
+  font-size: 18px;
+}
+
+.map-wrap { position: relative; display: grid; justify-content: center; }
+.map {
+  --cell: 28px;
+  display: grid;
+  grid-template-columns: repeat(24, var(--cell));
+  grid-auto-rows: var(--cell);
+  background: var(--f-ground);
+  font-size: calc(var(--cell) * 0.9);
+  line-height: 1;
+  user-select: none;
+}
+.cell { display: grid; place-items: center; position: relative; cursor: default; }
+
+.t-grass { color: var(--f-dark); }
+.t-tall  { color: var(--f-mid); }
+.t-bush  { color: var(--f-mid); }
+.t-tree  { color: var(--f-mid); background: #182a14; }
+.t-rock  { color: #9a9a86; }
+.t-water { color: var(--f-light); background: var(--f-water); }
+.t-deep  { color: var(--f-water); background: var(--f-deep); }
+.t-sea   { color: #3f6680; background: var(--f-sea); }
+.t-ship  { color: var(--f-light); background: var(--f-sea); }
+
+.band { box-shadow: inset 0 0 0 100px rgba(242, 194, 48, 0.1); }
+.danger { box-shadow: inset 0 0 0 100px rgba(210, 85, 43, 0.35); }
+
+.e-player { color: var(--paper); font-weight: bold; text-shadow: 0 0 4px #000; }
+.e-player.is-hidden { color: var(--f-light); opacity: 0.6; }
+.e-bird { color: var(--bird); text-shadow: 0 0 6px rgba(242, 194, 48, 0.7); }
+.e-bird.is-observed { opacity: 0.45; text-shadow: none; }
+.e-bear { color: var(--danger); font-weight: bold; }
+.cell[data-intent]::after {
+  content: attr(data-intent);
+  position: absolute;
+  top: -0.45em;
+  right: -0.1em;
+  font-size: 0.6em;
+  color: var(--ink);
+  background: var(--bird);
+  padding: 0 2px;
+}
+
+.map-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  background: rgba(15, 26, 18, 0.88);
+}
+.map-overlay[hidden] { display: none; }
+.map-overlay h3 { margin: 0; font-size: 36px; font-weight: normal; color: var(--bird); }
+
+.placeholder { margin: 0 auto 8px; color: var(--dark); text-align: center; line-height: 1.05; }
+.status { display: grid; gap: 2px; }
+.status div { display: flex; justify-content: space-between; gap: 8px; }
+.status span { color: var(--mid); }
+.status b { font-weight: normal; }
+.hearts { color: var(--danger); letter-spacing: 1px; }
+
+.notebook .nb-row { display: flex; justify-content: space-between; gap: 8px; }
+.notebook b { font-weight: normal; color: var(--bird); }
+.log { list-style: none; margin: 8px 0 0; padding: 0; color: var(--mid); font-size: 19px; min-height: 7.5em; }
+.log li { line-height: 1.1; }
+.log li.is-new { color: var(--paper); }
+.log li::before { content: "› "; color: var(--dark); }
+.keys { margin: 8px 0 0; color: var(--dark); font-size: 18px; }
+
+.postcard { margin: 0; color: var(--mid); font-size: 17px; line-height: 1.05; overflow: hidden; }
+.placeholder-note { margin: 6px 0 0; color: var(--dark); font-size: 16px; }
+
+@media (max-width: 860px) {
+  .game-top, .game-bottom { grid-template-columns: 1fr; }
+}
+
 .credits {
   max-height: 360px;
   overflow-y: auto;

@@ -5,7 +5,9 @@ function show(id) {
   Suoni.stopAll();
   document.querySelectorAll(".is-playing").forEach((el) => el.classList.remove("is-playing"));
   screens.forEach((s) => s.classList.toggle("is-active", s.id === id));
-  focusFirst();
+  document.body.classList.toggle("in-game", id === "screen-game");
+  if (id === "screen-game") Gioco.start();
+  else focusFirst();
 }
 
 function activeItems() {

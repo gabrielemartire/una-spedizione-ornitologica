@@ -167,15 +167,16 @@ Una griglia (indicativamente **24 × 16 caselle**) generata dallo stesso seed de
 ### 9.1 Rumore e visione
 Un unico sistema regola uccelli e mostri.
 
-| Azione | Rumore (caselle) |
+| Azione | Rumore (raggio in caselle) |
 |---|---|
 | Aspettare / osservare | 0 |
-| Camminare | 1 |
-| Camminare nell'acqua o nei rami secchi | 2 |
-| Raccogliere / piazzare una trappola | 2 |
+| Camminare nell'erba alta | 1 |
+| Camminare nell'erba | 2 |
+| Attraversare un cespuglio | 3 |
+| Camminare nell'acqua | 4 |
 | Petardo | 6, nel punto in cui esplode |
 
-- Il rumore **attira i mostri** e **fa fuggire gli uccelli** nel raggio.
+- Il rumore **fa fuggire gli uccelli** nel raggio e **attira i mostri** (l'orso sente 3 caselle più lontano). L'erba alta è la via silenziosa.
 - **Cespugli ed erba alta** ti nascondono: sei visibile solo da una casella adiacente.
 - **Alberi e rocce** bloccano la linea di vista.
 

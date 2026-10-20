@@ -165,6 +165,10 @@ const Suoni = (() => {
       wobble.stop(t + 1.4);
       noise({ dur: 1.2, filter: "lowpass", freq: 500, vol: 0.12, attack: 0.2 });
     },
+    tonfo: () => {
+      noise({ dur: 0.35, filter: "lowpass", freq: 400, to: 80, vol: 0.8, attack: 0.002 });
+      tone({ freq: 110, to: 40, dur: 0.3, vol: 0.5, attack: 0.002 });
+    },
     lupo: () => {
       const t = ctx.currentTime;
       const osc = ctx.createOscillator();
