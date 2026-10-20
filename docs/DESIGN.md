@@ -162,6 +162,8 @@ Una griglia fitta (**40 × 24 caselle**) generata dallo stesso seed della cartol
 
 **Round "a scacchi".** Il giocatore ha **3 passi** per round: ogni passo è un'azione (muoversi di una casella, osservare, usare uno strumento, raccogliere). Può chiudere il round prima. Poi **si muovono tutti gli animali**, ognuno con il suo movimento tipico, come i pezzi degli scacchi.
 
+**Il tempo è scandito.** Alla fine dei tuoi passi compare il banner *Turno degli animali* con un suono grave e la mappa si scurisce; gli animali si muovono una casella alla volta, poi *Tocca a te*.
+
 **Si vede dove arrivano gli animali.** Le caselle che una creatura può raggiungere nel suo turno sono evidenziate in rosso (tenue se non ti ha notato, acceso se ti insegue). Finire il round lì dentro significa farsi prendere.
 
 **Animali non stupidi.** Le creature non si fanno male da sole (niente cariche contro gli alberi): aggirano gli ostacoli, ti seguono, cercano dove ti hanno visto l'ultima volta. Si battono con le trappole, le esche e il terreno, non con i loro errori.
@@ -200,7 +202,7 @@ Ogni creatura mostra il suo stato (`!` ti insegue, `?` ti cerca, `z` si riposa) 
 
 | Creatura | Comportamento | Come la gestisci |
 |---|---|---|
-| Orso | Lento (2 passi a round) ma tenace: ti fiuta da vicino, ti vede da lontano, aggira gli ostacoli e ti segue. Se ti perde va dove ti ha visto l'ultima volta. Fa la guardia al territorio dell'uccello | Mantieni la distanza, nasconditi nell'erba alta e nei cespugli, usa esche e trappole |
+| Orso | 4 passi a round quando ti insegue (più di te!), 3 quando ti cerca, 1 quando vaga; l'acqua gli costa doppio. Tenace: ti fiuta da vicino, ti vede da lontano, aggira gli ostacoli e ti segue. Se ti perde va dove ti ha visto l'ultima volta. Fa la guardia al territorio dell'uccello | Correndo non lo semini: nasconditi nell'erba alta e nei cespugli, attraversa il ruscello, usa esche e trappole |
 | Lupi | In branco, cercano di circondarti | Separali con l'acqua; il petardo li mette in fuga |
 | Cinghiale | Ti insegue, 2 caselle a turno, solo in linea retta | Portalo nella tagliola |
 | Serpente | Fermo nell'erba alta, morde chi è adiacente | Va notato ed evitato |

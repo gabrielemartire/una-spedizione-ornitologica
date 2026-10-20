@@ -8,13 +8,14 @@ const Gioco = (() => {
   const FLEE = 1.5;           // più vicino di così l'uccello scappa
   const OBSERVE = 3.5;        // portata del binocolo
   const BIRD_LEAVE = 0.35;    // probabilità che, spaventato, lasci la zona invece di spostarsi
-  const BEAR_SPEED = 2;
+  const BEAR_SPEED = { hunt: 4, search: 3, wander: 1 }; // passi a round; l'acqua ne costa 2
   const BEAR_SIGHT = 10;
   const BEAR_SMELL = 6;       // ti fiuta entro questa distanza, se non sei nascosto
   const BEAR_HEARING = 2;     // l'orso sente un po' più lontano del rumore stesso
   const BEAR_DAMAGE = 4;
   const MAX_HP = 10;
-  const ANIMAL_DELAY = 260;   // ms, per vedere gli animali muoversi
+  const PHASE_PAUSE = 550;    // ms: annuncio del turno degli animali
+  const STEP_DELAY = 170;     // ms: ogni passo di un animale
 
   // noise = raggio del rumore in caselle; hide = chi ci sta dentro si vede solo da vicino
   const TILES = {
@@ -54,6 +55,7 @@ const Gioco = (() => {
   const tile = (map, x, y) => TILES[map[y][x]];
   const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
   const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   // Linea di vista (Bresenham): alberi e rocce intermedi bloccano la vista
   function los(map, a, b) {
@@ -275,20 +277,41 @@ const Gioco = (() => {
     else render();
   }
 
-  function endRound() {
+  async function endRound() {
     if (!canAct()) return;
+    const run = s; // se nel frattempo si torna al menu, l'animazione si ferma
     s.busy = true;
+    phase("animals");
     render();
-    setTimeout(() => {
-      birdTurn();
-      bearTurn();
-      s.round++;
-      s.steps = STEPS;
-      s.noise = 0;
-      s.heard = [];
-      s.busy = false;
-      if (!s.over) render();
-    }, ANIMAL_DELAY);
+    await sleep(PHASE_PAUSE);
+    if (s !== run) return;
+
+    birdTurn();
+    render();
+    await sleep(STEP_DELAY);
+    if (s !== run) return;
+
+    await bearTurn();
+    if (s !== run || s.over) return;
+
+    s.round++;
+    s.steps = STEPS;
+    s.noise = 0;
+    s.heard = [];
+    s.busy = false;
+    phase("player");
+    render();
+  }
+
+  function phase(kind) {
+    const animals = kind === "animals";
+    el.banner.textContent = animals ? "Turno degli animali" : "Tocca a te";
+    el.banner.className = `phase-banner ${animals ? "is-animals" : "is-player"}`;
+    el.banner.hidden = false;
+    el.map.classList.toggle("is-animals", animals);
+    Suoni.play(animals ? "turnoAnimali" : "tuoTurno");
+    clearTimeout(el.bannerTimer);
+    if (!animals) el.bannerTimer = setTimeout(() => { el.banner.hidden = true; }, 700);
   }
 
   // --- Uccello ---
@@ -323,7 +346,35 @@ const Gioco = (() => {
 
   // --- Orso ---
 
-  const bearPassable = (c) => tile(s.map, c.x, c.y).walk && s.map[c.y][c.x] !== "ship";
+  // Quanti passi costa all'orso entrare in una casella
+  function bearCost(c) {
+    const t = tile(s.map, c.x, c.y);
+    if (!t.walk || t === TILES.ship) return Infinity;
+    return t === TILES.water ? 2 : 1;
+  }
+
+  // Dijkstra a secchi: costo per raggiungere ogni casella, e da dove ci si arriva
+  function bearPaths(maxCost = Infinity) {
+    const from = { x: s.bear.x, y: s.bear.y };
+    const cost = new Map([[key(from), 0]]);
+    const prev = new Map();
+    const buckets = [[from]];
+    for (let d = 0; d < buckets.length; d++) {
+      for (const c of buckets[d] || []) {
+        if (cost.get(key(c)) !== d) continue;
+        for (const [dx, dy] of DIRS) {
+          const n = { x: c.x + dx, y: c.y + dy };
+          if (!inside(n.x, n.y)) continue;
+          const nd = d + bearCost(n);
+          if (nd > maxCost || nd === Infinity || (cost.has(key(n)) && cost.get(key(n)) <= nd)) continue;
+          cost.set(key(n), nd);
+          prev.set(key(n), c);
+          (buckets[nd] ||= []).push(n);
+        }
+      }
+    }
+    return { cost, prev };
+  }
 
   function bearSees() {
     const o = s.bear, p = s.player, d = dist(o, p);
@@ -335,63 +386,62 @@ const Gioco = (() => {
     return s.heard.some((n) => n.r > 0 && dist(s.bear, n) <= n.r + BEAR_HEARING);
   }
 
-  // Le caselle che l'orso può raggiungere nel suo turno
+  // Le caselle che l'orso raggiunge se si mette a inseguirti
   function bearReach() {
     if (s.bear.rest) return new Map();
-    return bfs(s.map, s.bear, BEAR_SPEED, bearPassable).depth;
+    return bearPaths(BEAR_SPEED.hunt).cost;
   }
 
-  function bearTurn() {
-    const o = s.bear, p = s.player;
+  async function bearTurn() {
+    const run = s, o = s.bear, p = s.player;
     if (o.rest) { o.rest--; return; }
 
     if (bearSees() || bearHears()) {
-      if (o.mode !== "hunt") Suoni.play("orso");
+      if (o.mode !== "hunt") { Suoni.play("orso"); log("L'orso ti ha fiutato e ti insegue!"); }
       o.mode = "hunt";
       o.last = { x: p.x, y: p.y };
     } else if (o.mode === "hunt") {
       o.mode = "search";
       o.searchLeft = 3;
-      log("L'orso ti ha perso di vista e annusa l'aria.");
+      log("L'orso ti ha perso e va a cercarti dove ti ha visto.");
     }
 
-    const { prev } = bfs(s.map, o, Infinity, bearPassable);
-
-    if (o.mode === "hunt") {
-      const path = pathFrom(prev, o, p);
-      if (path && path.length <= BEAR_SPEED) return attack(path);
-      return walk(path, BEAR_SPEED);
-    }
-
-    if (o.mode === "search") {
-      walk(pathFrom(prev, o, o.last), BEAR_SPEED);
-      if (same(o, o.last) && --o.searchLeft <= 0) o.mode = "wander";
-      return;
-    }
-
+    const speed = BEAR_SPEED[o.mode];
+    const { cost, prev } = bearPaths();
+    let target = o.mode === "hunt" ? p : o.mode === "search" ? o.last : null;
     // Vagando, tende comunque a fiutare la tua direzione
-    if (Math.random() < 0.6) return walk(pathFrom(prev, o, p), 1);
-    const around = DIRS.map(([dx, dy]) => ({ x: o.x + dx, y: o.y + dy }))
-      .filter((c) => inside(c.x, c.y) && bearPassable(c) && !same(c, p));
-    if (around.length) walk([pickRandom(around)], 1);
-  }
+    if (!target) {
+      const around = DIRS.map(([dx, dy]) => ({ x: o.x + dx, y: o.y + dy }))
+        .filter((c) => inside(c.x, c.y) && bearCost(c) < Infinity && !same(c, p));
+      target = Math.random() < 0.6 ? p : pickRandom(around);
+    }
+    const path = target ? pathFrom(prev, o, target) || [] : [];
 
-  function walk(path, steps) {
-    if (!path) return;
-    const o = s.bear;
-    for (const c of path.slice(0, steps)) {
-      if (same(c, s.player)) break;
+    let spent = 0;
+    for (const c of path) {
+      if (same(c, p)) break;
+      spent += bearCost(c);
+      if (spent > speed) break;
       o.x = c.x;
       o.y = c.y;
+      Suoni.play("passoOrso");
+      render();
+      await sleep(STEP_DELAY);
+      if (s !== run) return;
     }
+
+    if (o.mode === "hunt" && cost.get(key(p)) <= speed) return attack();
+    if (o.mode === "search" && same(o, o.last) && --o.searchLeft <= 0) o.mode = "wander";
   }
 
-  function attack(path) {
+  function attack() {
     const p = s.player;
-    walk(path.slice(0, -1), BEAR_SPEED);
     s.bear.rest = 1;
     p.hp = Math.max(0, p.hp - BEAR_DAMAGE);
     Suoni.play("tonfo");
+    el.map.classList.remove("is-hit");
+    void el.map.offsetWidth; // fa ripartire l'animazione
+    el.map.classList.add("is-hit");
     log(`L'orso ti raggiunge e ti colpisce! −${BEAR_DAMAGE} vita.`);
     if (!p.hp) die();
   }
@@ -414,6 +464,8 @@ const Gioco = (() => {
   }
 
   function showOverlay(title, html, canStay) {
+    el.banner.hidden = true;
+    el.map.classList.remove("is-animals");
     render();
     el.overlay.innerHTML = `
       <h3>${title}</h3>
@@ -440,11 +492,14 @@ const Gioco = (() => {
     el = {
       map: document.getElementById("map"),
       overlay: document.getElementById("map-overlay"),
+      banner: document.getElementById("phase-banner"),
       status: document.getElementById("status"),
       notebook: document.getElementById("notebook"),
       log: document.getElementById("log"),
     };
     el.overlay.hidden = true;
+    el.banner.hidden = true;
+    el.map.classList.remove("is-animals", "is-hit");
     el.map.innerHTML = "";
     el.map.style.gridTemplateColumns = `repeat(${W}, var(--cell))`;
     el.cells = [];
@@ -505,7 +560,7 @@ const Gioco = (() => {
     }
 
     const hearts = "♥".repeat(Math.ceil(p.hp / 2)) + "♡".repeat(Math.ceil(MAX_HP / 2) - Math.ceil(p.hp / 2));
-    const steps = s.busy ? "animali…" : "●".repeat(s.steps) + "○".repeat(STEPS - s.steps);
+    const steps = s.busy ? "aspetta…" : "●".repeat(s.steps) + "○".repeat(STEPS - s.steps);
     const noise = "●".repeat(s.noise) + "○".repeat(4 - s.noise);
     const bearState = o.rest ? "si riposa" : { wander: "fiuta in giro", search: "ti cerca", hunt: "ti insegue!" }[o.mode];
     el.status.innerHTML = `
