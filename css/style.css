@@ -121,7 +121,7 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
   gap: 8px;
   min-height: 0;
 }
-.col-main { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 8px; min-height: 0; }
+.col-main { display: grid; grid-template-rows: minmax(0, 1fr) auto; grid-template-columns: minmax(0, 1fr); gap: 8px; min-height: 0; min-width: 0; }
 .col-side { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 8px; min-height: 0; align-content: start; }
 
 .panel { border: 1px solid var(--dark); padding: 6px 10px; min-width: 0; min-height: 0; }
@@ -170,7 +170,7 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .version { color: var(--dark); font-size: 18px; margin: 0; }
 
 .view-wrap { position: relative; min-height: 0; display: grid; }
-.map-wrap { display: grid; place-content: center; min-height: 0; height: 100%; }
+.map-wrap { display: grid; place-content: center; min-height: 0; height: 100%; overflow: hidden; }
 .map-wrap[hidden], .sea-view[hidden] { display: none; }
 .sea-view { display: grid; justify-items: center; align-content: center; gap: 6px; min-height: 0; }
 .sea-view canvas { display: block; image-rendering: pixelated; }
@@ -385,7 +385,7 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
     radial-gradient(ellipse at center, transparent 55%, rgba(110, 76, 34, 0.38) 100%);
 }
 .signature { font-family: "Pinyon Script", cursive; font-weight: normal; }
-.diary-strip { position: relative; padding-top: 14px; }
+.diary-strip { position: relative; padding-top: 14px; min-width: 0; }
 .ds-tabs { position: absolute; top: 0; right: 14px; display: flex; gap: 6px; z-index: 2; }
 /* Linguette di stoffa vecchia, in pixel art: coda biforcuta a gradini di 3px, trama, ombra netta sotto */
 .ds-tabs, .book-tabs { filter: drop-shadow(3px 3px 0 rgba(10, 6, 4, 0.55)); }
@@ -419,7 +419,7 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
   min-height: 5.2em;
 }
 .ds-notes { list-style: none; margin: 0; padding: 0 120px 0 0; font-size: 19px; line-height: 1.12; }
-.ds-notes li { color: #5a4a34; }
+.ds-notes li { color: #5a4a34; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* una riga per nota: il diario non ruba spazio alla mappa */
 .ds-notes li.is-new { color: #2a2014; }
 .ds-notes em, .book-notes em { font-style: normal; color: #8a2a1a; margin-right: 4px; }
 .ds-sign { position: absolute; right: 16px; bottom: 2px; font-size: 26px; font-weight: bold; color: #3a2a18; transform: rotate(-4deg); }

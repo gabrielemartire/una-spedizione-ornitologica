@@ -20,7 +20,8 @@ const Gioco = (() => {
   const MAX_RUMORS = 2;       // voci di taverna per spedizione (più quelle dei mercanti)
   const RARE_RUMOR = { forte: 1, porto: 0.84, mercante: 1 }; // al porticciolo a volte la voce è su un uccello qualunque
   const ITEM_CHANCE = 1 / 3;  // un oggetto nella zona; nelle rovine c'è sempre     // momenti persi ricaricando la pagina a terra: un giorno
-  let lastSave = 0;      // ripartire costa due momenti: si arriva sempre col momento precedente
+  let lastSave = 0;
+  let mapObserver = null;      // ripartire costa due momenti: si arriva sempre col momento precedente
   const TIME_ICONS = { alba: "sunrise", pomeriggio: "sun", notte: "moon" };
   const SLIDE_MS = 110;       // durata dello scivolamento di una pedina
   const ACT_INTERVAL = 110;   // ms minimi tra due azioni, anche tenendo premuto
@@ -1171,6 +1172,11 @@ const Gioco = (() => {
       status: $("status"), keys: $("keys"), toast: $("toast"), tileInfo: $("tile-info"),
       postcard: $("postcard"), explorer: $("mb-explorer"),
     };
+    // la mappa si rifà le misure ogni volta che il suo spazio cambia, non solo quando la finestra cambia
+    if (!mapObserver) {
+      mapObserver = new ResizeObserver(() => fitMap());
+      mapObserver.observe(el.mapWrap);
+    }
     el.overlay.hidden = true;
     el.banner.hidden = true;
     el.toast.hidden = true;
