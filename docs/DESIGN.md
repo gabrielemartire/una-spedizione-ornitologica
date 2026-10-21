@@ -1,6 +1,6 @@
 # Una spedizione ornitologica · Documento di design
 
-> Versione 0.1 · ottobre 2026 · documento vivo, cambia mentre il gioco prende forma.
+> Versione 0.2 · ottobre 2026 · documento vivo, cambia mentre il gioco prende forma.
 
 ---
 
@@ -57,28 +57,31 @@ In entrambi i casi si apre il **resoconto del viaggio** con l'attestato PDF (§ 
 
 ## 5. La schermata
 
+Tutto sta in **una schermata senza scorrere**, anche su un portatile da 13" (circa 1440 × 800): la battlemap si ridimensiona sullo spazio che resta. Sugli schermi piccoli si torna a una colonna che scorre.
+
 ```
-┌─────────────────────────────────────┬───────────────┐
-│                                     │               │
-│                                     │   B · GLOBO   │
-│          A · BATTLEMAP              │               │
-│     (il riquadro più grande)        ├───────────────┤
-│                                     │  data · soldi │
-│                                     │  vita · ciurma│
-├──────────────────────────┬──────────┴───────────────┤
-│  C · TACCUINO /          │  D · CARTOLINA           │
-│      INVENTARIO          │      (pixel art a layer) │
-└──────────────────────────┴──────────────────────────┘
+┌ Spedizione · Diario · Suoni ─────────────────── nome · v0.2 ┐
+├─────────────────────────────────────┬───────────────────────┤
+│                                     │  D · CARTOLINA        │
+│          A · BATTLEMAP              │                       │
+│        (o il globo, in mare)        ├───────────────────────┤
+│                                     │  B · mini globe       │
+│                                     │      giorno · ☀ ☾     │
+├────────────────────── ▼ ▼ ▼ ▼ ▼ ▼ ──┤      monete · vita    │
+│  C · DIARIO (ultime 3 note)         │      rumore · animali │
+└─────────────────────────────────────┴───────────────────────┘
 ```
 
 | Riquadro | Contenuto | Note |
 |---|---|---|
-| **A** Battlemap | La zona in cui sei sbarcato, a griglia, con icone | Più alta possibile. In mare mostra il ponte della nave o il mare |
-| **B** Globo | Sfera ASCII che ruota, la nave, i puntatori delle voci | Sotto, la barra di stato: data, soldi, vita, costo giornaliero |
-| **C** Taccuino | Due schede: **Taccuino** (uccelli visti e mancanti) e **Inventario** | Ricorda il libro delle quest di Pioneers |
-| **D** Cartolina | Il panorama della zona in pixel art, visto da una persona in piedi | Composta a layer; è informazione, non decorazione |
+| **A** Battlemap | La zona in cui sei sbarcato, a griglia, con icone | In mare mostra il globo grande. Sotto: che cosa c'è nella casella indicata ("Erba alta · si passa · ti nasconde") e i tasti |
+| **B** Stato | Mini globo (a terra), giorno e i tre momenti, monete, vita; a terra rumore e animali, in mare rotta, vele e traversata | |
+| **C** Diario | Una pagina di carta con le ultime 3 note utili | Le linguette rosse biforcute aprono il taccuino intero (§ 12) |
+| **D** Cartolina | Il panorama della zona in pixel art, visto da una persona in piedi | In mare: il mare dal ponte; col cannocchiale: la costa |
 
-Barra menu in stile anni '90: `Spedizione · Taccuino · Inventario · Ciurma · Aiuto`.
+**Niente titoli sui riquadri.** In alto una **barra menu** in stile anni '90: *Spedizione* (tendina: torna al menu principale, nuova spedizione), *Diario*, *Suoni*; a destra il nome dell'esploratore e la **versione** del gioco. In partita **Esc** apre la tendina invece di uscire, per non perdere il viaggio per sbaglio.
+
+**Avvisi e diario sono separati.** Quello che succede adesso ("l'orso ti ha fiutato", "troppo lontano") è un avviso che compare sulla mappa e sparisce. Nel diario finisce solo ciò che serve ricordare: uccelli osservati, tracce, uccelli volati via.
 
 ## 6. Il globo
 
@@ -88,19 +91,24 @@ Barra menu in stile anni '90: `Spedizione · Taccuino · Inventario · Ciurma ·
 - ← → cambiano la rotta, ↑ ↓ le vele (4 livelli). Indicatori di rotta in gradi e punti cardinali.
 - La sfera, in pixel art con luce, ombra e atmosfera sul bordo, **ruota sotto la nave**, che resta al centro con la sua scia.
 - Mari profondi e bassi fondali, spiagge, prati, boschi, colline; rocce e neve dove la zona ha le montagne. I confini delle zone sono appena segnati.
-- La costa ferma la nave. **Vicino alla costa** (≈2,4°) la zona si illumina: **Invio sbarca** (costa un momento della giornata). Vicino a una città, Invio attracca in porto.
+- La costa ferma la nave. **Vicino alla costa** (≈2,4°) la zona si illumina: **Invio sbarca** (gratis). Vicino a una città, Invio attracca in porto.
 
-**Cannocchiale (T).** In navigazione, entro ≈9° da una costa, il cannocchiale mostra **la cartolina di quella zona senza sbarcare**. Sbarcare costa giorni (e paga della ciurma); guardare no. Così la cartolina diventa lo strumento per decidere dove attraccare: c'è una cascata? un uccello in volo? rovine?
+**Cannocchiale (T).** In navigazione, entro ≈12° da una costa, il cannocchiale mostra **la cartolina di quella zona senza sbarcare**, dentro una lente con gli angoli scuri. Premere di nuovo T non fa nulla: per riporlo basta allontanarsi dalla costa. **Se circumnavighi l'isola, mostra via via la costa successiva.** La cartolina diventa lo strumento per decidere dove attraccare: c'è un fiume (e quindi forse un orso)? un lago? un vulcano? Sbarcare è gratis, ma ripartire costa tempo: conviene guardare prima.
+
+**Segni sul globo.** Le zone visitate restano segnate: **✓ nera** se ne hai osservato l'uccello (lì non comparirà altro), **?** se ci sei stato senza vederlo, **✗ rossa** se ti è volato via per sempre. Il vulcano si vede anche dal mare, come un cono scuro con la bocca rossa.
 
 **Puntatori.** Le voci comprate in città compaiono sul globo come segni: un cerchio largo per le voci vaghe, una croce precisa per quelle care.
 
-**Tempo.** Un unico orologio per tutta la spedizione. In mare scorre **solo mentre navighi**: un giorno ogni ~45 secondi a vele spiegate. **Sbarcare costa un giorno intero**, pagato allo sbarco; a terra poi i passi non consumano tempo. All'inizio di ogni giorno suona la campana e paghi la ciurma.
+**Tempo: la giornata in tre momenti.** Ogni giorno ha **alba**, **pomeriggio** e **notte**. Il tempo avanza solo a scatti di un momento:
+- **Attraccare e camminare a terra non costano niente**: se arrivi di giorno, resta giorno.
+- **Ripartire costa due momenti** (si pensa alla notte di navigazione): parti di pomeriggio e arrivi all'alba; se riattracchi è ancora alba.
+- **Aspettare a bordo costa un momento**: dalla casella nave puoi aspettare che venga pomeriggio, se l'uccello che cerchi è diurno, e risbarcare nella stessa zona.
+- **In mare l'orologio è fermo**, ma una **traversata lunga** aggiunge un momento ogni 60° percorsi (barra *Traversata* nel riquadro B).
+- A ogni nuova alba suona la campana e si paga la ciurma.
 
-**Momenti del giorno.** Ogni giorno ha tre momenti: **alba**, **pomeriggio** e **notte**, che tingono anche il globo. Sbarchi nel momento in cui arrivi, e il momento resta fisso per tutta la visita a terra.
-- La cartolina cambia cielo e luce; la palette della zona si scurisce di notte.
-- Alcuni uccelli compaiono solo in certi momenti (*mattinieri* all'alba, *notturni* di notte).
-- Di notte la visione si accorcia per tutti e alcune creature sono più attive.
-- Tornare in una zona già visitata in un altro momento può valerne la pena.
+Così il ciclo tipico (sbarco, esplorazione, ripartenza) costa due terzi di giornata, e l'attesa diventa una scelta: *investire tempo per vedere se arriva l'uccello che cerco*.
+
+**Il momento cambia tutto.** La palette della mappa, del globo e della cartolina; quali uccelli si fanno vedere (§ 13); quali animali ci sono (§ 9.3). Di notte gli animali vedono meno lontano, ma **ogni passo fa più rumore**: l'uccello scappa prima.
 
 ## 7. Zone, biomi e caratteristiche
 
@@ -123,9 +131,13 @@ Ogni zona ha **un bioma** e **0–3 caratteristiche**. Insieme formano i **tag**
 | Bosco di cristallo | azzurro, viola | fantastico, raro |
 | Foresta di funghi | viola, crema | fantastico, raro |
 
-**Caratteristiche:** `cascata`, `fiume`, `lago`, `rovine`, `castello`, `villaggio`, `grotta`, `faro`, `albero secolare`.
+**Caratteristiche:** `fiume` (con o senza `cascata`), `lago`, oppure nessuna acqua; `rovine`, `villaggio`, `colline`, `montagne`; rari, al massimo uno per globo: `castello` e `vulcano`.
+- **Fiume:** non c'è sempre; dove c'è, di giorno **l'orso è molto più probabile**. Col cannocchiale si valuta se vale la pena attraccare.
+- **Lago:** tondo, profondo nel mezzo; nelle isole ghiacciate è gelato e ci si cammina sopra.
+- **Vulcano:** una colata di lava (non si attraversa) e rocce nere; il calore scioglie il ghiaccio della zona. *(v2: tutta l'isola diventa di un bioma più caldo.)*
+- **Castello:** al margine della mappa, mura, fossato e **un ponte tra due bandiere** che porta al ponte levatoio, ben visibile. Per ora è chiuso; entrarci (una nuova battlemap) è in v2.
 
-Ogni uccello richiede un bioma e, a volte, una caratteristica (es. *Becco Blu* = foresta temperata + cascata). Un uccello può comparire **solo** in una zona che ha tutti i suoi tag.
+Un uccello può comparire **solo** in una zona che ha i suoi tag (§ 13).
 
 ## 8. La cartolina (D)
 
@@ -152,7 +164,7 @@ Ogni layer ha 3–5 varianti, ognuna è un piccolo disegno ASCII con trasparenza
 
 **Pixel art 120 × 80**, con retino ordinato per le sfumature, luce e ombra decise dalla posizione del sole o della luna, foschia sulle montagne lontane, riflessi sull'acqua, finestre accese di notte. (Una versione ASCII è stata provata e scartata: la pixel art rende molto di più.)
 
-**Lontano e vicino.** Lo **sfondo** (montagne, castello) è la regione intorno: si vede ma non si raggiunge. Il **piano medio** (villaggio, rovine, cascata, ruscello) è dentro la zona: sulla battlemap c'è davvero. Il villaggio diventa qualche casa al margine della mappa; le rovine un edificio in cui entrare; la cascata la sorgente del ruscello.
+**Lontano e vicino.** Lo **sfondo** (montagne, vulcano) è la regione intorno: si vede ma non si raggiunge (ma dal vulcano scende una colata di lava fin dentro la zona). Il **piano medio** (castello, villaggio, rovine, cascata, ruscello, lago) è dentro la zona: sulla battlemap c'è davvero. Il villaggio diventa qualche casa al margine della mappa; il castello mura, fossato e ponte al margine sud; le rovine un edificio in cui entrare; la cascata la sorgente del ruscello.
 
 **Impaginazione garantita:** ruscello, castello, villaggio e rovine vengono messi in fila in ordine casuale, ognuno con una larghezza minima e massima, così nessuno copre mai un altro.
 
@@ -166,7 +178,9 @@ Una griglia fitta (**40 × 24 caselle**) generata dallo stesso seed della cartol
 
 **Grafica:** icone monocromatiche da [game-icons.net](https://game-icons.net), colorate con la palette della zona. Una casella, un'icona leggibile.
 
-**Contenuto:** terreno (erba, erba alta, cespugli, alberi, rocce, acqua bassa, acqua profonda), **rovine**, la **casella nave** (punto di arrivo e di partenza), uccelli, mostri, risorse, a volte un tesoro.
+**Contenuto:** terreno (erba, erba alta, cespugli, alberi, rocce, acqua bassa, acqua profonda), **rovine**, **lava**, **castello**, la **casella nave** (punto di arrivo e di partenza), uccelli, animali, a volte un tesoro.
+
+**Cosa blocca e cosa no.** Dove si passa (erba, erba alta, cespugli, acqua bassa, ghiaccio, macerie) le icone sono **velate**; quello che blocca (alberi, rocce, muri, acqua profonda, lava) è pieno. Passando sopra una casella col mouse, o camminandoci, sotto la mappa compare che cosa è: "Erba alta · si passa · ti nasconde". **Quanto rumore fa ogni terreno resta da scoprire**: non sapere bene quando l'orso ti sente è più realistico.
 
 **Il tempo scorre solo quando agisci.** Ogni azione (un passo, un'osservazione, aspettare) è un **battito**: in quel battito si muovono anche gli animali, nella stessa animazione, scivolando di casella in casella. Se non fai niente il mondo resta fermo e puoi pensare quanto vuoi; non ci sono turni né annunci che interrompono il gioco. (Il primo prototipo usava round "3 passi, poi gli animali" con il banner *Turno degli animali*: spezzava il ritmo ed è stato scartato.)
 
@@ -176,7 +190,7 @@ Una griglia fitta (**40 × 24 caselle**) generata dallo stesso seed della cartol
 
 **Animali non stupidi.** Le creature non si fanno male da sole (niente cariche contro gli alberi): aggirano gli ostacoli, ti seguono, cercano dove ti hanno visto l'ultima volta. Si battono con le trappole, le esche e il terreno, non con i loro errori.
 
-**Tempo a terra.** Ogni sbarco costa **un giorno**, pagato subito: a terra puoi muoverti quanto vuoi senza clessidra (contare i passi era troppo punitivo). Il passaggio dei giorni è sempre visibile: campana, banner *Giorno N*, paga della ciurma nel diario. Se non puoi pagare, la ciurma ti abbandona e la spedizione finisce.
+**Tempo a terra.** Sbarcare è gratis e a terra i passi non consumano tempo (contare i passi era troppo punitivo); il tempo passa solo ripartendo o aspettando a bordo (§ 6). Il passaggio dei giorni è sempre visibile: campana, banner *Giorno N*, paga della ciurma nel diario. Se non puoi pagare, la ciurma ti abbandona e la spedizione finisce.
 
 **Rovine.** Un edificio diroccato di circa 8 × 6 caselle: muri spessi, un varco e un crollo pieno di macerie (rumorose), a volte un pilastro. **Da fuori si vede solo il tetto: l'interno si scopre entrando.** I muri bloccano la vista, l'orso può entrare dai varchi. A volte l'uccello nidifica dentro.
 
@@ -208,13 +222,21 @@ Basta **un'azione di osservazione** dalla fascia tra i due anelli, con l'uccello
 Comportamenti possibili: *timido* (fuga ampia), *curioso* (si avvicina se stai fermo), *nomade* (cambia posatoio), *notturno*, *mattiniero*, *ghiotto* (attirato dai semi).
 
 ### 9.3 Creature
-Ogni creatura mostra il suo stato (`!` ti insegue, `?` ti cerca, `z` si riposa) e la sua portata: non si viene mai colpiti a sorpresa.
+Ogni creatura mostra il suo stato (`!` ti insegue o carica, `?` ti cerca, `z` si riposa o è stordita) e la sua portata: non si viene mai colpiti a sorpresa.
+
+**Chi c'è dipende dal momento del giorno**, ed è deciso a ogni sbarco:
+
+| Momento | Animali |
+|---|---|
+| Alba | il **cinghiale** (a volte, vicino al fiume, un orso) |
+| Pomeriggio | l'**orso**: quasi sempre se c'è un fiume, meno spesso altrimenti |
+| Notte | i **lupi**, in branco da 2 (3 nella taiga e sui ghiacci) |
 
 | Creatura | Comportamento | Come la gestisci |
 |---|---|---|
-| Orso | 4 passi ogni 3 tuoi quando ti insegue (più veloce di te!), al tuo passo quando ti cerca, uno ogni due quando vaga; l'acqua gli costa doppio. Dopo averti colpito si ferma per 3 battiti. Tenace: ti fiuta da vicino, ti vede da lontano, aggira gli ostacoli e ti segue. Se ti perde va dove ti ha visto l'ultima volta. Fa la guardia al territorio dell'uccello | Correndo non lo semini: nasconditi nell'erba alta e nei cespugli, attraversa il ruscello, usa esche e trappole |
-| Lupi | In branco, cercano di circondarti | Separali con l'acqua; il petardo li mette in fuga |
-| Cinghiale | Ti insegue, 2 caselle a turno, solo in linea retta | Portalo nella tagliola |
+| Orso | 4 passi ogni 3 tuoi quando ti insegue (più veloce di te!), al tuo passo quando ti cerca, uno ogni due quando vaga; l'acqua gli costa doppio. Dopo averti colpito (−4) si ferma per 3 battiti. Tenace: ti fiuta da vicino, ti vede da lontano, aggira gli ostacoli e ti segue | Correndo non lo semini: nasconditi nell'erba alta e nei cespugli, attraversa il ruscello |
+| Lupi | In branco, al tuo passo, colpiscono meno forte (−2) ma sono tanti; ci vedono bene anche di notte | Nasconditi e aspetta; *(v2: cercano di circondarti)* |
+| Cinghiale | Non sa curvare: se sei sulla sua riga o colonna, in vista, **carica in linea retta** di 2 caselle a battito (−3). Contro un ostacolo si pianta e resta stordito | Le sue linee di carica sono evidenziate: spostati di lato, oppure fallo schiantare contro un albero |
 | Serpente | Fermo nell'erba alta, morde chi è adiacente | Va notato ed evitato |
 | Pipistrelli | In grotte e rovine, si muovono a caso, sentono il rumore | Stai fermo e passano |
 
@@ -266,47 +288,36 @@ Valori iniziali, da tarare giocando.
 
 Obiettivo: i soldi iniziali bastano per **circa 10 giorni**. Devi vendere presto, e ogni traversata lunga è una scommessa.
 
-## 12. Il taccuino (C)
+## 12. Il diario (C)
 
-- Una pagina per uccello: ASCII art, nome, habitat, comportamento, curiosità.
-- Gli uccelli non ancora visti mostrano una **sagoma** e un indizio sull'habitat ("si dice che ami le acque che cadono").
-- I visti in **questo** viaggio sono evidenziati rispetto a quelli dei viaggi precedenti.
-- Seconda scheda: **inventario** con peso e valore.
+Sotto la mappa c'è il **bordo del diario**: una pagina di carta cucita con le **ultime 3 note**. Dall'alto spuntano le **linguette rosse biforcute** che aprono il taccuino intero (anche con **Tab** o dalla barra menu; ← → cambiano scheda):
+
+- **Note**: tutto ciò che è stato annotato, con giorno e momento.
+- **Uccelli**: ogni uccello in uno di tre stati: **sconosciuto** (un "?"), **traccia** (la sagoma della specie e un indizio sull'habitat, non sull'ora), **osservato** (a colori, con habitat, ore, curiosità e dove l'hai visto).
+- **Voci**: quelle sentite in taverna, al massimo 2 per spedizione (in arrivo con le taverne).
+- **Ciurma**: paga giornaliera, cassa e registro delle spese.
+- **Zaino**: l'inventario personale (per ora il binocolo).
+- **Stiva**: le cose da vendere (in arrivo con il mercato).
+
+**Le tracce.** Se sbarchi in una zona all'ora sbagliata, o se l'uccello ti vola via per sempre, trovi le sue tracce: diventa una sagoma nel diario. Gli uccelli **rari** non lasciano tracce: di loro si sa solo dalle voci.
 
 ## 13. Gli uccelli
 
-**60 uccelli**, organizzati in **20 famiglie × 3 varianti** (comune · raro · leggendario). Un mix di inventati buffi, inventati seri e alcuni reali.
+**Specie e varianti.** Ogni specie ha **una sola icona**; le sue varianti si distinguono per colore e nome (*Gabbiano comune*, *Gabbiano ala nera*, *Gabbiano becco blu*…). Obiettivo finale: **20 specie × 3 varianti = 60 uccelli**. Per ora **6 specie** (gabbiani, gufi, corvi, anatre, tucani, aquile), **18 uccelli**, in `js/uccelli.js`.
 
-Vivono in un file di dati modificabile senza toccare il codice:
+Ogni uccello ha: bioma (o "ovunque"), a volte una caratteristica (cascata, lago, castello, vulcano), **i momenti in cui si fa vedere**, un indizio e una curiosità. Gli ID non cambiano mai: il codice del taccuino si baserà su di essi.
 
-```json
-{
-  "id": 17,
-  "nome": "Becco Blu Maggiore",
-  "famiglia": "beccoblu",
-  "variante": 2,
-  "bioma": "foresta",
-  "caratteristica": "cascata",
-  "rarita": 2,
-  "comportamento": "timido",
-  "anello_fuga": 3,
-  "turni_osservazione": 4,
-  "ascii": ["  __ ", " (o>", " /)) ", " ^^ "],
-  "curiosita": "Si dice che canti solo quando piove."
-}
-```
+**Un uccello per zona, deciso all'attracco.** Al primo sbarco in una zona si sceglie il suo uccello tra quelli adatti al bioma e alle caratteristiche (chi vuole una caratteristica ha la precedenza); da lì in poi è sempre quello. Se l'ora è sbagliata non si fa vedere: puoi aspettare a bordo e riprovare. Una volta osservato, la zona è segnata con la ✓ e lì non compare più niente.
 
-Gli ID vanno da 0 a 59 e **non cambiano mai**: il codice del taccuino si basa su di essi.
+**Gli uccelli rari** (Gabbiano becco blu, Corvo delle mura, Tucano delle oasi, Aquila di fuoco) non escono mai a caso: li lega a una zona precisa **solo una voce di taverna**, al massimo **2 voci per spedizione**.
 
 ## 14. Fine partita, attestato e codice
 
-**Resoconto:** giorni di viaggio, zone visitate, uccelli nuovi, totale del taccuino, causa della fine.
+**Resoconto** (fatto): una schermata con la causa della fine, giorni di viaggio, sbarchi, zone esplorate, isole toccate, passi, ferite, uccelli osservati, e la griglia del taccuino (a colori gli osservati, sagome le tracce, "?" il resto).
 
-**Attestato PDF** (generato nel browser):
-- intestazione con il logo e "Una spedizione ornitologica";
-- nome dell'esploratore, data, numero di spedizioni;
-- la griglia dei 60 uccelli: visti in ASCII, mancanti come sagome;
-- il **codice** in grande e un **QR code** con lo stesso codice.
+**Attestato** (fatto, come immagine PNG): nome dell'esploratore, causa della fine, resoconto, la griglia degli uccelli per specie, il codice. *(Più avanti: PDF con QR code.)*
+
+**Codice del taccuino**: per ora mostrato come `????-????-????-????` *prossimamente*.
 
 **Il codice** (senza server):
 
@@ -367,8 +378,11 @@ Idea: **ogni uccello ha il suo verso**, generato dal suo ID. Lo stesso uccello c
 
 ## 19. Decisioni prese
 
-- **Nome del giocatore:** si sceglie all'inizio della partita.
-- **Momenti del giorno:** alba, pomeriggio e notte, che cambiano con il passare dei giorni (§ 6).
+- **Nome del giocatore:** si sceglie all'inizio della partita ("Il registro di bordo").
+- **Tempo in terzi:** attraccare gratis, ripartire due momenti, aspettare a bordo uno, traversate lunghe uno ogni 60° (§ 6).
+- **Animali per momento:** alba cinghiale, pomeriggio orso (più spesso col fiume), notte lupi (§ 9.3).
+- **Un uccello per zona**, deciso al primo attracco; i rari solo con le voci, al massimo 2 (§ 13).
+- **Un'icona per specie**, le varianti cambiano colore.
 - **Cosa sopravvive al viaggio:** solo il taccuino. Strumenti, soldi e binocolo migliorato si perdono.
 - **Ciurma:** per ora è solo un costo giornaliero, senza eventi.
 - **Audio:** niente musica, suoni d'ambiente ed effetti sintetizzati; le proposte del § 16 sono approvate come base.

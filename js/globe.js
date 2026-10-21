@@ -236,12 +236,28 @@ const Globo = (() => {
     return world.cities.find((c) => angle(c.p, p) <= maxDeg) || null;
   }
 
-  // Un passo di navigazione: ci si muove lungo la rotta, in gradi
+  // La base locale in un punto: verso est e verso nord
+  function basis(lat, lon) {
+    return {
+      east: [-Math.sin(lon * DEG), Math.cos(lon * DEG), 0],
+      north: [-Math.sin(lat * DEG) * Math.cos(lon * DEG), -Math.sin(lat * DEG) * Math.sin(lon * DEG), Math.cos(lat * DEG)],
+    };
+  }
+
+  // Un passo di navigazione lungo un cerchio massimo: si può passare sopra i poli, e la rotta
+  // si aggiorna da sola (prima la latitudine era bloccata e la nave si fermava andando a nord)
   function advance(lat, lon, heading, deg) {
-    const h = heading * DEG;
-    const la = lat + Math.cos(h) * deg;
-    const lo = lon + (Math.sin(h) * deg) / Math.max(0.2, Math.cos(lat * DEG));
-    return { lat: Math.max(-70, Math.min(70, la)), lon: ((lo + 540) % 360) - 180 };
+    const h = heading * DEG, a = deg * DEG;
+    const p = vec(lat, lon), { east, north } = basis(lat, lon);
+    const d = [0, 1, 2].map((k) => north[k] * Math.cos(h) + east[k] * Math.sin(h));
+    const q = [0, 1, 2].map((k) => p[k] * Math.cos(a) + d[k] * Math.sin(a));
+    const dq = [0, 1, 2].map((k) => d[k] * Math.cos(a) - p[k] * Math.sin(a));
+    const ll = toLatLon(q);
+    // Esattamente sul polo la base non esiste: ci si tiene un soffio più in qua
+    ll.lat = Math.max(-89.5, Math.min(89.5, ll.lat));
+    const b = basis(ll.lat, ll.lon);
+    const nh = (Math.atan2(dot(dq, b.east), dot(dq, b.north)) / DEG + 360) % 360;
+    return { lat: ll.lat, lon: ll.lon, heading: nh };
   }
 
   // --- Disegno ---
@@ -276,7 +292,7 @@ const Globo = (() => {
 
   const buffers = new Map();
 
-  // view = { lat, lon, heading }; opts = { res, time, wake: [{lat,lon}], highlight: zoneId, markers: true }
+  // view = { lat, lon, heading }; opts = { res, time, wake: [{lat,lon}], highlight: zoneId, markers: true, marks: trip.zones }
   function draw(canvas, world, view, opts) {
     const N = opts.res;
     if (!buffers.has(N)) {
@@ -292,8 +308,7 @@ const Globo = (() => {
 
     // La base della vista: il centro è la nave, il nord in alto
     const center = vec(view.lat, view.lon);
-    const east = [-Math.sin(view.lon * DEG), Math.cos(view.lon * DEG), 0];
-    const north = [-Math.sin(view.lat * DEG) * Math.cos(view.lon * DEG), -Math.sin(view.lat * DEG) * Math.sin(view.lon * DEG), Math.cos(view.lat * DEG)];
+    const { east, north } = basis(view.lat, view.lon);
     const L = [-0.45, 0.5, 0.74]; // la luce arriva da nord-ovest
 
     data.fill(0);
@@ -345,6 +360,39 @@ const Globo = (() => {
         const roof = city.id === "forte" ? [222, 214, 196] : [200, 90, 60];
         [[0, 0], [1, 0], [0, 1], [1, 1], [0, -1], [1, -1]].forEach(([dx, dy]) => put(s.x + dx, s.y + dy, roof));
         [[-1, -1], [2, -1], [-1, 1], [2, 1], [-1, 0], [2, 0], [0, 2], [1, 2], [0, -2], [1, -2]].forEach(([dx, dy]) => put(s.x + dx, s.y + dy, [30, 24, 20]));
+      }
+    }
+
+    // Il vulcano: un cono scuro con la bocca rossa, visibile da lontano
+    if (opts.markers) {
+      for (const z of world.zones) {
+        if (!z.tags.has("vulcano")) continue;
+        const s = project(z.lat, z.lon);
+        if (!s) continue;
+        [[-1, 1], [0, 1], [1, 1], [-2, 2], [-1, 2], [0, 2], [1, 2], [2, 2], [0, 0]].forEach(([dx, dy]) => put(s.x + dx, s.y + dy, [46, 36, 34]));
+        put(s.x, s.y - 1, [240, 96, 40]);
+        put(s.x, s.y, [255, 150, 60]);
+      }
+    }
+
+    // I segni del diario sulle zone visitate: ✓ uccello osservato, ? visitata senza vederlo, ✗ volato via
+    const MARKS = {
+      done: { color: [16, 14, 12], px: [[-2, 0], [-1, 1], [0, 2], [1, 1], [2, 0], [3, -1], [4, -2]] },
+      seen: { color: [250, 244, 220], px: [[-1, -2], [0, -2], [1, -2], [2, -1], [1, 0], [0, 1], [0, 3]] },
+      gone: { color: [200, 70, 50], px: [[-2, -2], [-1, -1], [0, 0], [1, 1], [2, 2], [2, -2], [1, -1], [-1, 1], [-2, 2]] },
+    };
+    if (opts.marks) {
+      for (const [id, m] of Object.entries(opts.marks)) {
+        if (!m.visited) continue;
+        const z = world.zones[id], s = project(z.lat, z.lon);
+        if (!s) continue;
+        const mark = MARKS[m.done ? "done" : m.gone ? "gone" : "seen"];
+        const halo = mark === MARKS.done ? [250, 244, 220] : [16, 14, 12];
+        // un bordo di contrasto, poi il segno
+        for (const [dx, dy] of mark.px) for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          if (!mark.px.some(([x, y]) => x === dx + ox && y === dy + oy)) put(s.x + dx + ox, s.y + dy + oy, halo);
+        }
+        for (const [dx, dy] of mark.px) put(s.x + dx, s.y + dy, mark.color);
       }
     }
 

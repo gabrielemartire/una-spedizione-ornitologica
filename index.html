@@ -20,7 +20,7 @@
       <p class="subtitle">isole, nebbie e piume · a turni</p>
 
       <nav class="menu">
-        <button class="menu-item" data-goto="screen-game">Nuova spedizione <span class="tag">prototipo</span></button>
+        <button class="menu-item" data-goto="screen-name">Nuova spedizione <span class="tag">prototipo</span></button>
         <button class="menu-item" disabled>Riprendi un taccuino <span class="tag">presto</span></button>
         <button class="menu-item" data-action="toggle-sound">Suoni: <span data-label="sound">ON</span></button>
         <button class="menu-item" data-action="volume" aria-label="Volume">Volume <span class="volume" data-label="volume"></span></button>
@@ -29,44 +29,77 @@
       </nav>
 
       <p class="hint">↑ ↓ per scegliere · ← → volume · Invio per confermare</p>
+      <p class="version" data-version></p>
     </section>
 
-    <!-- Partita: A battlemap · B globo e stato · C taccuino · D cartolina -->
+    <!-- Scelta del nome -->
+    <section id="screen-name" class="screen">
+      <h2 class="heading">~ Il registro di bordo ~</h2>
+      <p class="subtitle">Il capitano intinge la penna. «E voi, sapiente, come vi chiamate?»</p>
+      <form id="name-form" class="name-form" autocomplete="off">
+        <input id="player-name" class="name-input" maxlength="24" placeholder="il tuo nome" aria-label="Il tuo nome" spellcheck="false">
+        <nav class="menu">
+          <button class="menu-item" type="submit">Firma e salpa</button>
+          <button class="menu-item" type="button" data-goto="screen-menu">← Torna al menu</button>
+        </nav>
+      </form>
+    </section>
+
+    <!-- Partita: barra del menu · A battlemap o globo · diario · D cartolina · B stato -->
     <section id="screen-game" class="screen game">
-      <div class="game-top">
-        <div class="panel panel-a">
-          <div class="panel-title" id="zone-title">In mare aperto</div>
-          <div class="view-wrap">
-            <div id="map-wrap" class="map-wrap" hidden>
-              <div id="map" class="map" aria-label="Mappa della zona"></div>
-            </div>
-            <div id="sea-view" class="sea-view">
-              <div id="sea-hud" class="sea-hud"></div>
-              <canvas id="globe-big" aria-label="Il globo"></canvas>
-              <div id="sea-prompt" class="sea-prompt"></div>
-            </div>
-            <div id="phase-banner" class="phase-banner" hidden></div>
-            <div id="map-overlay" class="map-overlay" hidden></div>
+      <header class="menubar">
+        <div class="mb-group">
+          <button class="mb-item" data-game-action="menubar">Spedizione</button>
+          <div class="mb-drop" id="mb-drop" hidden>
+            <button class="mb-item" data-game-action="to-menu">Torna al menu principale <small>(la spedizione va persa)</small></button>
+            <button class="mb-item" data-game-action="restart">Nuova spedizione</button>
           </div>
         </div>
-        <div class="panel panel-b">
-          <div class="panel-title" id="b-title">Navigazione</div>
-          <canvas id="globe-mini" class="globe-mini" hidden aria-label="Dove sei sul globo"></canvas>
-          <div id="status" class="status"></div>
+        <button class="mb-item" data-game-action="diary">Diario</button>
+        <button class="mb-item" data-action="toggle-sound">Suoni: <span data-label="sound">ON</span></button>
+        <span class="mb-right"><span id="mb-explorer"></span> · <span data-version></span></span>
+      </header>
+      <div class="game-body">
+        <div class="col-main">
+          <div class="panel panel-a">
+            <div class="view-wrap">
+              <div id="map-wrap" class="map-wrap" hidden>
+                <div id="map" class="map" aria-label="Mappa della zona"></div>
+              </div>
+              <div id="sea-view" class="sea-view">
+                <div id="sea-hud" class="sea-hud"></div>
+                <canvas id="globe-big" aria-label="Il globo"></canvas>
+                <div id="sea-prompt" class="sea-prompt"></div>
+              </div>
+              <div id="phase-banner" class="phase-banner" hidden></div>
+              <div id="toast" class="toast" hidden></div>
+              <div id="map-overlay" class="map-overlay" hidden></div>
+            </div>
+            <div class="panel-foot"><span id="tile-info" class="tile-info"></span><span class="keys" id="keys"></span></div>
+          </div>
+          <div class="diary-strip" id="diary-strip"></div>
+        </div>
+        <div class="col-side">
+          <div class="panel panel-d">
+            <div id="postcard" class="postcard" role="img" aria-label="Panorama della zona"></div>
+          </div>
+          <div class="panel panel-b">
+            <canvas id="globe-mini" class="globe-mini" hidden aria-label="Dove sei sul globo"></canvas>
+            <div id="status" class="status"></div>
+          </div>
         </div>
       </div>
-      <div class="game-bottom">
-        <div class="panel panel-c">
-          <div class="panel-title">Taccuino</div>
-          <div id="notebook" class="notebook"></div>
-          <ul id="log" class="log"></ul>
-          <p class="keys" id="keys"></p>
-        </div>
-        <div class="panel panel-d">
-          <div class="panel-title" id="postcard-title">Cartolina</div>
-          <div id="postcard" class="postcard" role="img" aria-label="Panorama della zona"></div>
-        </div>
-      </div>
+      <div id="diary-popup" class="diary-popup" hidden></div>
+    </section>
+
+    <!-- Fine della spedizione -->
+    <section id="screen-end" class="screen end">
+      <div id="end-body"></div>
+      <nav class="menu">
+        <button class="menu-item" data-end-action="download">Scarica l'attestato</button>
+        <button class="menu-item" data-goto="screen-name">Nuova spedizione</button>
+        <button class="menu-item" data-goto="screen-menu">Menu principale</button>
+      </nav>
     </section>
 
     <!-- Prova dei suoni proposti -->
@@ -129,6 +162,7 @@
 
         <h3>Sviluppo</h3>
         <p>Gabriele Martire<br>con l'aiuto di Claude (Anthropic)</p>
+        <p><a href="https://github.com/gabrielemartire" target="_blank" rel="noopener">github.com/gabrielemartire</a></p>
 
         <h3>Ispirazione</h3>
         <p>
@@ -159,12 +193,15 @@
     </section>
 
   </main>
+  <script src="js/versione.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/icons.js"></script>
   <script src="js/biomes.js"></script>
+  <script src="js/uccelli.js"></script>
   <script src="js/postcard.js"></script>
   <script src="js/globe.js"></script>
   <script src="js/game.js"></script>
+  <script src="js/diario.js"></script>
   <script src="js/sea.js"></script>
   <script src="js/menu.js"></script>
 </body>

@@ -1,9 +1,10 @@
 // La navigazione: la nave si guida in tempo reale sul globo.
-// ← → cambiano la rotta, ↑ ↓ le vele. Il tempo passa solo mentre navighi.
-// Vicino a una costa si può guardare col cannocchiale (gratis) o sbarcare (costa un momento del giorno).
+// ← → cambiano la rotta, ↑ ↓ le vele. In mare l'orologio è fermo: costa ripartire (due momenti),
+// e una traversata lunga aggiunge un momento ogni SEA_LEG gradi percorsi.
+// Vicino a una costa si può guardare col cannocchiale o sbarcare, gratis.
 // Espone l'oggetto globale `Mare`.
 const Mare = (() => {
-  const DAY_SECONDS = 45;     // secondi di navigazione per un giorno
+  const SEA_LEG = 60;         // gradi di traversata che costano un momento del giorno
   const MAX_SAILS = 4;
   const SAIL_SPEED = 1.8;     // gradi al secondo per ogni livello di vela
   const TURN_RATE = 100;      // gradi di rotta al secondo
@@ -21,7 +22,8 @@ const Mare = (() => {
   let wake = [];
   let near = null;            // la costa più vicina, se c'è
   let city = null;            // la città vicina, se c'è
-  let scope = null;           // la zona guardata col cannocchiale
+  let scoping = false;        // il cannocchiale è in mano: segue la costa finché non ti allontani
+  let scope = null;           // la zona che si sta guardando
   let seaTime = null;         // il momento disegnato nella cartolina del mare
   let el = null;
 
@@ -35,17 +37,15 @@ const Mare = (() => {
       hud: document.getElementById("sea-hud"),
       prompt: document.getElementById("sea-prompt"),
       postcard: g.postcard,
-      postcardTitle: g.postcardTitle,
-      zoneTitle: g.zoneTitle,
     };
     const trip = Gioco.trip;
     trip.mode = "sea";
     trip.ship.sails = 0;
     turning = 0;
+    scoping = false;
     scope = null;
     seaTime = null;
     Gioco.showView("sea");
-    el.zoneTitle.textContent = "In mare aperto";
     fitCanvas();
     Suoni.stopAll();
     Suoni.toggleAmbient("mare");
@@ -60,9 +60,11 @@ const Mare = (() => {
     running = false;
   }
 
+  // Il globo grande riempie il riquadro A, lasciando posto alla rotta e al messaggio
   function fitCanvas() {
-    const box = el.canvas.parentElement.getBoundingClientRect();
-    const size = Math.max(200, Math.min(box.width, window.innerHeight * 0.62));
+    const wrap = el.canvas.parentElement.parentElement.getBoundingClientRect();
+    const spare = el.hud.offsetHeight + el.prompt.offsetHeight + 16;
+    const size = Math.max(200, Math.min(wrap.width, wrap.height - spare));
     const dpr = window.devicePixelRatio || 1;
     el.canvas.style.width = `${size}px`;
     el.canvas.style.height = `${size}px`;
@@ -83,34 +85,45 @@ const Mare = (() => {
 
     ship.heading = (ship.heading + turning * TURN_RATE * dt + 360) % 360;
     if (ship.sails > 0) {
-      const next = Globo.advance(ship.lat, ship.lon, ship.heading, ship.sails * SAIL_SPEED * dt);
+      const step = ship.sails * SAIL_SPEED * dt;
+      const next = Globo.advance(ship.lat, ship.lon, ship.heading, step);
       if (Globo.isWater(trip.world, next.lat, next.lon)) {
         Object.assign(ship, next);
         if (!wake.length || Math.hypot(wake[0].lat - ship.lat, wake[0].lon - ship.lon) > 0.6) {
           wake.unshift({ lat: ship.lat, lon: ship.lon });
           wake.length = Math.min(wake.length, 24);
         }
+        // Le traversate lunghe costano tempo
+        trip.seaDist += step;
+        if (trip.seaDist >= SEA_LEG) {
+          trip.seaDist -= SEA_LEG;
+          if (!Gioco.advance(1)) return;
+          Gioco.toast(`La traversata è lunga: si fa ${Gioco.now()}.`);
+          document.getElementById("screen-game").dataset.time = Gioco.now();
+        }
       } else {
         ship.sails = 0;
         Suoni.play("legno");
-        Gioco.log("Ammaini le vele: la costa è a un passo.", "ship");
+        Gioco.toast("Ammaini le vele: la costa è a un passo.");
       }
-      // Il tempo passa solo navigando
-      if (!Gioco.advanceClock(dt / DAY_SECONDS)) return;
       if (Math.random() < dt * 0.05) Suoni.play(Math.random() < 0.5 ? "gabbiano" : "legno");
     }
 
     near = Globo.nearestCoast(trip.world, ship.lat, ship.lon, SCOPE_RANGE);
     city = Globo.nearestCity(trip.world, ship.lat, ship.lon, CITY_RANGE);
-    if (scope && (!near || near.zone.id !== scope.id)) closeScope();
+    // Il cannocchiale segue la costa: girando attorno all'isola mostra la zona successiva
+    if (scoping) {
+      if (!near) closeScope();
+      else if (!scope || near.zone.id !== scope.id) showScope(near.zone);
+    }
 
-    const time = Gioco.timeOf(trip.clock);
+    const time = Gioco.now();
     const canLand = near && near.distance <= LAND_RANGE;
     Globo.draw(el.canvas, trip.world, ship, {
-      res: BIG_RES, time, wake, ship: true, markers: true,
+      res: BIG_RES, time, wake, ship: true, markers: true, marks: trip.zones,
       highlight: scope ? scope.id : canLand ? near.zone.id : null,
     });
-    if (!scope && seaTime !== time) drawSeaPostcard(time);
+    if (!scoping && seaTime !== time) drawSeaPostcard(time);
     renderHud(canLand);
     if (now - lastStatus > 250) { lastStatus = now; Gioco.renderStatus(); }
     requestAnimationFrame((t) => frame(t, id));
@@ -123,42 +136,55 @@ const Mare = (() => {
       <span>Vele <b>${sails}</b></span>`;
     let msg = "Mare aperto. Cerca una costa.";
     if (city) msg = `<b>${city.name}</b> · Invio per attraccare in città`;
-    else if (canLand) msg = `<b>${near.zone.name}</b> · Invio sbarca (costa un giorno) · T cannocchiale`;
-    else if (near) msg = `Una costa all'orizzonte · T cannocchiale`;
+    else if (canLand) msg = `<b>${near.zone.name}</b> · Invio sbarca · ${scoping ? "col cannocchiale" : "T cannocchiale"}`;
+    else if (near) msg = scoping ? `Col cannocchiale: <b>${near.zone.name}</b>` : "Una costa all'orizzonte · T cannocchiale";
     el.prompt.innerHTML = msg;
   }
 
   // Righe del riquadro B in navigazione
   function statusRows() {
-    const ship = Gioco.trip.ship;
+    const trip = Gioco.trip, ship = trip.ship;
+    const leg = Math.min(5, Math.floor((trip.seaDist / SEA_LEG) * 5));
     return `
       <div>${Gioco.iconHtml("ship")}<span>Rotta</span><b>${Math.round(ship.heading)}° ${compass(ship.heading)}</b></div>
-      <div><span>Vele</span><b>${"▰".repeat(ship.sails)}${"▱".repeat(MAX_SAILS - ship.sails)}</b></div>`;
+      <div><span>Vele</span><b>${"▰".repeat(ship.sails)}${"▱".repeat(MAX_SAILS - ship.sails)}</b></div>
+      <div title="Ogni ${SEA_LEG}° di traversata passa un momento del giorno">${Gioco.iconHtml("hourglass")}<span>Traversata</span><b>${"▰".repeat(leg)}${"▱".repeat(5 - leg)}</b></div>`;
   }
 
-  // --- Cartolina: il mare, oppure la costa vista col cannocchiale ---
+  // --- Cartolina: il mare dal ponte, oppure la costa vista col cannocchiale ---
 
   function drawSeaPostcard(time) {
+    const trip = Gioco.trip;
     seaTime = time;
-    el.postcardTitle.textContent = `Dal ponte · ${time}`;
-    Cartolina.render({ seed: Gioco.trip.seed, sea: true, time, tags: new Set() }, el.postcard);
+    el.postcard.classList.remove("is-scope");
+    // ogni traversata ha il suo mare: a volte il sole, uno scoglio, dei gabbiani
+    Cartolina.render({ seed: trip.seed + trip.departures * 977 + trip.third * 31, sea: true, time, tags: new Set() }, el.postcard);
   }
 
+  function showScope(zone) {
+    scope = zone;
+    const trip = Gioco.trip;
+    const memory = trip.zones[zone.id];
+    const bird = memory && memory.bird != null ? UCCELLI[memory.bird] : null;
+    const flying = !!bird && !memory.done && !memory.gone && bird.ore.includes(Gioco.now());
+    el.postcard.classList.add("is-scope");
+    Cartolina.render({ seed: zone.seed, tags: zone.tags, time: Gioco.now(), bird: flying }, el.postcard);
+    Suoni.play("pagina");
+  }
+
+  // T prende il cannocchiale; per riporlo basta allontanarsi dalla costa
   function openScope() {
+    if (scoping) return;
     if (!near) {
-      Gioco.log("Col cannocchiale vedi solo mare.", "telescope");
+      Gioco.toast("Col cannocchiale vedi solo mare.");
       return;
     }
-    scope = near.zone;
-    const time = Gioco.timeOf(Gioco.trip.clock);
-    const memory = Gioco.trip.zones[scope.id];
-    el.postcardTitle.textContent = `Cannocchiale · ${scope.name}`;
-    Cartolina.render({ seed: scope.seed, tags: scope.tags, time, bird: !memory?.gone }, el.postcard);
-    Suoni.play("pagina");
-    Gioco.log(`Col cannocchiale: ${scope.name.toLowerCase()}.`, "telescope");
+    scoping = true;
+    showScope(near.zone);
   }
 
   function closeScope() {
+    scoping = false;
     scope = null;
     seaTime = null;
   }
@@ -167,14 +193,14 @@ const Mare = (() => {
 
   document.addEventListener("keydown", (e) => {
     const trip = Gioco.trip;
-    if (!running || !trip || trip.mode !== "sea" || !document.body.classList.contains("in-game")) return;
+    if (!running || !trip || trip.mode !== "sea" || !document.body.classList.contains("in-game") || Diario.isOpen()) return;
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     const ship = trip.ship;
     if (k === "ArrowLeft" || k === "a") turning = -1;
     else if (k === "ArrowRight" || k === "d") turning = 1;
     else if ((k === "ArrowUp" || k === "w") && !e.repeat) { ship.sails = Math.min(MAX_SAILS, ship.sails + 1); Suoni.play("legno"); }
     else if ((k === "ArrowDown" || k === "s") && !e.repeat) { ship.sails = Math.max(0, ship.sails - 1); Suoni.play("legno"); }
-    else if (k === "t" && !e.repeat) scope ? closeScope() : openScope();
+    else if (k === "t" && !e.repeat) openScope();
     else if (k === "Enter") {
       if (city) { stop(); Gioco.visitCity(city); }
       else if (near && near.distance <= LAND_RANGE) { stop(); Gioco.landAt(near.zone); }
@@ -193,14 +219,14 @@ const Mare = (() => {
   // Il globo piccolo del riquadro B, quando sei a terra
   function drawMini(canvas) {
     const trip = Gioco.trip;
-    const size = 150, dpr = window.devicePixelRatio || 1;
+    const size = 120, dpr = window.devicePixelRatio || 1;
     if (canvas.width !== size * dpr) {
       canvas.width = size * dpr;
       canvas.height = size * dpr;
       canvas.style.width = `${size}px`;
       canvas.style.height = `${size}px`;
     }
-    Globo.draw(canvas, trip.world, trip.ship, { res: MINI_RES, time: Gioco.timeOf(trip.clock), ship: true, markers: true });
+    Globo.draw(canvas, trip.world, trip.ship, { res: MINI_RES, time: Gioco.now(), ship: true, markers: true, marks: trip.zones });
   }
 
   return { enter, stop, statusRows, drawMini };

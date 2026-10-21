@@ -135,8 +135,8 @@ const Cartolina = (() => {
     // in fila, in ordine casuale, senza mai coprirsi. Ognuno ha una larghezza minima e massima:
     // prima si riserva il minimo, poi si divide lo spazio avanzato.
     const GAP = 4;
-    const items = [["fiume", 28, 28], ["castello", 30, 30], ["villaggio", 34, 14], ["rovine", 26, 14]]
-      .filter(([tag]) => tag === "fiume" || zone.tags.has(tag))
+    const items = [["fiume", 28, 28], ["lago", 40, 26], ["castello", 30, 30], ["villaggio", 34, 14], ["rovine", 26, 14]]
+      .filter(([tag]) => zone.tags.has(tag))
       .map(([tag, max, min]) => ({ tag, max, min, w: min }))
       .sort(() => r() - 0.5);
     let slack = PW - 4 - items.reduce((sum, it) => sum + it.min, 0) - GAP * (items.length - 1);
@@ -154,14 +154,47 @@ const Cartolina = (() => {
       spots[it.tag] = { x: cursor, w: it.w };
       cursor += it.w + GAP;
     }
-    let rx = spots.fiume.x + spots.fiume.w / 2;
+    let rx = spots.fiume ? spots.fiume.x + spots.fiume.w / 2 : -100;
+    // Dal ponte, a volte il cielo è coperto e il sole non si vede
+    const cloudy = zone.sea && r() < 0.3;
+
+    // Il ponte della nave: parapetto a ringhiera, assi, l'albero maestro con le sartie e il fondo della vela
+    const drawDeck = () => {
+      const wood = tintHex("#4a3424", zone.time), woodDark = tintHex("#2a1c12", zone.time), woodLight = tintHex("#7a5a3c", zone.time);
+      const sail = tintHex("#e6dcc0", zone.time), sailShadow = tintHex("#b4a888", zone.time);
+      const railY = PH - 15, deckY = PH - 5;
+      const mastX = r() < 0.5 ? PW - 24 - Math.floor(r() * 8) : 18 + Math.floor(r() * 8);
+      // la vela, vista da sotto: un arco di tela in cima
+      for (let x = mastX - 26; x <= mastX + 26; x++) {
+        const bottom = Math.round(8 - 4 * ((x - mastX) / 26) ** 2);
+        for (let y = 0; y <= bottom; y++) px(x, y, y > bottom - 2 ? sailShadow : sail);
+      }
+      // le sartie, dalla cima dell'albero al parapetto
+      for (const toX of [mastX - 30, mastX + 30]) {
+        for (let k = 0; k <= 60; k++) {
+          const t = k / 60;
+          px(mastX + (toX - mastX) * t, 6 + (railY - 6) * t, woodDark);
+        }
+      }
+      for (let y = 0; y < deckY; y++) {
+        px(mastX - 1, y, woodLight); px(mastX, y, wood); px(mastX + 1, y, woodDark);
+      }
+      // la ringhiera: corrimano, colonnine, assi del ponte
+      for (let x = 0; x < PW; x++) {
+        px(x, railY, woodLight); px(x, railY + 1, wood); px(x, railY + 2, woodDark);
+        for (let y = deckY; y < PH; y++) px(x, y, (x + (y - deckY) * 7) % 23 === 0 ? woodDark : y === deckY ? woodLight : wood);
+      }
+      for (let x = 3; x < PW; x += 9) {
+        for (let y = railY + 3; y < deckY; y++) { px(x, y, woodLight); px(x + 1, y, wood); px(x + 2, y, woodDark); }
+      }
+    };
 
     // 1. Cielo sfumato, con l'alone attorno al sole o alla luna
     for (let y = 0; y < HY + 10; y++) {
       for (let x = 0; x < PW; x++) px(x, y, ramp(P.sky, y / (HY + 4), x, y));
     }
-    const haloR = zone.time === "alba" ? 30 : 16;
-    for (let y = 0; y < HY + 10; y++) {
+    const haloR = cloudy ? 0 : zone.time === "alba" ? 30 : 16;
+    for (let y = 0; y < HY + 10 && haloR; y++) {
       for (let x = 0; x < PW; x++) {
         const d = Math.hypot(x - sunX, (y - sunY) * 1.3);
         if (d < haloR) px(x, y, mix(get(x, y), P.glow, (1 - d / haloR) * 0.85, x, y));
@@ -177,11 +210,11 @@ const Cartolina = (() => {
       }
     }
     const discR = zone.time === "alba" ? 7 : 5;
-    ellipse(sunX, sunY, discR, discR, () => P.sun);
-    if (night) [[-2, -1], [1, 1], [2, -2], [-1, 2]].forEach(([dx, dy]) => px(sunX + dx, sunY + dy, P.moonShade));
+    if (!cloudy) ellipse(sunX, sunY, discR, discR, () => P.sun);
+    if (night && !cloudy) [[-2, -1], [1, 1], [2, -2], [-1, 2]].forEach(([dx, dy]) => px(sunX + dx, sunY + dy, P.moonShade));
 
     // 3. Nuvole: luce in alto, ombra in basso
-    const clouds = 1 + Math.floor(r() * 3);
+    const clouds = cloudy ? 5 + Math.floor(r() * 3) : 1 + Math.floor(r() * 3);
     for (let i = 0; i < clouds; i++) {
       const cx = 8 + r() * (PW - 16), cy = 6 + r() * 14;
       const puffs = Array.from({ length: 3 + Math.floor(r() * 3) }, (_, k) => ({
@@ -200,11 +233,26 @@ const Cartolina = (() => {
         for (let x = 0; x < PW; x++) {
           let c = ramp([P.haze, P.waterLight, P.water, P.waterDark], 0.25 + t * 0.75, x, y);
           if (y > HY + 1 && (y * 5 + Math.floor((x + y * 3) / (2 + t * 6))) % (spacing + 4) === 0) c = t > 0.6 ? P.foam : P.waterLight;
-          if (Math.abs(x - sunX) < 2 + t * 6 && r() < 0.45 - t * 0.3) c = P.glow; // la scia di luce
+          if (!cloudy && Math.abs(x - sunX) < 2 + t * 6 && r() < 0.45 - t * 0.3) c = P.glow; // la scia di luce
           px(x, y, c);
         }
       }
       for (let x = 0; x < PW; x++) px(x, HY, P.haze);
+      // A volte uno scoglio all'orizzonte, a volte dei gabbiani
+      if (r() < 0.4) {
+        const x0 = 8 + r() * 90, w = 6 + r() * 12, h = 2 + r() * 4;
+        for (let x = Math.floor(x0); x < x0 + w; x++) {
+          const top = HY - Math.round(h * Math.sin(((x - x0) / w) * Math.PI));
+          for (let y = top; y <= HY; y++) px(x, y, (lightLeft ? x > x0 + w / 2 : x < x0 + w / 2) ? P.nearShadow : P.near);
+        }
+      }
+      if (!night && r() < 0.5) {
+        for (let i = 0, n = 1 + Math.floor(r() * 3); i < n; i++) {
+          const bx = 10 + r() * 70, by = 6 + r() * 18;
+          [[0, 0], [1, 1], [2, 1], [3, 0], [-1, -1], [4, -1]].forEach(([dx, dy]) => px(bx + dx, by + dy, P.bird));
+        }
+      }
+      drawDeck();
       return buf;
     }
 
@@ -226,6 +274,33 @@ const Cartolina = (() => {
         const t = Math.round(HY + 6 - 13 * near(x));
         const lit = lightLeft ? near(x - 1) <= near(x + 1) : near(x - 1) >= near(x + 1);
         for (let y = t; y < HY + 10; y++) px(x, y, lit ? P.near : P.nearShadow);
+      }
+    }
+
+    // Il vulcano: un cono scuro sullo sfondo, la bocca accesa, colate e un pennacchio di fumo
+    if (zone.tags.has("vulcano")) {
+      const vx = 16 + r() * 88, top = HY - 20, base = HY + 10, crater = 4;
+      const rock = tintHex("#4a3e3e", zone.time), rockDark = tintHex("#2e2628", zone.time);
+      const lava = night ? "#ff7a30" : "#e8582a", glowC = night ? "#ffc060" : "#f2a040";
+      const smoke = tintHex("#9a9490", zone.time), smokeDark = tintHex("#6a6462", zone.time);
+      for (let y = top; y < base; y++) {
+        const half = crater + (y - top) * 1.5;
+        for (let x = Math.floor(vx - half); x <= vx + half; x++) {
+          const lit = lightLeft ? x < vx : x > vx;
+          px(x, y, mix(lit ? rock : rockDark, P.haze, ((y - top) / (base - top)) * 0.35, x, y));
+        }
+      }
+      for (let x = vx - crater; x <= vx + crater; x++) { px(x, top, glowC); px(x, top + 1, lava); }
+      for (const side of [-1, 1]) {
+        let lx = vx + side * 2;
+        for (let y = top + 2; y < top + 12 + r() * 6; y++) {
+          lx += side * (0.4 + r() * 0.8);
+          px(lx, y, lava);
+        }
+      }
+      for (let i = 0; i < 6; i++) {
+        const drift = (i * i) / 3;
+        ellipse(vx + drift, top - 3 - i * 4, 2.5 + i * 1.1, 1.8 + i * 0.6, (x, y) => mix(smoke, smokeDark, r() * 0.8, x, y));
       }
     }
 
@@ -346,7 +421,16 @@ const Cartolina = (() => {
       waterTop = forestY + 6;
     }
     const isWater = (c) => c === P.water || c === P.waterDark || c === P.waterLight;
-    for (let y = waterTop; y < PH; y++) {
+    // Il lago, calmo, con i riflessi
+    if (spots.lago) {
+      const cx = spots.lago.x + spots.lago.w / 2, cy = forestY + 7, lrx = spots.lago.w / 2, lry = 4;
+      ellipse(cx, cy, lrx, lry, (x, y) => {
+        if (y < cy - lry + 1) return P.waterDark;
+        if ((y * 3 + Math.floor(x / 4)) % 7 === 0) return P.waterLight;
+        return Math.abs(x - sunX) < 2 && r() < 0.6 ? P.waterLight : P.water;
+      });
+    }
+    for (let y = waterTop; y < PH && spots.fiume; y++) {
       const half = 1.5 + (y - waterTop) * 0.45;
       rx += Math.sin(y * 0.25) * 0.6;
       for (let x = Math.round(rx - half); x <= rx + half; x++) {

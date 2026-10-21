@@ -41,6 +41,26 @@ ICONS = {
     "fern": "delapouite/fern",
     "ice": "lorc/frozen-block",
     "deadtree": "lorc/tree-branch",
+    "wolf": "lorc/wolf-head",
+    "volcano": "delapouite/smoking-volcano",
+    "castle": "delapouite/castle",
+    "bridge": "delapouite/stone-bridge",
+    "flag": "delapouite/flag-objective",
+    "drawbridge": "delapouite/drawbridge",
+    "check": "delapouite/check-mark",
+    "book": "lorc/open-book",
+    "backpack": "delapouite/backpack",
+    "crate": "delapouite/wooden-crate",
+    "tankard": "lorc/beer-stein",
+    "scroll": "lorc/scroll-unfurled",
+    "boar": "lorc/boar-tusks",
+    # Una per specie di uccello (js/uccelli.js): le varianti cambiano solo colore
+    "seagull": "delapouite/seagull",
+    "owl": "lorc/owl",
+    "raven": "lorc/raven",
+    "duck": "delapouite/duck",
+    "toucan": "delapouite/toucan",
+    "eagle": "lorc/eagle-emblem",
 }
 
 BASE = "https://raw.githubusercontent.com/game-icons/icons/master/{}.svg"
