@@ -1,16 +1,17 @@
 // Navigazione tra le schermate del menu, con mouse o tastiera
 const screens = document.querySelectorAll(".screen");
 
-function show(id) {
+function show(id, { resume = false } = {}) {
   Suoni.stopAll();
   document.querySelectorAll(".is-playing").forEach((el) => el.classList.remove("is-playing"));
   screens.forEach((s) => s.classList.toggle("is-active", s.id === id));
   document.body.classList.toggle("in-game", id === "screen-game");
   closeMenubar();
   if (id === "screen-game") {
-    Gioco.start(document.getElementById("player-name").value);
+    if (!resume || !Gioco.resume()) Gioco.start(document.getElementById("player-name").value);
     return;
   }
+  if (id === "screen-menu") renderContinue();
   if (id === "screen-end") Diario.renderEnd();
   if (id === "screen-name") {
     const input = document.getElementById("player-name");
@@ -22,11 +23,11 @@ function show(id) {
 }
 
 function activeItems() {
-  return [...document.querySelectorAll(".screen.is-active .menu-item:not(:disabled), .screen.is-active .name-input")];
+  return [...document.querySelectorAll(".screen.is-active .menu-item:not(:disabled):not([hidden]), .screen.is-active .name-input")];
 }
 
 function focusFirst() {
-  document.querySelector(".screen.is-active .menu-item:not(:disabled)")?.focus();
+  document.querySelector(".screen.is-active .menu-item:not(:disabled):not([hidden])")?.focus();
 }
 
 function renderSoundLabels() {
@@ -70,13 +71,16 @@ document.addEventListener("click", (e) => {
     return;
   }
   if (!e.target.closest(".mb-group")) closeMenubar();
-  if (action === "to-menu") { show("screen-menu"); return; }
+  if (action === "to-menu") { Gioco.save(); show("screen-menu"); return; }
   if (action === "restart") { show("screen-name"); return; }
 
   const el = e.target.closest("button");
   if (!el) return;
 
-  if (el.dataset.goto) {
+  if (el.dataset.action === "continue") {
+    Suoni.play("conferma");
+    show("screen-game", { resume: true });
+  } else if (el.dataset.goto) {
     Suoni.play("conferma");
     show(el.dataset.goto);
   } else if (el.dataset.action === "toggle-sound") {
@@ -132,5 +136,12 @@ window.addEventListener("keydown", (e) => {
   e.stopImmediatePropagation();
 }, true);
 
+// "Continua la spedizione" c'è solo se ce n'è una salvata
+function renderContinue() {
+  document.querySelector('[data-action="continue"]').hidden = !Gioco.hasSave();
+}
+
 renderSoundLabels();
-focusFirst();
+// Un refresh durante la partita riporta dritto alla spedizione salvata
+if (Gioco.hasSave()) show("screen-game", { resume: true });
+else { renderContinue(); focusFirst(); }

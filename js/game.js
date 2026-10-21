@@ -13,7 +13,9 @@ const Gioco = (() => {
   const HEAL_COST = 5;        // monete per punto vita, in città
   const START_MONEY = 100;
   const CREW_PAY = 8;         // la paga giornaliera della ciurma
-  const DEPART_COST = 2;      // ripartire costa due momenti: si arriva sempre col momento precedente
+  const DEPART_COST = 2;
+  const SAVE_KEY = "spedizione-ornitologica:partita";
+  let lastSave = 0;      // ripartire costa due momenti: si arriva sempre col momento precedente
   const TIME_ICONS = { alba: "sunrise", pomeriggio: "sun", notte: "moon" };
   const SLIDE_MS = 110;       // durata dello scivolamento di una pedina
   const ACT_INTERVAL = 110;   // ms minimi tra due azioni, anche tenendo premuto
@@ -412,9 +414,8 @@ const Gioco = (() => {
   const day = () => Math.floor(trip.third / 3) + 1;
   const timeLabel = (t) => ({ alba: "all'alba", pomeriggio: "nel pomeriggio", notte: "di notte" })[t];
 
-  function start(name) {
-    explorer = (name || explorer || "").trim() || "Senza nome";
-    const seed = Math.floor(Math.random() * 1e9);
+  // Il globo nasce tutto dal seed: per questo il salvataggio può tenere solo il seed e ricostruirlo
+  function makeWorld(seed) {
     const world = Globo.createWorld(seed, (zSeed, biome) => {
       const { tags, place } = zoneTags(zSeed, biome);
       return { tags, place, name: zoneName(tags, place) };
@@ -426,7 +427,13 @@ const Gioco = (() => {
     if (r() < 0.8) pickZone((z) => z.biome !== "ghiaccio")?.tags.add("castello");
     if (r() < 0.6) pickZone((z) => !z.tags.has("castello"))?.tags.add("vulcano");
     for (const z of world.zones) z.name = zoneName(z.tags, z.place);
+    return world;
+  }
 
+  function start(name) {
+    explorer = (name || explorer || "").trim() || "Senza nome";
+    const seed = Math.floor(Math.random() * 1e9);
+    const world = makeWorld(seed);
     trip = {
       seed, world, third: 0, money: START_MONEY, hp: MAX_HP, explorer, mode: "sea",
       zones: {}, birds: {}, notes: [], payments: [], departures: 0, seaDist: 0, over: false,
@@ -438,6 +445,50 @@ const Gioco = (() => {
     note("Salpi dal Forte.", "ship");
     Mare.enter();
   }
+
+  // --- Salvataggio: la spedizione in corso resta nel browser, un refresh non la cancella ---
+
+  function save() {
+    if (!trip || trip.over) return;
+    const { world, ...rest } = trip;
+    const data = { ...rest, hp: s ? s.player.hp : trip.hp, stats: { ...trip.stats, islands: [...trip.stats.islands] } };
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch (e) { /* senza memoria si gioca lo stesso */ }
+  }
+
+  function loadSave() {
+    try { return JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { return null; }
+  }
+
+  function clearSave() {
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* niente da cancellare */ }
+  }
+
+  // Si riparte da dove eri: in mare nello stesso punto, a terra di nuovo sulla nave della stessa zona, in città in porto
+  function resume() {
+    const data = loadSave();
+    if (!data) return false;
+    try {
+      const world = makeWorld(data.seed);
+      explorer = data.explorer;
+      trip = { ...data, world, stats: { ...data.stats, islands: new Set(data.stats.islands) } };
+      s = null;
+      initUi();
+      const zone = world.zones.find((z) => z.id === trip.landZone);
+      const city = world.cities.find((c) => c.id === trip.city);
+      if (trip.mode === "land" && zone) landAt(zone, { waited: true });
+      else {
+        Mare.enter();
+        if (data.mode === "city" && city) { Mare.stop(); visitCity(city); }
+      }
+      return true;
+    } catch (e) {
+      clearSave(); // un salvataggio di una versione troppo diversa: meglio ricominciare
+      return false;
+    }
+  }
+
+  window.addEventListener("pagehide", save);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) save(); });
 
   // Far passare uno o più momenti. A ogni nuova alba si paga la ciurma: se non si può, finisce tutto.
   function advance(thirds) {
@@ -460,6 +511,7 @@ const Gioco = (() => {
 
   function landAt(zone, { waited = false } = {}) {
     trip.mode = "land";
+    trip.landZone = zone.id;
     const time = now();
     const memory = (trip.zones[zone.id] ||= { visited: false, done: false, gone: false });
     // L'uccello della zona si decide al primo attracco, tra quelli adatti, e poi resta quello.
@@ -526,6 +578,7 @@ const Gioco = (() => {
   // Le città: per ora ci si cura e basta. Mercato, taverna e bottega arriveranno.
   function visitCity(city) {
     trip.mode = "city";
+    trip.city = city.id;
     Suoni.play("campana");
     cityOverlay(city);
   }
@@ -958,6 +1011,7 @@ const Gioco = (() => {
   function endTrip(cause) {
     trip.over = true;
     trip.cause = cause;
+    clearSave();
     Mare.stop();
     if (s) s.over = true;
     Diario.close();
@@ -1170,6 +1224,8 @@ const Gioco = (() => {
 
   // Il riquadro B: il momento del giorno, soldi, vita e, a terra, rumore e animali
   function renderStatus() {
+    // ogni tanto si salva, così anche un refresh improvviso perde al massimo un paio di secondi
+    if (performance.now() - lastSave > 2000) { lastSave = performance.now(); save(); }
     const land = trip.mode === "land" && s;
     const time = land ? s.time : now();
     const hp = land ? s.player.hp : trip.hp;
@@ -1246,7 +1302,7 @@ const Gioco = (() => {
 
   // Quello che serve alla navigazione (js/sea.js) e al diario (js/diario.js)
   return {
-    start, depart, landAt, visitCity, advance, renderStatus, note, toast, timeOf, now, day, showView, iconHtml, fitMap,
+    start, resume, save, hasSave: () => !!loadSave(), clearSave, depart, landAt, visitCity, advance, renderStatus, note, toast, timeOf, now, day, showView, iconHtml, fitMap,
     get trip() { return trip; },
     get el() { return el; },
     get explorer() { return explorer; },

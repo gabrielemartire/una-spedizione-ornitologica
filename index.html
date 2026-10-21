@@ -20,6 +20,7 @@
       <p class="subtitle">isole, nebbie e piume · a turni</p>
 
       <nav class="menu">
+        <button class="menu-item" data-action="continue" hidden>Continua la spedizione</button>
         <button class="menu-item" data-goto="screen-name">Nuova spedizione <span class="tag">prototipo</span></button>
         <button class="menu-item" disabled>Riprendi un taccuino <span class="tag">presto</span></button>
         <button class="menu-item" data-action="toggle-sound">Suoni: <span data-label="sound">ON</span></button>
@@ -51,7 +52,7 @@
         <div class="mb-group">
           <button class="mb-item" data-game-action="menubar">Spedizione</button>
           <div class="mb-drop" id="mb-drop" hidden>
-            <button class="mb-item" data-game-action="to-menu">Torna al menu principale <small>(la spedizione va persa)</small></button>
+            <button class="mb-item" data-game-action="to-menu">Torna al menu principale <small>(la spedizione resta salvata)</small></button>
             <button class="mb-item" data-game-action="restart">Nuova spedizione</button>
             <button class="mb-item" data-action="toggle-sound">Suoni: <span data-label="sound">ON</span></button>
           </div>

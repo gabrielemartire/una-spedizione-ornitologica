@@ -163,7 +163,7 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
   border: 3px double var(--mid);
   padding: 4px 0;
 }
-.mb-drop[hidden] { display: none; }
+.mb-drop[hidden], .menu-item[hidden] { display: none; }
 .mb-drop .mb-item { padding: 2px 12px; }
 .mb-right { margin-left: auto; color: var(--dark); }
 .mb-right #mb-explorer { color: var(--mid); }

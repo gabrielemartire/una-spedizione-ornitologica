@@ -81,6 +81,8 @@ Tutto sta in **una schermata senza scorrere**, anche su un portatile da 13" (cir
 
 **Niente titoli sui riquadri.** In alto una **barra menu** in stile anni '90: *Spedizione* (tendina: torna al menu principale, nuova spedizione, suoni), *Diario*, *Suoni*; a destra il nome dell'esploratore e la **versione** del gioco. In partita **Esc** apre la tendina invece di uscire, per non perdere il viaggio per sbaglio.
 
+**La spedizione si salva da sola** nel browser (localStorage), ogni paio di secondi e quando chiudi o ricarichi la pagina. Al refresh si riparte da dove eri: in mare nello stesso punto, in città in porto, a terra **di nuovo sulla nave della stessa zona** (la battlemap si rigenera, animali compresi). Dal menu principale *Continua la spedizione*; a fine spedizione il salvataggio si cancella. Il globo non si salva: nasce dal seed.
+
 **Si gioca tutto con la tastiera.** Frecce/WASD a terra e in mare, T binocolo, Invio, Tab diario, Esc tendina (↑ ↓ e Invio dentro), ↑ ↓ e Invio nelle scelte che compaiono sulla mappa. Il mouse è un aiuto, non serve.
 
 **Avvisi e diario sono separati.** Quello che succede adesso ("l'orso ti ha fiutato", "troppo lontano") è un avviso che compare sulla mappa e sparisce. Nel diario finisce solo ciò che serve ricordare: uccelli osservati, tracce, uccelli volati via.
