@@ -364,16 +364,17 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .signature { font-family: "Pinyon Script", cursive; font-weight: normal; }
 .diary-strip { position: relative; padding-top: 14px; }
 .ds-tabs { position: absolute; top: 0; right: 14px; display: flex; gap: 6px; z-index: 2; }
-/* Linguette in pixel art: coda biforcuta a gradini di 3px, luce a sinistra, ombra a destra, ombra netta sotto */
+/* Linguette di stoffa vecchia, in pixel art: coda biforcuta a gradini di 3px, trama, ombra netta sotto */
 .ds-tabs, .book-tabs { filter: drop-shadow(3px 3px 0 rgba(10, 6, 4, 0.55)); }
 .ribbon {
-  --rb: #a8322a;
-  --rb-hi: #d0503c;
-  --rb-lo: #7a2018;
+  --rb: #7e3026;
+  --rb-hi: #96463a;
+  --rb-lo: #5c1e18;
   font: inherit;
   font-size: 16px;
-  color: #f6e8d8;
-  background: var(--rb);
+  color: #e8d4b8;
+  background-color: var(--rb);
+  background-image: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 3px);
   box-shadow: inset 3px 0 0 var(--rb-hi), inset -3px 0 0 var(--rb-lo);
   border: none;
   padding: 0 9px 11px;
@@ -386,7 +387,7 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
     calc(50% - 3px) calc(100% - 9px), calc(50% - 3px) calc(100% - 6px), calc(50% - 6px) calc(100% - 6px),
     calc(50% - 6px) calc(100% - 3px), calc(50% - 9px) calc(100% - 3px), calc(50% - 9px) 100%, 0 100%);
 }
-.ribbon:hover, .ribbon:focus { --rb: #6e1c16; --rb-hi: #8a2a20; --rb-lo: #4a120e; outline: none; }
+.ribbon:hover, .ribbon:focus { --rb: #4e1812; --rb-hi: #62241c; --rb-lo: #36100c; outline: none; }
 .ds-page {
   position: relative;
   padding: 6px 14px;
@@ -398,7 +399,7 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .ds-notes li { color: #5a4a34; }
 .ds-notes li.is-new { color: #2a2014; }
 .ds-notes em, .book-notes em { font-style: normal; color: #8a2a1a; margin-right: 4px; }
-.ds-sign { position: absolute; right: 16px; bottom: 2px; font-size: 26px; color: #3a2a18; transform: rotate(-4deg); }
+.ds-sign { position: absolute; right: 16px; bottom: 2px; font-size: 26px; font-weight: bold; color: #3a2a18; transform: rotate(-4deg); }
 
 /* Il taccuino aperto: un libro con due pagine e la piega in mezzo, sempre della stessa misura */
 .diary-popup {
@@ -415,14 +416,9 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .book-pages {
   position: absolute;
   inset: 0;
-  border-radius: 4px;
-  box-shadow: 0 0 0 6px #4a3018, 0 0 0 7px #2a1a0c, 4px 6px 0 7px #1a1008;
-  background-image:
-    linear-gradient(90deg, transparent 46%, rgba(90, 60, 24, 0.18) 49%, rgba(60, 38, 14, 0.5) 50%, rgba(90, 60, 24, 0.18) 51%, transparent 54%),
-    radial-gradient(ellipse at 22% 28%, rgba(160, 120, 60, 0.16), transparent 30%),
-    radial-gradient(ellipse at 78% 80%, rgba(140, 100, 50, 0.14), transparent 28%),
-    radial-gradient(ellipse at 25% 50%, transparent 50%, rgba(110, 76, 34, 0.32) 100%),
-    radial-gradient(ellipse at 75% 50%, transparent 50%, rgba(110, 76, 34, 0.32) 100%);
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  box-shadow: 0 0 0 4px #4a3018, 0 0 0 8px #2a1a0c, 8px 8px 0 8px #140c06;
 }
 /* le pagine scorrono in colonne: ogni colonna è una pagina, due colonne una doppia pagina */
 .book-spread { position: absolute; left: 46px; top: 38px; width: 828px; height: 470px; overflow: hidden; }
@@ -432,13 +428,20 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
   column-gap: 92px;
   column-fill: auto;
   color: #2a2014;
-  font-size: 19px;
-  line-height: 1.15;
+  font-family: "IM Fell English", Georgia, serif;
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.25;
 }
-.book-flow h3 { margin: 0 0 10px; font-weight: normal; font-size: 32px; color: #6a2a18; }
-.book-flow h4 { margin: 8px 0 4px; font-weight: normal; color: #6a4a2c; font-size: 20px; break-after: avoid; }
+.chapter + .chapter, .blank-page { break-before: column; }
+.blank-page + .chapter { break-before: column; }
+.blank-page { height: 1px; }
+.book-flow h3 { margin: 0 0 10px; font-weight: normal; font-size: 30px; color: #6a2a18; }
+.book-flow h4 { margin: 10px 0 6px; font-weight: normal; color: #6a4a2c; font-size: 19px; break-after: avoid; }
+.book-flow h4 small { font-size: 14px; color: #8a6a44; }
+.book-flow em { font-style: normal; }
 .book-end { display: block; height: 1px; }
-.book-folio { position: absolute; bottom: 18px; font-size: 16px; color: #7a6040; }
+.book-folio { position: absolute; bottom: 18px; font-family: "IM Fell English", serif; font-style: italic; font-size: 16px; color: #7a6040; }
 .book-folio.is-left { left: 46px; }
 .book-folio.is-right { right: 46px; }
 .book-keys { margin: 0; color: var(--mid); font-size: 18px; }
@@ -454,11 +457,11 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
   color: #23305a;
   transform: rotate(-7deg);
 }
-.ledger { width: 100%; border-collapse: collapse; font-size: 19px; }
+.ledger { width: 100%; border-collapse: collapse; font-size: 17px; }
 .ledger caption { text-align: left; color: #6a4a2c; border-bottom: 2px solid #6a4a2c; padding-bottom: 2px; }
 .ledger td { height: 25px; padding: 0 8px; }
 .ledger td + td { border-left: 1px solid #8a6a40; }
-.ledger td:last-child { text-align: right; color: #8a2a1a; width: 4em; }
+.ledger td:last-child { text-align: right; color: #8a2a1a; width: 5.5em; }
 
 /* Le linguette dei capitoli escono da sotto il libro, a sinistra, con la coda biforcuta verso fuori */
 .book-tabs { position: absolute; right: 100%; top: 40px; display: grid; gap: 8px; justify-items: end; margin-right: 7px; }
@@ -473,19 +476,44 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
     9px calc(50% + 3px), 9px calc(50% - 3px), 6px calc(50% - 3px), 6px calc(50% - 6px), 3px calc(50% - 6px),
     3px calc(50% - 9px), 0 calc(50% - 9px));
 }
-.ribbon.is-side.is-open { --rb: #6e1c16; --rb-hi: #8a2a20; --rb-lo: #4a120e; }
-.ribbon.is-side:hover { --rb: #82241c; --rb-hi: #a0362a; --rb-lo: #5a1610; }
-.bird-card { display: flex; gap: 8px; align-items: flex-start; font-size: 17px; line-height: 1.1; margin-bottom: 6px; break-inside: avoid; }
-.bird-card b { font-weight: normal; display: block; font-size: 19px; }
-.bird-card small { display: block; color: #5a4a34; }
-.bird-card .where { color: #8a2a1a; }
-.bird-pic {
-  flex: none; width: 46px; height: 46px; display: grid; place-items: center;
-  background: var(--ink); color: var(--mid); font-size: 32px; border-radius: 3px;
+.ribbon.is-side { background-image: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 3px); }
+.ribbon.is-side.is-open { --rb: #4e1812; --rb-hi: #62241c; --rb-lo: #36100c; }
+.ribbon.is-side:hover { --rb: #62201a; --rb-hi: #783028; --rb-lo: #441410; }
+/* La scheda di un uccello: quattro angoli appena segnati, il riquadro del disegno e righe da riempire */
+.bird-card {
+  --corner: rgba(106, 74, 44, 0.55);
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 7px 8px;
+  margin-bottom: 8px;
+  break-inside: avoid;
+  background:
+    linear-gradient(var(--corner), var(--corner)) left top / 10px 2px,
+    linear-gradient(var(--corner), var(--corner)) left top / 2px 10px,
+    linear-gradient(var(--corner), var(--corner)) right top / 10px 2px,
+    linear-gradient(var(--corner), var(--corner)) right top / 2px 10px,
+    linear-gradient(var(--corner), var(--corner)) left bottom / 10px 2px,
+    linear-gradient(var(--corner), var(--corner)) left bottom / 2px 10px,
+    linear-gradient(var(--corner), var(--corner)) right bottom / 10px 2px,
+    linear-gradient(var(--corner), var(--corner)) right bottom / 2px 10px;
+  background-repeat: no-repeat;
 }
-.bird-pic .ic { width: 38px; height: 38px; }
-.is-seen .bird-pic .ic, .end-bird.is-seen .ic { fill: var(--bird-color); }
-.is-trace .bird-pic .ic, .end-bird.is-trace .ic { fill: #4e5a4a; }
+.bird-pic {
+  flex: none; width: 58px; height: 58px; display: grid; place-items: center;
+  border: 2px solid rgba(106, 74, 44, 0.35);
+}
+.bird-pic .ic { width: 46px; height: 46px; }
+.bird-card.is-seen .bird-pic { border-color: var(--bird-color); background: rgba(42, 32, 20, 0.85); }
+.bird-card.is-seen .bird-pic .ic { fill: var(--bird-color); filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.6)); }
+.bird-lines { flex: 1; min-width: 0; }
+.bird-lines p { margin: 0; min-height: 17px; font-size: 14px; line-height: 16px; border-bottom: 1px solid rgba(106, 74, 44, 0.3); }
+.bird-lines p + p { margin-top: 2px; }
+.bird-lines b { font-weight: normal; font-size: 15px; color: #2a2014; }
+.bird-lines i { font-size: 13px; color: #8a6a44; }
+.bird-lines .where { color: #8a2a1a; }
+.end-bird.is-seen .ic { fill: var(--bird-color); }
+.end-bird.is-trace .ic { fill: #4e5a4a; }
 
 /* Il binocolo, in alto a sinistra sul globo: si accende quando c'è una costa da guardare */
 .sea-scope {
@@ -557,9 +585,10 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .end-stats dd { margin: 0; text-align: right; }
 .end-name { margin: 0 0 6px; color: var(--mid); }
 .end-name b { color: var(--paper); font-weight: normal; font-size: 34px; }
-.end-grid { display: grid; grid-template-columns: repeat(3, 40px); gap: 4px; }
-.end-bird { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--dark); color: var(--dark); font-size: 26px; }
-.end-bird .ic { width: 32px; height: 32px; }
+.end-grid { display: grid; gap: 3px; }
+.end-row { display: flex; gap: 3px; }
+.end-bird { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--dark); color: var(--dark); font-size: 22px; }
+.end-bird .ic { width: 26px; height: 26px; }
 .end-code { color: var(--mid); margin: 6px 0 0; }
 .end-code b { color: var(--paper); font-weight: normal; letter-spacing: 2px; }
 
