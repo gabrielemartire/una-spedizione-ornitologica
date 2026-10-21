@@ -36,7 +36,7 @@ Solo il taccuino, scritto a mano e timbrato con il suo codice, viaggia con te.
 
 ## A che punto siamo
 
-🚧 **In costruzione, ma già giocabile.** Si naviga sul globo in tempo reale, si guarda la costa col binocolo, si sbarca e si cercano 18 uccelli che si fanno vedere solo a certe ore, tra orsi di giorno, lupi di notte e cinghiali all'alba. La giornata è divisa in alba, pomeriggio e notte: ripartire costa tempo, la ciurma va pagata, il diario annota tracce e avvistamenti, e a fine viaggio si scarica l'attestato. Mancano ancora il mercato, le taverne e il codice del taccuino: il progetto completo è descritto nel [documento di design](docs/DESIGN.md).
+🚧 **In costruzione, ma già giocabile.** Si naviga sul globo in tempo reale, si guarda la costa col binocolo, si sbarca e si cercano 51 uccelli che si fanno vedere solo a certe ore, tra orsi di giorno, lupi di notte e cinghiali all'alba. La giornata è divisa in alba, pomeriggio e notte: ripartire costa tempo, la ciurma va pagata, il diario annota tracce e avvistamenti, e a fine viaggio si scarica l'attestato. Nelle città si cammina tra la gente: medico, taverna con le voci sugli uccelli rari, mercato per vendere quello che trovi a terra. Mancano ancora l'emporio e il codice del taccuino: il progetto completo è descritto nel [documento di design](docs/DESIGN.md).
 
 ## Grazie
 

@@ -196,7 +196,7 @@ const Diario = (() => {
     },
 
     stiva() {
-      return "";
+      return `<ul class="book-items">${trip().hold.map((it) => `<li>${icon(OGGETTI[it.kind].icona)}${OGGETTI[it.kind].nome}</li>`).join("")}</ul>`;
     },
   };
 

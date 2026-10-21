@@ -123,6 +123,11 @@ const Globo = (() => {
 
     // Il bioma è deciso per ogni isola generata, dalla sua latitudine; l'isola grande è la foresta del Forte
     const biomeOf = islands.map((is, k) => (k === 0 ? "foresta" : biomaPerLatitudine(toLatLon(is.c).lat, r)));
+    // Il porticciolo sta sempre su un'isola di ghiaccio: se non ce n'è una, la diventa la più vicina a un polo
+    if (!biomeOf.includes("ghiaccio") && islands.length > 1) {
+      const polar = islands.map((is, k) => [k, Math.abs(toLatLon(is.c).lat)]).slice(1).sort((a, b) => b[1] - a[1])[0][0];
+      biomeOf[polar] = "ghiaccio";
+    }
 
     // Zone: punti di terra ben distanziati, ognuno con il suo seed e i suoi tag
     const land = [];
@@ -178,8 +183,8 @@ const Globo = (() => {
     // Le due città: il Forte sull'isola grande, il Porto del fiordo su un'isola minore
     const byIsland = (id) => coast.filter((c) => island[c.i] === id);
     const bigIsland = islandSize.indexOf(Math.max(...islandSize));
-    // Il Porto del fiordo sta su un'isola fredda, la più vicina al Forte
-    const coldFirst = (id) => (["ghiaccio", "taiga"].includes(zones.find((z) => z.island === id).biome) ? 0 : 1);
+    // Il Porto del fiordo sta su un'isola di ghiaccio, la più vicina al Forte
+    const coldFirst = (id) => (zones.find((z) => z.island === id).biome === "ghiaccio" ? 0 : 1);
     const otherIslands = [...new Set(zones.map((z) => z.island))].filter((id) => id !== bigIsland)
       .sort((a, b) => coldFirst(a) - coldFirst(b));
     const forteSpot = byIsland(bigIsland)[Math.floor(r() * byIsland(bigIsland).length)];
@@ -380,13 +385,15 @@ const Globo = (() => {
       done: { color: [16, 14, 12], px: [[-2, 0], [-1, 1], [0, 2], [1, 1], [2, 0], [3, -1], [4, -2]] },
       seen: { color: [250, 244, 220], px: [[-1, -2], [0, -2], [1, -2], [2, -1], [1, 0], [0, 1], [0, 3]] },
       gone: { color: [200, 70, 50], px: [[-2, -2], [-1, -1], [0, 0], [1, 1], [2, 2], [2, -2], [1, -1], [-1, 1], [-2, 2]] },
+      // la X delle voci: grande e dorata, come sulle mappe del tesoro
+      rumor: { color: [242, 194, 48], px: [[-3, -3], [-2, -2], [-1, -1], [0, 0], [1, 1], [2, 2], [3, 3], [3, -3], [2, -2], [1, -1], [-1, 1], [-2, 2], [-3, 3], [-2, -3], [3, -2], [-3, 2], [2, 3]] },
     };
     if (opts.marks) {
       for (const [id, m] of Object.entries(opts.marks)) {
-        if (!m.visited) continue;
+        if (!m.visited && !m.rumor) continue;
         const z = world.zones[id], s = project(z.lat, z.lon);
         if (!s) continue;
-        const mark = MARKS[m.done ? "done" : m.gone ? "gone" : "seen"];
+        const mark = MARKS[m.done ? "done" : m.gone ? "gone" : m.rumor ? "rumor" : "seen"];
         const halo = mark === MARKS.done ? [250, 244, 220] : [16, 14, 12];
         // un bordo di contrasto, poi il segno
         for (const [dx, dy] of mark.px) for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {

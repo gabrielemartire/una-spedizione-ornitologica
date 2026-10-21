@@ -4,8 +4,9 @@
 // La scena è pixel art 120 × 80, con un retino ordinato per le sfumature.
 // Espone l'oggetto globale `Cartolina`.
 const Cartolina = (() => {
-  const PW = 120;
-  const PH = 80;
+  // 120 × 80 in orizzontale; le città, come le foto da cui nascono, 80 × 120 in verticale
+  let PW = 120;
+  let PH = 80;
   const HY = 36; // l'orizzonte, in pixel
 
   // Una palette ridotta per ogni momento del giorno
@@ -75,6 +76,7 @@ const Cartolina = (() => {
   // --- Composizione della scena ---
 
   function compose(zone) {
+    [PW, PH] = zone.city ? [80, 120] : [120, 80];
     const r = rng(zone.seed ^ 0x5bd1e995);
     const biome = BIOMI[[...zone.tags].find((t) => BIOMI[t]) || "foresta"];
     const P = { ...PALETTES[zone.time] };
@@ -115,7 +117,7 @@ const Cartolina = (() => {
     };
 
     // Da dove viene la luce: decide il versante illuminato di montagne, alberi, edifici
-    const sunX = zone.time === "alba" ? 10 + r() * 100 : zone.time === "pomeriggio" ? 78 + r() * 30 : 14 + r() * 92;
+    const sunX = (PW / 120) * (zone.time === "alba" ? 10 + r() * 100 : zone.time === "pomeriggio" ? 78 + r() * 30 : 14 + r() * 92);
     const sunY = zone.time === "alba" ? HY - 3 : zone.time === "pomeriggio" ? 11 : 10;
     const lightLeft = sunX < PW / 2;
     // Rettangolo con un lato in ombra
@@ -189,6 +191,135 @@ const Cartolina = (() => {
       }
     };
 
+    const tint = (hex) => tintHex(hex, zone.time);
+    const lit = (on) => (night ? P.windowLit : on ? P.window : P.window);
+    // Una persona vista da lontano: testa, corpo, a volte un cesto
+    const person = (x, y, h = 5) => {
+      const coat = [tint("#7a3a2a"), tint("#4a5a6a"), tint("#6a5a3a"), tint("#8a7a5a"), tint("#3a3a3a")][Math.floor(r() * 5)];
+      px(x, y - h, tint("#e0b090"));
+      for (let k = 1; k < h; k++) { px(x, y - h + k, coat); if (k > 1) px(x + 1, y - h + k, coat); }
+    };
+    // Una casa a graticcio: intonaco, travi scure, tetto d'ardesia
+    const timberHouse = (x0, y0, w, h, roofH) => {
+      const plaster = tint("#d8ccb0"), plasterShadow = tint("#b0a488"), beam = tint("#4a3424");
+      const slate = tint("#5a6070"), slateDark = tint("#3e4250");
+      block(x0, y0, w, h, plaster, plasterShadow);
+      for (let x = x0; x < x0 + w; x += 4) for (let y = y0; y < y0 + h; y++) px(x, y, beam);
+      for (let y = y0; y < y0 + h; y += 6) for (let x = x0; x < x0 + w; x++) px(x, y, beam);
+      for (let k = 0; k < roofH; k++) {
+        for (let x = x0 - 1 + Math.floor(k / 2); x <= x0 + w - Math.floor(k / 2); x++) px(x, y0 - 1 - k, (x + k) % 5 === 0 ? slateDark : slate);
+      }
+      for (let y = y0 + 2; y < y0 + h - 4; y += 6) for (let x = x0 + 2; x < x0 + w - 2; x += 4) { px(x, y, lit()); px(x + 1, y, lit()); px(x, y + 1, lit()); px(x + 1, y + 1, lit()); }
+    };
+
+    // Il Forte (80 × 120): si guarda giù per la strada principale, fino alla porta nelle mura; dietro, il mare e le navi
+    const drawForte = () => {
+      const seaY = 26, wallTop = 50;
+      for (let y = seaY; y < wallTop; y++) for (let x = 0; x < PW; x++) {
+        let c = ramp([P.haze, P.waterLight, P.water, P.waterDark], 0.2 + (y - seaY) / 26, x, y);
+        if ((y * 5 + Math.floor((x + y * 3) / 4)) % 11 === 0) c = P.foam;
+        px(x, y, c);
+      }
+      // il promontorio lontano, a destra
+      for (let x = 44; x < PW; x++) { const top = seaY - Math.round(5 * Math.sin(((x - 44) / 40) * Math.PI)); for (let y = top; y <= seaY; y++) px(x, y, mix(P.near, P.haze, 0.5, x, y)); }
+      // le navi alla fonda, a destra dietro le mura: scafi e alberi
+      for (const sx of [52, 64, 74]) {
+        for (let x = sx - 4; x <= sx + 4; x++) { px(x, 46, tint("#4a3424")); px(x, 47, tint("#2a1c12")); }
+        for (let y = 30; y < 46; y++) px(sx, y, tint("#3a2a1a"));
+        for (let x = sx - 3; x <= sx + 3; x++) px(x, 34, tint("#3a2a1a"));
+      }
+      // le mura con i merli, due torri e il torrione della porta
+      const stone = tint("#a89a84"), stoneShadow = tint("#7a6e5e"), slate = tint("#4e5462"), slateDark = tint("#363a46");
+      block(0, wallTop, PW, 14, stone, stoneShadow);
+      crenels(0, wallTop, PW, stone, stoneShadow);
+      for (let x = 0; x < PW; x++) for (let y = wallTop; y < wallTop + 14; y++) if ((x + (y % 4 < 2 ? 0 : 3)) % 6 === 0 && y % 2 === 0) px(x, y, stoneShadow);
+      for (const [tx, tw, th, cone] of [[2, 12, 26, false], [62, 12, 32, true]]) {
+        const top = wallTop + 12 - th;
+        block(tx, top, tw, th, stone, stoneShadow);
+        crenels(tx, top, tw, stone, stoneShadow);
+        if (cone) for (let k = 0; k < 9; k++) for (let x = tx + Math.floor(k * 0.7); x < tx + tw - Math.floor(k * 0.7); x++) px(x, top - 2 - k, k % 2 ? slate : slateDark);
+        px(tx + tw / 2, top + 6, lit()); px(tx + tw / 2, top + 7, lit());
+      }
+      // il torrione della porta, col tetto d'ardesia a punta e l'arco
+      const gx = 26, gw = 28, gTop = 42;
+      block(gx, gTop, gw, 26, stone, stoneShadow);
+      for (let k = 0; k < 11; k++) for (let x = gx - 2 + k; x < gx + gw + 2 - k; x++) px(x, gTop - 1 - k, k % 2 ? slate : slateDark);
+      block(gx + 12, gTop - 7, 4, 3, stone, stoneShadow); px(gx + 13, gTop - 6, lit()); px(gx + 14, gTop - 6, lit());
+      for (let y = gTop + 12; y < gTop + 26; y++) {
+        const half = y < gTop + 15 ? Math.round(Math.sqrt(9 - (gTop + 15 - y) ** 2)) + 2 : 5;
+        for (let x = gx + 14 - half; x < gx + 14 + half; x++) px(x, y, y > gTop + 21 ? tint("#c8bca4") : tint("#2a2a30"));
+      }
+      // la strada di ciottoli che scende verso di noi, allargandosi
+      const roadTop = gTop + 26;
+      for (let y = roadTop; y < PH; y++) {
+        const t = (y - roadTop) / (PH - roadTop), half = 5 + t * 26;
+        for (let x = Math.round(40 - half); x <= 40 + half; x++) {
+          px(x, y, ((x + (y % 2) * 2) % 4 === 0 || y % 3 === 0) ? tint("#7a7468") : tint("#9a9282"));
+        }
+      }
+      // le case a graticcio ai lati della strada, alte e strette, con le tende delle botteghe
+      timberHouse(-2, 44, 16, 76, 10);
+      timberHouse(14, 64, 8, 56, 5);
+      timberHouse(66, 46, 16, 74, 10);
+      timberHouse(58, 66, 8, 54, 5);
+      const awning = tint("#d8c8a0"), awningDark = tint("#a89870");
+      for (const [ax, aw, ay, dir] of [[8, 14, 92, 1], [58, 14, 96, -1]]) {
+        for (let k = 0; k < 4; k++) for (let x = ax; x < ax + aw; x++) px(x + dir * k, ay + k, k === 3 ? awningDark : awning);
+        for (let x = ax + 2; x < ax + aw - 1; x += 3) px(x, ay + 8, [tint("#c86a3a"), tint("#e8c060"), tint("#7a9a4a")][x % 3]);
+        for (let x = ax + 1; x < ax + aw; x++) px(x, ay + 9, tint("#5a4030"));
+      }
+      // la gente per strada
+      for (let i = 0; i < 12; i++) {
+        const y = roadTop + 4 + Math.floor(r() * (PH - roadTop - 4)), t = (y - roadTop) / (PH - roadTop);
+        person(Math.round(40 + (r() - 0.5) * (8 + t * 46)), y, 3 + Math.round(t * 6));
+      }
+    };
+
+    // Il porticciolo del fiordo (80 × 120): la banchina di legno nella nebbia, case grigio-azzurre, boe rosse
+    const drawPorto = () => {
+      const vx = 46, vy = 54; // il punto di fuga della banchina
+      for (let y = vy; y < PH; y++) for (let x = 0; x < PW; x++) px(x, y, ramp([P.haze, P.water, P.waterDark], (y - vy) / 50, x, y));
+      // pini lontani nella nebbia
+      for (let x = 24; x < PW; x += 3) { const h = 4 + Math.floor(r() * 7); for (let k = 0; k < h; k++) for (let j = -Math.floor(k / 3); j <= Math.floor(k / 3); j++) px(x + j, vy - h + k, mix(P.treeFar, P.haze, 0.7, x + j, k)); }
+      // le case di legno a destra, sempre più piccole verso il fondo
+      const wood = tint("#6a7e94"), woodDark = tint("#4a5a6e"), roof = tint("#3a3e48");
+      for (let i = 4; i >= 0; i--) {
+        const t = i / 4, x0 = Math.round(vx + 3 + (1 - t) * 18), h = Math.round(8 + (1 - t) * 50), w = Math.round(5 + (1 - t) * 16);
+        const base = Math.round(vy + 2 + (1 - t) * 40);
+        for (let y = base - h; y < base; y++) for (let x = x0; x < Math.min(PW, x0 + w); x++) px(x, y, (x - x0) % 3 === 0 ? woodDark : wood);
+        for (let k = 0; k < Math.round(3 + (1 - t) * 6); k++) for (let x = x0 - 1 + k; x < Math.min(PW, x0 + w + 1 - k); x++) px(x, base - h - 1 - k, roof);
+        for (let y = base - h + 3; y < base - 4; y += 8) for (let x = x0 + 2; x < Math.min(PW, x0 + w) - 2; x += 5) { px(x, y, lit()); px(x + 1, y, lit()); px(x, y + 1, lit()); px(x + 1, y + 1, lit()); }
+      }
+      // la banchina di assi, in prospettiva
+      const plank = tint("#6a5a48"), plankDark = tint("#4a3e32"), plankLight = tint("#8a7a64");
+      for (let y = vy + 1; y < PH; y++) {
+        const t = (y - vy) / (PH - vy);
+        const xl = Math.round(vx - 2 - t * 30), xr = Math.round(vx + 3 + t * 10);
+        for (let x = xl; x <= xr; x++) px(x, y, (Math.floor((x - vx) / (1 + t * 5)) % 2 === 0) ? plank : (y % 5 === 0 ? plankLight : plankDark));
+        px(xl, y, plankDark);
+      }
+      // il peschereccio rosso ormeggiato a sinistra, con la cabina bianca e gli alberi
+      const hull = tint("#a83a2a"), hullDark = tint("#6a2218"), white = tint("#e8e8e0");
+      for (let y = 74; y < 90; y++) for (let x = 0; x < 20 - Math.round((y - 74) * 0.3); x++) px(x, y, y < 77 ? white : y > 86 ? hullDark : hull);
+      for (let y = 66; y < 74; y++) for (let x = 3; x < 15; x++) px(x, y, (x === 6 || x === 11) && y < 70 ? tint("#3a3a44") : white);
+      for (const [mx, top] of [[4, 16], [13, 28]]) for (let y = top; y < 74; y++) px(mx, y, tint("#7a5a3a"));
+      for (let k = 0; k < 40; k++) px(4 + k * 0.35, 18 + k, tint("#5a5a5a"));
+      // le boe rosse appoggiate alle case e le gabbie per le aragoste
+      const buoy = tint("#c84a3a"), buoyDark = tint("#8a2a22");
+      for (const [bx, by, bh] of [[62, 112, 18], [56, 98, 12], [52, 82, 8], [50, 70, 5]]) {
+        for (let y = by - bh; y < by; y++) for (let x = bx; x < bx + Math.ceil(bh / 3); x++) px(x, y, x === bx ? buoyDark : buoy);
+      }
+      for (const [cx, cy, cs] of [[18, 116, 12], [38, 92, 7]]) {
+        for (let y = cy - cs; y < cy; y++) for (let x = cx; x < cx + cs * 1.4; x++) if (x % 2 === 0 || y % 2 === 0) px(x, y, tint("#8a6a4a"));
+      }
+      if (r() < 0.6) person(vx + 2, vy + 14, 5);
+      // la nebbia su tutto, più fitta lontano
+      for (let y = 0; y < PH; y++) for (let x = 0; x < PW; x++) {
+        const far = Math.max(0, 1 - Math.hypot(x - vx, (y - vy) * 1.3) / 80);
+        px(x, y, mix(get(x, y), P.haze, far * 0.55 + 0.12, x, y));
+      }
+    };
+
     // 1. Cielo sfumato, con l'alone attorno al sole o alla luna
     for (let y = 0; y < HY + 10; y++) {
       for (let x = 0; x < PW; x++) px(x, y, ramp(P.sky, y / (HY + 4), x, y));
@@ -224,6 +355,10 @@ const Cartolina = (() => {
         ellipse(p.x, p.y, p.rx, p.ry, (x, y) => mix(P.cloud, P.cloudShadow, (y - (p.y - p.ry)) / (p.ry * 2) - 0.2, x, y));
       }
     }
+
+    // Le due città hanno la loro cartolina, dalle foto di riferimento
+    if (zone.city === "forte") { drawForte(); return buf; }
+    if (zone.city === "porto") { drawPorto(); return buf; }
 
     // Dal ponte della nave: solo mare fino all'orizzonte
     if (zone.sea) {
@@ -537,7 +672,9 @@ const Cartolina = (() => {
       canvas = document.createElement("canvas");
       container.appendChild(canvas);
     }
-    const width = container.clientWidth || 440;
+    // le cartoline verticali delle città riempiono l'altezza del riquadro, senza uscirne
+    const room = PH > PW ? container.parentElement.clientHeight - 12 : Infinity;
+    const width = Math.floor(Math.min(container.clientWidth || 440, (room * PW) / PH));
     const dpr = window.devicePixelRatio || 1;
     canvas.style.width = `${width}px`;
     canvas.style.height = `${(width * PH) / PW}px`;
@@ -560,12 +697,14 @@ const Cartolina = (() => {
   }
 
   function render(zone, container) {
-    last = { buf: compose(zone), container };
+    last = { buf: compose(zone), container, size: [PW, PH] };
     redraw();
   }
 
   function redraw() {
-    if (last) drawPixels(last.buf, canvasFor(last.container));
+    if (!last) return;
+    [PW, PH] = last.size;
+    drawPixels(last.buf, canvasFor(last.container));
   }
 
   return { render, redraw };

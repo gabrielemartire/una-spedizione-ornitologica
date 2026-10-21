@@ -1,6 +1,6 @@
 # Una spedizione ornitologica · Documento di design
 
-> Versione 0.2.1 · ottobre 2026 · documento vivo, cambia mentre il gioco prende forma.
+> Versione 0.3 · ottobre 2026 · documento vivo, cambia mentre il gioco prende forma.
 
 ---
 
@@ -210,6 +210,7 @@ Un unico sistema regola uccelli e mostri.
 | Camminare nell'acqua | 4 |
 | Petardo | 6, nel punto in cui esplode |
 
+- **Tenere premuto per muoversi è correre**: ogni tre passi di fila il rumore sale di uno, fino a +3. Il riquadro di stato lo segnala (*no, corri*).
 - Il rumore **fa fuggire gli uccelli** nel raggio e **attira i mostri** (l'orso sente 2 caselle più lontano). L'erba alta è la via silenziosa.
 - **Cespugli ed erba alta** ti nascondono: sei visibile solo da una casella adiacente.
 - **Alberi e rocce** bloccano la linea di vista.
@@ -258,24 +259,30 @@ Il contatto toglie **punti vita** (vita iniziale: 10). Ci si cura **solo in citt
 | Semi | Esca per uccelli: li fa avvicinare o restare | consumabile |
 | Mantella mimetica | Ti rende nascosto anche fuori dai cespugli per 5 turni | consumabile |
 
-### 9.5 Risorse
-Piume cadute, erbe, funghi, legno pregiato, conchiglie, pelli, tesori. Hanno **peso** e lo zaino ha un limite: decidere cosa portare a bordo fa parte del gioco.
+### 9.5 Oggetti
+**Nelle rovine c'è sempre un oggetto, nelle altre zone una volta su tre** (deciso al primo sbarco, poi resta lì finché non lo prendi). Brilla sulla mappa; nelle rovine è sotto il tetto e lo vedi solo entrando. Ci passi sopra e **finisce in stiva**. Sono 14, in `js/oggetti.js`, in quattro categorie: *reliquie* (spada cerimoniale, calice ingemmato, ciondolo, moneta antica), *arte* (maschera rituale, vaso dipinto, idolo, ceramica), *natura* (piume, teschio, pelliccia, erbe) e *cose* (mappa strappata, lanterna). Nelle rovine solo reliquie e arte.
+
+Servono a **vendere al mercato**, ma conviene tenerne qualcuno: **i mercanti** li vogliono.
+
+**I mercanti.** Due per globo, ognuno in una zona, incappucciati vicino alla riva. Ognuno cerca **un oggetto preciso**: se ce l'hai e glielo dai, ti racconta **una voce** (in più rispetto alle 2 di taverna). Poi se ne va.
+
+*(Più avanti: peso e limite della stiva.)*
 
 ## 10. Le città
 
-Due città per globo, sempre presenti.
+Due città per globo, sempre presenti. **Sono battlemap cittadine**: la banchina con le altre navi, le strade, le case, la gente che va e viene (si muove da sola, anche se stai fermo; se le vai addosso brontola). Lungo la strada principale **le botteghe**: la porta ha il simbolo **→** (si entra), ci passi sopra e il padrone ti fa la sua domanda. Per ripartire si torna alla propria nave. In città il tempo non passa, tranne dormendo in taverna.
 
-| | **Il Forte** (città grande) | **Il Porto del fiordo** (città piccola) |
+| | **Il Forte** (città grande) | **Il porticciolo del fiordo** (città piccola) |
 |---|---|---|
-| Atmosfera | Mura di pietra sul mare, torri, porta ad arco, vicoli acciottolati e bancarelle | Molo di legno nella nebbia, case di legno grigio-azzurro, boe rosse, nasse, pini |
-| Palette | pietra grigia, ardesia, legno caldo, mare | grigio-azzurro nebbia, legno scuro, **un solo accento rosso** |
-| Mercato | ricco, compra tutto a buon prezzo | povero, prezzi bassi |
-| Voci | precise e care | vaghe e economiche, dai pescatori |
-| Cure | guaritore completo | solo cure di base |
-| Strumenti | tutti, binocolo migliorabile | pochi |
-| Posizione | sull'isola grande | in un fiordo, vicino alle zone fredde e selvagge |
+| Dove | sull'isola grande | **sempre su un'isola di ghiaccio** (c'è sempre almeno un'isola di ghiaccio) |
+| Mappa | mura tutt'intorno, porta sul mare, strada principale, vicoli, cortili, piazza col pozzo, bancarelle | una lunga banchina di legno, le case in fila, boe rosse, gabbie, pescherecci; dietro neve e abeti |
+| Cartolina | **verticale**: giù per la strada fino alla porta nelle mura, il mare e le navi dietro | **verticale**: la banchina nella nebbia, le case grigio-azzurre, il peschereccio rosso, le boe |
+| Medico | «Volete curarvi le ferite?» **5 m.o.**, cura completa (5 cuori) | **3 m.o.**, 5 cuori **+ 1 in più**; quel cuore il Forte non lo ripristina |
+| Taverna | «Una notte in locanda?» **11 m.o.**: dormi fino all'alba (la ciurma si paga) e senti una voce, sempre su un uccello raro | **7 m.o.**, ma la voce è su un raro solo l'84% delle volte |
+| Mercato | **2 m.o.** a oggetto, compra tutto | **4 m.o.** a oggetto, ma l'arte no |
+| Emporio | chiuso, per ora | chiuso, per ora |
 
-Anche le città hanno la loro **cartolina** in D. In città la battlemap è sostituita da un menu: *Mercato · Taverna (voci) · Guaritore · Bottega · Salpa*. **Per ora c'è solo il guaritore** (5 monete per punto vita); il resto arriverà.
+**Le voci.** Una voce lega un uccello a **una zona precisa**, segnata sul globo con una **X dorata**. Dice la specie, non quale uccello: chi va a vedere può trovare un raro, o (al porticciolo) restare deluso da uno qualunque. Massimo **2 voci di taverna** a spedizione, più quelle dei mercanti. Finite le voci, in taverna si dorme e basta.
 
 ## 11. Economia
 
@@ -300,23 +307,25 @@ Una linguetta, **Tab** o *Diario* nella barra aprono il **taccuino**: un libro a
 
 Il diario è un diario, non un manuale: niente spiegazioni, se un capitolo è vuoto è vuoto.
 - **Note**: tutto ciò che è stato annotato, con giorno e momento.
-- **Uccelli**: per specie, ogni uccello in uno di tre stati: **sconosciuto** (un "?"), **traccia** (la sagoma della specie e un indizio sull'habitat, non sull'ora), **osservato** (a colori, con habitat, ore, curiosità e dove l'hai visto).
-- **Voci**: le note delle voci sentite in taverna (al massimo 2 per spedizione).
-- **Ciurma**: in alto a destra, a penna e di sbieco, *8 monete al giorno*; sotto il registro **pagamenti** a tre colonne (chi · giorno · −monete) con le righe vuote che si riempiono man mano.
+- **Uccelli**: per specie, ogni uccello è una **scheda**: quattro angoli appena segnati, il riquadro del disegno e righe vuote da riempire. **Sconosciuto**: tutto vuoto. **Traccia**: solo l'indizio. **Osservato**: nome (e latino), habitat e ore, curiosità, dove e quando, e il disegno a colori.
+- **Voci**: le voci sentite.
+- **Ciurma**: in alto a destra, a penna e di sbieco, *8 m.o. al giorno*; sotto il registro **pagamenti** a tre colonne (chi · giorno · −8 m.o.) con le righe vuote che si riempiono man mano.
 - **Zaino**: la lista degli oggetti (per ora il binocolo).
-- **Stiva**: le cose da vendere (in arrivo con il mercato).
+- **Stiva**: gli oggetti trovati.
+
+**È un solo libro**: le pagine sono numerate di seguito (Note 1–2, Uccelli dalla 3…) e **ogni capitolo comincia su una pagina di sinistra**. Testo in corsivo d'epoca (IM Fell English), carta in pixel art con grana, macchie, bordi bruniti e la piega; linguette di stoffa vecchia.
 
 **Le tracce.** Se sbarchi in una zona all'ora sbagliata, o se l'uccello ti vola via per sempre, trovi le sue tracce: diventa una sagoma nel diario. Gli uccelli **rari** non lasciano tracce: di loro si sa solo dalle voci.
 
 ## 13. Gli uccelli
 
-**Specie e varianti.** Ogni specie ha **una sola icona**; le sue varianti si distinguono per colore e nome (*Gabbiano comune*, *Gabbiano ala nera*, *Gabbiano becco blu*…). Obiettivo finale: **20 specie × 3 varianti = 60 uccelli**. Per ora **6 specie** (gabbiani, gufi, corvi, anatre, tucani, aquile), **18 uccelli**, in `js/uccelli.js`.
+**Specie e varianti.** Ogni specie ha **una sola icona** (provvisoria: arriveranno i disegni); le varianti si distinguono per colore e nome. **8 specie, 51 uccelli**, in `js/uccelli.js`: Pettirosso (*Erithacus ignifer*), Gufo selenicus, Airone di nebbia, Cinciallegra di vetro, Corvo dei campanili, Colibrì d'ambra, Gabbiano di tempesta, Fenice. **Ogni specie ha un uccello raro.**
 
-Ogni uccello ha: bioma (o "ovunque"), a volte una caratteristica (cascata, lago, castello, vulcano), **i momenti in cui si fa vedere**, un indizio e una curiosità. Gli ID non cambiano mai: il codice del taccuino si baserà su di essi.
+Ogni uccello ha: bioma (o "ovunque"), a volte una caratteristica (fiume, lago, cascata, rovine, villaggio, montagne, castello, vulcano), **i momenti in cui si fa vedere**, un indizio e una curiosità. Gli ID non cambiano mai: il codice del taccuino si baserà su di essi.
 
 **Un uccello per zona, deciso all'attracco.** Al primo sbarco in una zona si sceglie il suo uccello tra quelli adatti al bioma e alle caratteristiche (chi vuole una caratteristica ha la precedenza); da lì in poi è sempre quello. Se l'ora è sbagliata non si fa vedere: puoi aspettare a bordo e riprovare. Una volta osservato, la zona è segnata con la ✓ e lì non compare più niente.
 
-**Gli uccelli rari** (Gabbiano becco blu, Corvo delle mura, Tucano delle oasi, Aquila di fuoco) non escono mai a caso: li lega a una zona precisa **solo una voce di taverna**, al massimo **2 voci per spedizione**.
+**Gli uccelli rari** (uno per specie: Pettirosso cenerino, Gufo del plenilunio, Airone fumoso, Cinciallegra prismatica, Corvo segnaore, Colibrì fossile, Gabbiano elettrico, Fenice eterna) non escono mai a caso: li lega a una zona precisa **solo una voce** (§ 10).
 
 ## 14. Fine partita, attestato e codice
 
