@@ -10,21 +10,23 @@ const Citta = (() => {
   const W = 40;
   const H = 24;
   const PX = 8;               // pixel di disegno per casella
-  const NPC_MS = 650;         // ogni quanto la gente fa un passo
+  const NPC_MS = 650;         // ogni quanto la gente può fare un passo
+  const NPC_MOVE = 0.05;      // e quanto spesso lo fa davvero: qualche passo ogni tanto
+  const NPC_RANGE = 2;        // quanto si allontana da dove sta
   const TYPE_MS = 32;         // la velocità con cui compaiono le parole di chi parla
   const EVENT_CHANCE = 0.6;   // a ogni visita, qualcuno col punto esclamativo
   const ROB = [2, 4];         // quanto ti può rubare
 
   // walk: ci si cammina; i nomi servono a dire cosa c'è nella casella
   const TILES = {
-    sea: { name: "Mare" }, boat: { name: "Nave ormeggiata" }, fish: { name: "Peschereccio" },
-    ship: { name: "La tua nave", walk: true, icon: "ship" },
+    sea: { name: "Mare" }, boat: { name: "Nave ormeggiata" }, fish: { name: "Peschereccio" }, hull: { name: "La tua nave" },
+    ship: { name: "Si sale a bordo", walk: true, icon: "ship" },
     quay: { name: "Banchina", walk: true }, road: { name: "Strada", walk: true }, square: { name: "Piazza", walk: true },
     court: { name: "Cortile del castello", walk: true }, gate: { name: "Porta", walk: true }, snow: { name: "Neve", walk: true },
     house: { name: "Casa" }, yard: { name: "Orto" }, tree: { name: "Albero" }, pine: { name: "Abete" },
     wall: { name: "Mura" }, tower: { name: "Torre" }, keep: { name: "Il castello" },
     church: { name: "La chiesa" }, bell: { name: "Il campanile" }, well: { name: "Pozzo" }, stall: { name: "Bancarella" },
-    crate: { name: "Casse" }, buoy: { name: "Boe" },
+    crate: { name: "Casse" },
     barrel: { name: "Barile", icon: "barrel", talk: true },
     door: { name: "Porta", walk: true, icon: "enter" },
   };
@@ -115,6 +117,12 @@ const Citta = (() => {
     return id;
   }
 
+  // Una nave in scala: occupa più caselle di mare, disegnata intera in pixel art
+  function vessel(m, kind, x, y, w, h) {
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) if (inside(x + i, y + j)) m.map[y + j][x + i] = kind;
+    m.vessels.push({ kind, x, y, w, h });
+  }
+
   // Una porta di bottega: una casella di casa che dà sulla strada; l'insegna sta sul tetto, dietro la porta
   function placeShop(m, kind, near, roads) {
     const cand = [];
@@ -140,6 +148,7 @@ const Citta = (() => {
   function buildForte(r) {
     const m = blank("lot");
     m.doors = {};
+    m.vessels = [];
     const set = (x, y, t) => { if (inside(x, y)) m.map[y][x] = t; };
     const rect = (x0, y0, x1, y1, t) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) set(x, y, t); };
     rect(0, 0, 3, H - 1, "sea");
@@ -190,7 +199,7 @@ const Citta = (() => {
     // sulla banchina barili e casse; in mare le altre navi
     for (const [x, yy] of [[5, 3], [6, 8], [5, 16], [6, 20]]) set(x, yy, "barrel");
     for (const [x, yy] of [[6, 4], [5, 19], [6, 17]]) set(x, yy, "crate");
-    for (const yy of [2, 7, 17, 21]) set(1 + Math.floor(r() * 2), yy, "boat");
+    for (const yy of [0, 19]) vessel(m, "boat", 1, yy, 2, 5);
     fillHouses(m, r, "lot", ["coppi", "coppi", "ardesia", "paglia", "mattoni"]);
     // due barili davanti alla taverna, uno in piazza
     const roads = ["road", "square"];
@@ -203,10 +212,12 @@ const Citta = (() => {
       for (const [dx, dy] of DIRS) if (m.map[f.y + dy]?.[f.x + dx] === "road" && r() < 0.5) { set(f.x + dx, f.y + dy, "barrel"); break; }
     }
     set(24, 4, "barrel");
-    const ship = { x: 3, y: m.main[0].y };
+    // la tua nave: tre caselle per nove, ormeggiata lungo la banchina; a bordo si sale dalla banchina
+    const ship = { x: 4, y: m.main[0].y };
+    vessel(m, "hull", 1, ship.y - 4, 3, 9);
     set(ship.x, ship.y, "ship");
     set(ship.x + 1, ship.y, "quay"); // davanti alla nave non ci va mai niente
-    return { ...m, ship, start: { x: 4, y: ship.y }, people: 16, walkable: ["road", "square", "quay", "court"] };
+    return { ...m, ship, start: { x: 5, y: ship.y }, people: 16, walkable: ["road", "square", "quay", "court"] };
   }
 
   // Il porticciolo: una lunga banchina di legno sul fiordo, le case in fila con le botteghe,
@@ -214,6 +225,7 @@ const Citta = (() => {
   function buildPorto(r) {
     const m = blank("snow");
     m.doors = {};
+    m.vessels = [];
     const set = (x, y, t) => { if (inside(x, y)) m.map[y][x] = t; };
     const rect = (x0, y0, x1, y1, t) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) set(x, y, t); };
     rect(0, 0, 5, H - 1, "sea");
@@ -231,22 +243,22 @@ const Citta = (() => {
       const x = 16 + Math.floor(r() * (W - 16)), yy = Math.floor(r() * H);
       if (m.map[yy][x] === "snow") set(x, yy, "pine");
     }
-    for (const [x, yy] of [[8, 4], [8, 11], [8, 18]]) set(x, yy, "buoy");
     for (const [x, yy] of [[6, 6], [6, 13], [7, 20]]) set(x, yy, "crate");
     for (const [x, yy] of [[8, 7], [6, 16]]) set(x, yy, "barrel");
-    for (const yy of [3, 9, 15, 20]) set(3 + Math.floor(r() * 2), yy, "fish");
+    for (const [x, yy] of [[3, 2], [3, 18], [0, 10]]) vessel(m, "fish", x, yy, 2, 4);
     const roads = ["quay", "road"];
     placeShop(m, "medico", { x: 10, y: 4 }, roads);
     placeShop(m, "taverna", { x: 10, y: 9 }, roads);
     placeShop(m, "mercato", { x: 10, y: 13 }, roads);
     placeShop(m, "emporio", { x: 10, y: 19 }, roads);
-    const ship = { x: 5, y: 12 };
+    const ship = { x: 6, y: 12 };
+    vessel(m, "hull", 3, ship.y - 4, 3, 9);
     set(ship.x, ship.y, "ship");
     set(ship.x + 1, ship.y, "quay"); // davanti alla nave non ci va mai niente
     // il falegname lavora in fondo alla banchina, accanto alle sue casse, vicino a un peschereccio
     const carpenter = { x: 6, y: 20 };
     set(carpenter.x, carpenter.y, "quay");
-    return { ...m, ship, carpenter, start: { x: 6, y: 12 }, people: 6, walkable: ["quay", "road"] };
+    return { ...m, ship, carpenter, start: { x: 7, y: 12 }, people: 6, walkable: ["quay", "road"] };
   }
 
   // --- Il disegno in pixel art ---
@@ -281,7 +293,7 @@ const Citta = (() => {
         const t = c.map[ty][tx], ox = tx * PX, oy = ty * PX;
         const cellPx = (fn) => { for (let y = 0; y < PX; y++) for (let x = 0; x < PX; x++) put(ox + x, oy + y, fn(x, y)); };
         // il fondo sotto ogni cosa: acqua, banchina, strada, neve
-        const under = ["sea", "boat", "fish", "ship"].includes(t) ? "sea" : ["barrel", "crate", "buoy"].includes(t) ? (c.city.id === "porto" && tx > 8 ? "snow" : "quay")
+        const under = ["sea", "boat", "fish", "hull"].includes(t) ? "sea" : ["barrel", "crate", "ship"].includes(t) ? (c.city.id === "porto" && tx > 8 ? "snow" : "quay")
           : t === "door" ? "road" : ["well", "stall"].includes(t) ? "square" : ["yard", "tree"].includes(t) ? "yard" : ["pine"].includes(t) ? "snow" : t;
         if (under === "sea") cellPx((x, y) => ((x + y * 3 + tx * 5 + ty * 2) % 11 === 0 ? "#4a7a9a" : (y + ty) % 4 === 0 && (x + tx * 3) % 6 < 2 ? "#3a6684" : "#2a4e6a"));
         else if (under === "quay") cellPx((x, y) => (c.city.id === "porto" ? (x === 0 || x === 4 ? ground.quay[1] : (y + tx) % 7 === 0 ? ground.quay[2] : ground.quay[0])
@@ -299,11 +311,6 @@ const Citta = (() => {
         if (t === "well") { for (let y = 0; y < PX; y++) for (let x = 0; x < PX; x++) { const d = Math.hypot(x - 3.5, y - 3.5); if (d < 3.8) put(ox + x, oy + y, d < 2.2 ? "#1e2a34" : "#b0a690"); } }
         if (t === "stall") { for (let y = 1; y < PX - 1; y++) for (let x = 0; x < PX; x++) put(ox + x, oy + y, (x >> 1) % 2 ? "#e8e0d0" : "#b84a3a"); }
         if (t === "crate") { for (let y = 1; y < 7; y++) for (let x = 1; x < 7; x++) put(ox + x, oy + y, x === 1 || y === 1 || x === 6 || y === 6 || x === y || x === 7 - y ? "#5a4028" : "#a07a4a"); }
-        if (t === "buoy") { for (let y = 0; y < PX; y++) for (let x = 0; x < PX; x++) { const d = Math.hypot(x - 3.5, y - 3.5); if (d < 3) put(ox + x, oy + y, y < 3 ? "#e86a50" : "#b03a2a"); } }
-        if (t === "boat" || t === "fish") {
-          for (let y = 1; y < 7; y++) for (let x = 0; x < PX; x++) { const half = 3 - Math.abs(x - 3.5) * 0.4; if (Math.abs(y - 3.5) < half) put(ox + x, oy + y, t === "fish" ? (Math.abs(y - 3.5) < 1 && x > 1 && x < 6 ? "#e8e8e0" : "#a83a2a") : "#6a4a2a"); }
-          if (t === "boat") for (let x = 1; x < 7; x++) put(ox + x, oy + 3, "#e8e0c8");
-        }
         if (t === "wall" || t === "tower") {
           // il camminamento in cima alle mura, con i merli sul bordo verso fuori
           for (let y = 0; y < PX; y++) for (let x = 0; x < PX; x++) if ((x === 0 || y === 0 || x === 7 || y === 7) && (x + y) % 2 === 0) put(ox + x, oy + y, "#b8ac94");
@@ -311,6 +318,8 @@ const Citta = (() => {
         }
       }
     }
+
+    for (const v of c.vessels) drawVessel(v, put, darken);
 
     // gli edifici: tetti a falde con la luce da nord-ovest, comignoli, e l'ombra che gettano
     for (const b of c.buildings) {
@@ -365,8 +374,83 @@ const Citta = (() => {
         for (let y = 0; y < 3; y++) for (let x = 1; x < 6; x++) put(Math.round(midX) + x, by0 + 4 + y, "#c8302a");
       }
     }
+    // le insegne sui tetti, in pixel art
+    for (const [kind, d] of Object.entries(c.doors)) drawSprite(SIGNS[kind], d.sign.x * PX, d.sign.y * PX, put);
     g.putImageData(img, 0, 0);
     return cv;
+  }
+
+  // Le navi viste dall'alto, con la prua a nord: scafo affusolato, ponte di assi, vele sui pennoni.
+  // La tua nave ha tre alberi; le navi del Forte due; i pescherecci sono rossi, con la cabina e le reti.
+  function drawVessel(v, put, darken) {
+    const w = v.w * PX, h = v.h * PX, x0 = v.x * PX, y0 = v.y * PX;
+    const fish = v.kind === "fish";
+    const hullCol = fish ? ["#a83a2a", "#5a1a12", "#c85a44"] : ["#8a5a30", "#3a2414", "#b88a52"];
+    const deck = fish ? ["#c8b090", "#a89070"] : ["#b88a52", "#9a7040"];
+    const top = fish ? 2 : 4;                     // il bompresso davanti
+    const half = (y) => {                         // mezza larghezza dello scafo alla riga y
+      const t = (y - top) / (h - top - 1);
+      if (t < 0 || t > 1) return -1;
+      const full = w / 2 - 1;
+      if (t < 0.3) return full * Math.sqrt(t / 0.3);
+      if (t > 0.9) return full * (1 - (t - 0.9) * 2);
+      return full;
+    };
+    const cx = (w - 1) / 2;
+    // l'ombra sull'acqua, verso sud-est
+    for (let y = 0; y < h; y++) { const hw = half(y); if (hw < 0) continue; for (let x = 0; x < w; x++) if (Math.abs(x - cx) <= hw) darken(x0 + x + 2, y0 + y + 2, 0.65); }
+    for (let y = 0; y < h; y++) {
+      const hw = half(y), t = (y - top) / (h - top - 1);
+      for (let x = 0; x < w; x++) {
+        const dx = Math.abs(x - cx);
+        if (hw < 0 || dx > hw) continue;
+        let col = dx > hw - 1 ? hullCol[1] : dx > hw - 2 ? hullCol[0] : x % 3 === 0 ? deck[1] : deck[0];
+        if (fish && dx > hw - 3) col = dx > hw - 1 ? hullCol[1] : dx > hw - 2 ? hullCol[0] : "#e8e8e0"; // fiancata rossa con la fascia bianca
+        if (!fish && t > 0.82 && dx <= hw - 2) col = y === Math.round(top + 0.82 * (h - top - 1)) + 1 ? hullCol[1] : hullCol[2]; // il cassero
+        put(x0 + x, y0 + y, col);
+      }
+    }
+    // il bompresso
+    for (let y = 0; y < top + 2; y++) put(x0 + Math.round(cx), y0 + y, hullCol[1]);
+    if (fish) {
+      // la cabina, l'albero e le reti a poppa
+      for (let y = Math.round(h * 0.5); y < Math.round(h * 0.72); y++) for (let x = 4; x < w - 4; x++) put(x0 + x, y0 + y, x === 4 || x === w - 5 || y === Math.round(h * 0.5) ? "#8a8a80" : "#e8e8e0");
+      put(x0 + Math.round(cx), y0 + Math.round(h * 0.3), "#3a2414");
+      for (const [x, y] of [[5, h - 6], [7, h - 5], [9, h - 6], [6, h - 4], [8, h - 4]]) put(x0 + x, y0 + y, "#5a7a5a");
+      return;
+    }
+    // le vele: una fascia per albero, più larga dello scafo, gonfia verso prua
+    const masts = v.kind === "hull" ? [0.22, 0.45, 0.68] : [0.3, 0.6];
+    for (const m of masts) {
+      const my = Math.round(top + m * (h - top - 1));
+      const sw = w / 2 - (m < 0.3 ? 2 : 0);
+      for (let x = 0; x < w; x++) {
+        const dx = Math.abs(x - cx);
+        if (dx > sw) continue;
+        const belly = Math.round((1 - (dx / sw) ** 2) * 2);   // la vela gonfia
+        for (let k = 0; k < 4; k++) put(x0 + x, y0 + my - belly + k, k === 3 ? "#a89c80" : k === 0 ? "#fbf6e6" : "#e8dfc4");
+        put(x0 + x, y0 + my + 3, "#4a3018");                    // il pennone
+      }
+      put(x0 + Math.round(cx), y0 + my + 1, "#4a3018");
+    }
+    // la lanterna a poppa
+    put(x0 + Math.round(cx), y0 + h - 3, "#f2c230");
+  }
+
+  // Le insegne, 8×8: la croce rossa del medico, il boccale della taverna, la coscia di pollo del
+  // mercato, la bussola dell'emporio
+  const SIGN_COL = { K: "#2a1a10", b: "#7a5430", W: "#f2ece0", R: "#c8302a", F: "#fbf6e6", Y: "#e0a030", y: "#f2c860", H: "#b07820",
+    M: "#b0602a", m: "#d88a4a", G: "#d8b040", d: "#1e2a34" };
+  const SIGNS = {
+    medico: ["KKKKKKKK", "KWWRRWWK", "KWWRRWWK", "KRRRRRRK", "KRRRRRRK", "KWWRRWWK", "KWWRRWWK", "KKKKKKKK"],
+    taverna: ["KKKKKKKK", "KbFFFFbK", "KbYyYYHK", "KbYyYbHK", "KbYyYYHK", "KbYyYYbK", "KbYYYYbK", "KKKKKKKK"],
+    mercato: ["KKKKKKKK", "KbbbMMbK", "KbbMmMMK", "KbbMmMMK", "KbbMMMbK", "KbWMbbbK", "KWbWbbbK", "KKKKKKKK"],
+    emporio: ["KKKKKKKK", "KbGGGGbK", "KGddRdGK", "KGddRdGK", "KGdWddGK", "KGdWddGK", "KbGGGGbK", "KKKKKKKK"],
+  };
+
+  function drawSprite(rows, x0, y0, put) {
+    if (!rows) return;
+    rows.forEach((row, y) => [...row].forEach((ch, x) => { if (SIGN_COL[ch]) put(x0 + x, y0 + y, SIGN_COL[ch]); }));
   }
 
   // --- Entrare e uscire ---
@@ -376,13 +460,13 @@ const Citta = (() => {
     const r = rng(trip.seed ^ (city.id === "forte" ? 0xf0f7e : 0x9077));
     const plan = city.id === "forte" ? buildForte(r) : buildPorto(r);
     c = { city, ...plan, player: { ...plan.start }, npcs: [], open: null, prev: null, near: null };
-    // la gente: sulle strade e sulla banchina, mai addosso a te
+    // la gente: sulle strade e sulla banchina, mai addosso a te né davanti a porte e nave
     const spots = [];
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (plan.walkable.includes(c.map[y][x]) && !(plan.carpenter && same(plan.carpenter, { x, y }))) spots.push({ x, y });
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (plan.walkable.includes(c.map[y][x]) && !inTheWay({ x, y })) spots.push({ x, y });
     const ra = Math.random;
     for (let i = 0; i < plan.people && spots.length; i++) {
       const at = spots.splice(Math.floor(ra() * spots.length), 1)[0];
-      if (!same(at, c.player)) c.npcs.push({ ...at });
+      if (!same(at, c.player)) c.npcs.push({ ...at, home: { ...at } });
     }
     // a volte qualcuno col punto esclamativo: ti aspetta fermo, e non si sa mai cosa vuole
     if (ra() < EVENT_CHANCE && c.npcs.length) c.npcs[0].event = true;
@@ -420,17 +504,15 @@ const Citta = (() => {
     el.map.style.gridTemplateColumns = `repeat(${W}, var(--cell))`;
     el.map.appendChild(paint());
     el.cells = [];
-    const signs = new Map(Object.entries(c.doors).map(([kind, d]) => [`${d.sign.x},${d.sign.y}`, kind]));
     for (let y = 0; y < H; y++) {
       el.cells.push([]);
       for (let x = 0; x < W; x++) {
         const d = document.createElement("div");
         d.dataset.x = x;
         d.dataset.y = y;
-        const t = tileAt(x, y), sign = signs.get(`${x},${y}`);
-        d.className = `cell cc ${t.walk ? "walk" : "block"}${t.icon ? ` cc-${c.map[y][x]}` : ""}${sign ? " cc-sign" : ""}`;
-        if (sign) d.innerHTML = Gioco.iconHtml(SHOP_INFO[sign][1]);
-        else if (t.icon) d.innerHTML = Gioco.iconHtml(t.icon);
+        const t = tileAt(x, y);
+        d.className = `cell cc ${t.walk ? "walk" : "block"}${t.icon ? ` cc-${c.map[y][x]}` : ""}`;
+        if (t.icon) d.innerHTML = Gioco.iconHtml(t.icon);
         el.map.appendChild(d);
         el.cells[y].push(d);
       }
@@ -458,14 +540,22 @@ const Citta = (() => {
     for (const n of c.npcs) place(n.el, n);
   }
 
-  // La gente cammina per conto suo, anche se tu stai fermo; chi ha il punto esclamativo aspetta
+  // Le caselle dove la gente non si ferma mai: davanti alle porte, alla nave, al falegname
+  function inTheWay(p) {
+    if (Object.values(c.doors).some((d) => same(d.front, p))) return true;
+    if (Math.abs(c.ship.x - p.x) + Math.abs(c.ship.y - p.y) <= 1 || same(c.start, p)) return true;
+    return !!c.carpenter && Math.abs(c.carpenter.x - p.x) + Math.abs(c.carpenter.y - p.y) <= 1;
+  }
+
+  // La gente fa qualche passo ogni tanto, restando vicino a dove sta; chi ha il punto esclamativo aspetta
   function stroll() {
     if (!c || Gioco.trip.mode !== "city" || !document.body.classList.contains("in-game")) return;
     for (const n of c.npcs) {
-      if (n.event || n.carpenter || Math.random() < 0.35) continue;
+      if (n.event || n.carpenter || Math.random() > NPC_MOVE) continue;
       const [dx, dy] = DIRS[Math.floor(Math.random() * 4)];
       const to = { x: n.x + dx, y: n.y + dy };
-      if (!inside(to.x, to.y) || !c.walkable.includes(c.map[to.y][to.x])) continue;
+      if (!inside(to.x, to.y) || !c.walkable.includes(c.map[to.y][to.x]) || inTheWay(to)) continue;
+      if (Math.abs(to.x - n.home.x) + Math.abs(to.y - n.home.y) > NPC_RANGE) continue;
       if (same(to, c.player) || c.npcs.some((o) => o !== n && same(o, to))) continue;
       Object.assign(n, to);
       place(n.el, n);
@@ -491,7 +581,12 @@ const Citta = (() => {
     const npc = c.npcs.find((n) => same(n, to));
     if (npc?.event) { meet(npc); return; }
     if (npc?.carpenter) { hint(null); talkCarpenter(); return; }
-    if (npc) { if (Math.random() < 0.3) Gioco.toast(["«Permesso!»", "«Attento a dove metti i piedi.»", "«Ehi, marinaio!»"][Math.floor(Math.random() * 3)]); return; }
+    // la gente non chiude mai il passaggio: si scansa e prende il tuo posto
+    if (npc) {
+      if (Math.random() < 0.3) Gioco.toast(["«Permesso!»", "«Attento a dove metti i piedi.»", "«Ehi, marinaio!»"][Math.floor(Math.random() * 3)]);
+      if (!c.walkable.includes(c.map[p.y][p.x])) return;
+      Object.assign(npc, p);
+    }
     if (t.talk) { readBarrel(); return; }
     if (!t.walk) return;
     c.prev = { ...p };
