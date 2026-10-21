@@ -1,7 +1,7 @@
 // La navigazione: la nave si guida in tempo reale sul globo.
 // ← → cambiano la rotta, ↑ ↓ le vele. In mare l'orologio è fermo: costa ripartire (due momenti),
 // e una traversata lunga aggiunge un momento ogni SEA_LEG gradi percorsi.
-// Vicino a una costa si può guardare col cannocchiale o sbarcare, gratis.
+// Vicino a una costa si può guardare col binocolo o sbarcare, gratis.
 // Espone l'oggetto globale `Mare`.
 const Mare = (() => {
   const SEA_LEG = 60;         // gradi di traversata che costano un momento del giorno
@@ -9,10 +9,9 @@ const Mare = (() => {
   const SAIL_SPEED = 1.8;     // gradi al secondo per ogni livello di vela
   const TURN_RATE = 100;      // gradi di rotta al secondo
   const LAND_RANGE = 3;       // gradi: abbastanza vicino per sbarcare
-  const SCOPE_RANGE = 12;     // gradi: abbastanza vicino per il cannocchiale
+  const SCOPE_RANGE = 12;     // gradi: abbastanza vicino per il binocolo
   const CITY_RANGE = 4;
   const BIG_RES = 200;
-  const MINI_RES = 90;
 
   let running = false;
   let loop = 0;               // ogni ingresso in mare avvia un solo ciclo di disegno
@@ -22,7 +21,7 @@ const Mare = (() => {
   let wake = [];
   let near = null;            // la costa più vicina, se c'è
   let city = null;            // la città vicina, se c'è
-  let scoping = false;        // il cannocchiale è in mano: segue la costa finché non ti allontani
+  let scoping = false;        // il binocolo è in mano: segue la costa finché non ti allontani
   let scope = null;           // la zona che si sta guardando
   let seaTime = null;         // il momento disegnato nella cartolina del mare
   let el = null;
@@ -36,6 +35,7 @@ const Mare = (() => {
       canvas: document.getElementById("globe-big"),
       hud: document.getElementById("sea-hud"),
       prompt: document.getElementById("sea-prompt"),
+      scopeBadge: document.getElementById("sea-scope"),
       postcard: g.postcard,
     };
     const trip = Gioco.trip;
@@ -45,6 +45,7 @@ const Mare = (() => {
     scoping = false;
     scope = null;
     seaTime = null;
+    el.scopeBadge.className = "";
     Gioco.showView("sea");
     fitCanvas();
     Suoni.stopAll();
@@ -111,7 +112,7 @@ const Mare = (() => {
 
     near = Globo.nearestCoast(trip.world, ship.lat, ship.lon, SCOPE_RANGE);
     city = Globo.nearestCity(trip.world, ship.lat, ship.lon, CITY_RANGE);
-    // Il cannocchiale segue la costa: girando attorno all'isola mostra la zona successiva
+    // Il binocolo segue la costa: girando attorno all'isola mostra la zona successiva
     if (scoping) {
       if (!near) closeScope();
       else if (!scope || near.zone.id !== scope.id) showScope(near.zone);
@@ -136,9 +137,15 @@ const Mare = (() => {
       <span>Vele <b>${sails}</b></span>`;
     let msg = "Mare aperto. Cerca una costa.";
     if (city) msg = `<b>${city.name}</b> · Invio per attraccare in città`;
-    else if (canLand) msg = `<b>${near.zone.name}</b> · Invio sbarca · ${scoping ? "col cannocchiale" : "T cannocchiale"}`;
-    else if (near) msg = scoping ? `Col cannocchiale: <b>${near.zone.name}</b>` : "Una costa all'orizzonte · T cannocchiale";
+    else if (canLand) msg = `<b>${near.zone.name}</b> · Invio sbarca`;
+    else if (near) msg = scoping ? `Col binocolo: <b>${near.zone.name}</b>` : "Una costa all'orizzonte";
     el.prompt.innerHTML = msg;
+    // Il binocolo in alto a sinistra: si accende quando c'è una costa da guardare
+    const state = scoping ? "is-on" : near ? "is-ready" : "";
+    if (el.scopeBadge.className !== `sea-scope ${state}`) {
+      el.scopeBadge.className = `sea-scope ${state}`;
+      el.scopeBadge.innerHTML = `${Gioco.iconHtml("binoculars")}<span>${scoping ? "binocolo in mano" : "usa binocolo (T)"}</span>`;
+    }
   }
 
   // Righe del riquadro B in navigazione
@@ -151,7 +158,7 @@ const Mare = (() => {
       <div title="Ogni ${SEA_LEG}° di traversata passa un momento del giorno">${Gioco.iconHtml("hourglass")}<span>Traversata</span><b>${"▰".repeat(leg)}${"▱".repeat(5 - leg)}</b></div>`;
   }
 
-  // --- Cartolina: il mare dal ponte, oppure la costa vista col cannocchiale ---
+  // --- Cartolina: il mare dal ponte, oppure la costa vista col binocolo ---
 
   function drawSeaPostcard(time) {
     const trip = Gioco.trip;
@@ -172,11 +179,11 @@ const Mare = (() => {
     Suoni.play("pagina");
   }
 
-  // T prende il cannocchiale; per riporlo basta allontanarsi dalla costa
+  // T prende il binocolo; per riporlo basta allontanarsi dalla costa
   function openScope() {
     if (scoping) return;
     if (!near) {
-      Gioco.toast("Col cannocchiale vedi solo mare.");
+      Gioco.toast("Col binocolo vedi solo mare.");
       return;
     }
     scoping = true;
@@ -216,18 +223,9 @@ const Mare = (() => {
 
   window.addEventListener("resize", () => { if (running) fitCanvas(); });
 
-  // Il globo piccolo del riquadro B, quando sei a terra
-  function drawMini(canvas) {
-    const trip = Gioco.trip;
-    const size = 120, dpr = window.devicePixelRatio || 1;
-    if (canvas.width !== size * dpr) {
-      canvas.width = size * dpr;
-      canvas.height = size * dpr;
-      canvas.style.width = `${size}px`;
-      canvas.style.height = `${size}px`;
-    }
-    Globo.draw(canvas, trip.world, trip.ship, { res: MINI_RES, time: Gioco.now(), ship: true, markers: true, marks: trip.zones });
-  }
+  document.addEventListener("click", (e) => {
+    if (running && e.target.closest("#sea-scope")) openScope();
+  });
 
-  return { enter, stop, statusRows, drawMini };
+  return { enter, stop, statusRows };
 })();

@@ -7,7 +7,7 @@
   <link rel="icon" href="assets/logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&family=VT323&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -53,6 +53,7 @@
           <div class="mb-drop" id="mb-drop" hidden>
             <button class="mb-item" data-game-action="to-menu">Torna al menu principale <small>(la spedizione va persa)</small></button>
             <button class="mb-item" data-game-action="restart">Nuova spedizione</button>
+            <button class="mb-item" data-action="toggle-sound">Suoni: <span data-label="sound">ON</span></button>
           </div>
         </div>
         <button class="mb-item" data-game-action="diary">Diario</button>
@@ -67,6 +68,7 @@
                 <div id="map" class="map" aria-label="Mappa della zona"></div>
               </div>
               <div id="sea-view" class="sea-view">
+                <button id="sea-scope" class="sea-scope" type="button" tabindex="-1"></button>
                 <div id="sea-hud" class="sea-hud"></div>
                 <canvas id="globe-big" aria-label="Il globo"></canvas>
                 <div id="sea-prompt" class="sea-prompt"></div>
@@ -84,7 +86,6 @@
             <div id="postcard" class="postcard" role="img" aria-label="Panorama della zona"></div>
           </div>
           <div class="panel panel-b">
-            <canvas id="globe-mini" class="globe-mini" hidden aria-label="Dove sei sul globo"></canvas>
             <div id="status" class="status"></div>
           </div>
         </div>
@@ -180,8 +181,8 @@
           licenza <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>
         </p>
 
-        <h3>Carattere</h3>
-        <p>VT323 di Peter Hull · SIL Open Font License</p>
+        <h3>Caratteri</h3>
+        <p>VT323 di Peter Hull · Pinyon Script di Nicole Fally<br>SIL Open Font License</p>
 
         <h3>E grazie a te</h3>
         <p>che hai acceso il gioco.<br>Buon viaggio, e occhi al cielo.</p>

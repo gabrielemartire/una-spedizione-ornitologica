@@ -41,10 +41,20 @@ function setVolume(vol) {
   Suoni.play("blip");
 }
 
-// La barra del menu in partita: "Spedizione" apre una tendina
+// La barra del menu in partita: "Spedizione" apre una tendina, anche con Esc
 function closeMenubar() {
   const drop = document.getElementById("mb-drop");
-  if (drop) drop.hidden = true;
+  if (!drop || drop.hidden) return;
+  drop.hidden = true;
+  // la tastiera torna al gioco, o alla scelta che era aperta sulla mappa
+  document.activeElement?.blur();
+  document.querySelector("#map-overlay:not([hidden]) .menu-item")?.focus();
+}
+
+function openMenubar() {
+  const drop = document.getElementById("mb-drop");
+  drop.hidden = false;
+  drop.querySelector("button").focus();
 }
 
 document.getElementById("name-form").addEventListener("submit", (e) => {
@@ -56,8 +66,7 @@ document.getElementById("name-form").addEventListener("submit", (e) => {
 document.addEventListener("click", (e) => {
   const action = e.target.closest("[data-game-action]")?.dataset.gameAction;
   if (action === "menubar") {
-    const drop = document.getElementById("mb-drop");
-    drop.hidden = !drop.hidden;
+    document.getElementById("mb-drop").hidden ? openMenubar() : closeMenubar();
     return;
   }
   if (!e.target.closest(".mb-group")) closeMenubar();
@@ -102,13 +111,26 @@ document.addEventListener("keydown", (e) => {
     setVolume(Suoni.vol + (e.key === "ArrowLeft" ? -1 : 1));
   } else if (e.key === "Escape") {
     // In partita Esc apre la tendina "Spedizione": uscire per sbaglio farebbe perdere il viaggio
-    if (inGame) {
-      const drop = document.getElementById("mb-drop");
-      drop.hidden = !drop.hidden;
-      if (!drop.hidden) drop.querySelector("button").focus();
-    } else show("screen-menu");
+    if (inGame) openMenubar();
+    else show("screen-menu");
   }
 });
+
+// A tendina aperta la tastiera è sua: ↑ ↓ scelgono, Invio conferma, Esc chiude
+window.addEventListener("keydown", (e) => {
+  const drop = document.getElementById("mb-drop");
+  if (!document.body.classList.contains("in-game") || drop.hidden) return;
+  const items = [...drop.querySelectorAll("button")];
+  const i = items.indexOf(document.activeElement);
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    items[(i + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length].focus();
+    Suoni.play("blip");
+  } else if (e.key === "Escape") {
+    closeMenubar();
+  }
+  if (e.key !== "Enter") e.preventDefault(); // Invio preme il pulsante scelto
+  e.stopImmediatePropagation();
+}, true);
 
 renderSoundLabels();
 focusFirst();

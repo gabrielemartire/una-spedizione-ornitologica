@@ -17,6 +17,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Vignetta notturna**: di notte la mappa più scura lontano dall'esploratore.
 
 ## Fatto di recente
+- [x] **Versione 0.2.1**: niente globo a terra; binocolo chiaro in alto a sinistra sul globo (*usa binocolo (T)*); diario su carta vecchia e taccuino come libro aperto a misura fissa, capitoli a sinistra, ← → pagine, ↑ ↓ capitoli; ciurma come registro dei pagamenti; firma in corsivo barocco; si gioca tutto da tastiera.
 - [x] **Versione 0.2**: tutto in una schermata, barra menu in alto, niente titoli sui riquadri, versione nel menu, link a GitHub nei crediti.
 - [x] **Tempo in terzi**: attraccare gratis, ripartire due momenti, aspettare a bordo uno, traversate lunghe uno ogni 60°.
 - [x] **Animali per momento**: cinghiale all'alba, orso di pomeriggio (più spesso col fiume), lupi di notte. Di notte ogni passo fa più rumore.
@@ -64,7 +65,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Ambienti per bioma**: vento gelido al nord, insetti e rane in palude, onde e pappagalli ai tropici, vento secco nel deserto.
 
 ## Comandi
-- [ ] **Mouse e touch**: in mare si guida solo da tastiera; servono comandi cliccabili (e per il telefono) per rotta, vele, cannocchiale e sbarco.
+- [ ] **Mouse e touch**: in mare si guida solo da tastiera; servono comandi cliccabili (e per il telefono) per rotta, vele, binocolo e sbarco.
 
 ## Pubblicazione
 - [x] Gioco online su GitHub Pages: https://gabrielemartire.github.io/una-spedizione-ornitologica/

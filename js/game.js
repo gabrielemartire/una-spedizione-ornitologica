@@ -435,7 +435,7 @@ const Gioco = (() => {
     };
     s = null;
     initUi();
-    note("Salpi dal Forte. Il taccuino è quasi vuoto, la ciurma costa " + CREW_PAY + " monete al giorno.", "ship");
+    note("Salpi dal Forte.", "ship");
     Mare.enter();
   }
 
@@ -547,7 +547,7 @@ const Gioco = (() => {
     const points = Math.min(MAX_HP - trip.hp, Math.floor(trip.money / HEAL_COST));
     trip.hp += points;
     trip.money -= points * HEAL_COST;
-    pay(`Guaritore (${city.name}), +${points} vita`, points * HEAL_COST);
+    pay("guaritore", points * HEAL_COST);
     Suoni.play("monete");
     cityOverlay(city);
     renderStatus();
@@ -697,7 +697,7 @@ const Gioco = (() => {
       return false;
     }
     trip.money -= CREW_PAY;
-    pay("Paga della ciurma", CREW_PAY);
+    pay("ciurma", CREW_PAY);
     showDayBanner();
     Suoni.play("monete");
     return true;
@@ -1015,7 +1015,7 @@ const Gioco = (() => {
     el = {
       map: $("map"), mapWrap: $("map-wrap"), sea: $("sea-view"), overlay: $("map-overlay"), banner: $("phase-banner"),
       status: $("status"), keys: $("keys"), toast: $("toast"), tileInfo: $("tile-info"),
-      postcard: $("postcard"), miniGlobe: $("globe-mini"), explorer: $("mb-explorer"),
+      postcard: $("postcard"), explorer: $("mb-explorer"),
     };
     el.overlay.hidden = true;
     el.banner.hidden = true;
@@ -1028,7 +1028,7 @@ const Gioco = (() => {
 
   const KEYS_HELP = {
     land: "frecce/WASD muovi · spazio osserva · Invio aspetta · ⚓ torna a bordo · Tab diario · Esc menu",
-    sea: "← → rotta · ↑ ↓ vele · T cannocchiale · Invio sbarca o attracca · Tab diario · Esc menu",
+    sea: "← → rotta · ↑ ↓ vele · T binocolo · Invio sbarca o attracca · Tab diario · Esc menu",
   };
 
   // A terra il riquadro A è la battlemap, in mare è il globo
@@ -1036,7 +1036,6 @@ const Gioco = (() => {
     const land = mode === "land";
     el.mapWrap.hidden = !land;
     el.sea.hidden = land;
-    el.miniGlobe.hidden = !land;
     el.keys.textContent = KEYS_HELP[land ? "land" : "sea"];
     el.tileInfo.textContent = "";
     el.overlay.hidden = true;
@@ -1167,7 +1166,6 @@ const Gioco = (() => {
 
     renderStatus();
     Diario.renderStrip();
-    if (el.miniGlobe && !el.miniGlobe.hidden) Mare.drawMini(el.miniGlobe);
   }
 
   // Il riquadro B: il momento del giorno, soldi, vita e, a terra, rumore e animali

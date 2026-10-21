@@ -1,6 +1,6 @@
 # Una spedizione ornitologica · Documento di design
 
-> Versione 0.2 · ottobre 2026 · documento vivo, cambia mentre il gioco prende forma.
+> Versione 0.2.1 · ottobre 2026 · documento vivo, cambia mentre il gioco prende forma.
 
 ---
 
@@ -65,8 +65,8 @@ Tutto sta in **una schermata senza scorrere**, anche su un portatile da 13" (cir
 │                                     │  D · CARTOLINA        │
 │          A · BATTLEMAP              │                       │
 │        (o il globo, in mare)        ├───────────────────────┤
-│                                     │  B · mini globe       │
-│                                     │      giorno · ☀ ☾     │
+│                                     │  B · giorno · ☀ ☾     │
+│                                     │                       │
 ├────────────────────── ▼ ▼ ▼ ▼ ▼ ▼ ──┤      monete · vita    │
 │  C · DIARIO (ultime 3 note)         │      rumore · animali │
 └─────────────────────────────────────┴───────────────────────┘
@@ -75,11 +75,13 @@ Tutto sta in **una schermata senza scorrere**, anche su un portatile da 13" (cir
 | Riquadro | Contenuto | Note |
 |---|---|---|
 | **A** Battlemap | La zona in cui sei sbarcato, a griglia, con icone | In mare mostra il globo grande. Sotto: che cosa c'è nella casella indicata ("Erba alta · si passa · ti nasconde") e i tasti |
-| **B** Stato | Mini globo (a terra), giorno e i tre momenti, monete, vita; a terra rumore e animali, in mare rotta, vele e traversata | |
+| **B** Stato | Giorno e i tre momenti, monete, vita; a terra rumore e animali, in mare rotta, vele e traversata | |
 | **C** Diario | Una pagina di carta con le ultime 3 note utili | Le linguette rosse biforcute aprono il taccuino intero (§ 12) |
-| **D** Cartolina | Il panorama della zona in pixel art, visto da una persona in piedi | In mare: il mare dal ponte; col cannocchiale: la costa |
+| **D** Cartolina | Il panorama della zona in pixel art, visto da una persona in piedi | In mare: il mare dal ponte; col binocolo: la costa |
 
-**Niente titoli sui riquadri.** In alto una **barra menu** in stile anni '90: *Spedizione* (tendina: torna al menu principale, nuova spedizione), *Diario*, *Suoni*; a destra il nome dell'esploratore e la **versione** del gioco. In partita **Esc** apre la tendina invece di uscire, per non perdere il viaggio per sbaglio.
+**Niente titoli sui riquadri.** In alto una **barra menu** in stile anni '90: *Spedizione* (tendina: torna al menu principale, nuova spedizione, suoni), *Diario*, *Suoni*; a destra il nome dell'esploratore e la **versione** del gioco. In partita **Esc** apre la tendina invece di uscire, per non perdere il viaggio per sbaglio.
+
+**Si gioca tutto con la tastiera.** Frecce/WASD a terra e in mare, T binocolo, Invio, Tab diario, Esc tendina (↑ ↓ e Invio dentro), ↑ ↓ e Invio nelle scelte che compaiono sulla mappa. Il mouse è un aiuto, non serve.
 
 **Avvisi e diario sono separati.** Quello che succede adesso ("l'orso ti ha fiutato", "troppo lontano") è un avviso che compare sulla mappa e sparisce. Nel diario finisce solo ciò che serve ricordare: uccelli osservati, tracce, uccelli volati via.
 
@@ -87,13 +89,13 @@ Tutto sta in **una schermata senza scorrere**, anche su un portatile da 13" (cir
 
 **Generazione.** Ogni spedizione genera un **pianeta piccolo**: un'isola grande (la foresta del Forte) e **11–13 isole sparse su tutta la sfera**, da un seed, su una texture di 360 × 180 gradi. **Il bioma di ogni isola dipende dalla latitudine**: ghiaccio verso i poli, taiga, foresta e palude alle medie latitudini, tropicale e deserto verso l'equatore. Ogni isola è divisa in **zone** (punti distanti almeno 9°, ognuno con il suo territorio); ogni zona ha un seed e dei tag (§ 7), quindi la stessa cartolina e la stessa mappa a ogni visita. Le zone ricordano se il loro uccello è già stato osservato o è volato via. **Non tutti i biomi sono presenti in ogni partita**: alcuni uccelli in certi viaggi semplicemente non ci sono.
 
-**Navigazione (tempo reale).** In mare il riquadro A mostra il globo grande; a terra il riquadro B ne mostra uno piccolo.
+**Navigazione (tempo reale).** In mare il riquadro A mostra il globo grande; a terra il globo non c'è.
 - ← → cambiano la rotta, ↑ ↓ le vele (4 livelli). Indicatori di rotta in gradi e punti cardinali.
 - La sfera, in pixel art con luce, ombra e atmosfera sul bordo, **ruota sotto la nave**, che resta al centro con la sua scia.
 - Mari profondi e bassi fondali, spiagge, prati, boschi, colline; rocce e neve dove la zona ha le montagne. I confini delle zone sono appena segnati.
 - La costa ferma la nave. **Vicino alla costa** (≈2,4°) la zona si illumina: **Invio sbarca** (gratis). Vicino a una città, Invio attracca in porto.
 
-**Cannocchiale (T).** In navigazione, entro ≈12° da una costa, il cannocchiale mostra **la cartolina di quella zona senza sbarcare**, dentro una lente con gli angoli scuri. Premere di nuovo T non fa nulla: per riporlo basta allontanarsi dalla costa. **Se circumnavighi l'isola, mostra via via la costa successiva.** La cartolina diventa lo strumento per decidere dove attraccare: c'è un fiume (e quindi forse un orso)? un lago? un vulcano? Sbarcare è gratis, ma ripartire costa tempo: conviene guardare prima.
+**Binocolo (T).** In alto a sinistra sul globo c'è sempre un binocolo chiaro con scritto *usa binocolo (T)*: si accende e pulsa quando c'è una costa da guardare, perché chi gioca capisca che è lo strumento principale. Entro ≈12° da una costa, il binocolo mostra **la cartolina di quella zona senza sbarcare**, dentro una lente con gli angoli scuri. Premere di nuovo T non fa nulla: per riporlo basta allontanarsi dalla costa. **Se circumnavighi l'isola, mostra via via la costa successiva.** La cartolina diventa lo strumento per decidere dove attraccare: c'è un fiume (e quindi forse un orso)? un lago? un vulcano? Sbarcare è gratis, ma ripartire costa tempo: conviene guardare prima.
 
 **Segni sul globo.** Le zone visitate restano segnate: **✓ nera** se ne hai osservato l'uccello (lì non comparirà altro), **?** se ci sei stato senza vederlo, **✗ rossa** se ti è volato via per sempre. Il vulcano si vede anche dal mare, come un cono scuro con la bocca rossa.
 
@@ -132,7 +134,7 @@ Ogni zona ha **un bioma** e **0–3 caratteristiche**. Insieme formano i **tag**
 | Foresta di funghi | viola, crema | fantastico, raro |
 
 **Caratteristiche:** `fiume` (con o senza `cascata`), `lago`, oppure nessuna acqua; `rovine`, `villaggio`, `colline`, `montagne`; rari, al massimo uno per globo: `castello` e `vulcano`.
-- **Fiume:** non c'è sempre; dove c'è, di giorno **l'orso è molto più probabile**. Col cannocchiale si valuta se vale la pena attraccare.
+- **Fiume:** non c'è sempre; dove c'è, di giorno **l'orso è molto più probabile**. Col binocolo si valuta se vale la pena attraccare.
 - **Lago:** tondo, profondo nel mezzo; nelle isole ghiacciate è gelato e ci si cammina sopra.
 - **Vulcano:** una colata di lava (non si attraversa) e rocce nere; il calore scioglie il ghiaccio della zona. *(v2: tutta l'isola diventa di un bioma più caldo.)*
 - **Castello:** al margine della mappa, mura, fossato e **un ponte tra due bandiere** che porta al ponte levatoio, ben visibile. Per ora è chiuso; entrarci (una nuova battlemap) è in v2.
@@ -290,13 +292,16 @@ Obiettivo: i soldi iniziali bastano per **circa 10 giorni**. Devi vendere presto
 
 ## 12. Il diario (C)
 
-Sotto la mappa c'è il **bordo del diario**: una pagina di carta cucita con le **ultime 3 note**. Dall'alto spuntano le **linguette rosse biforcute** che aprono il taccuino intero (anche con **Tab** o dalla barra menu; ← → cambiano scheda):
+Sotto la mappa c'è il **bordo del diario**: carta vecchia, macchiata ai bordi, senza righe, con le **ultime 3 note** e la firma dell'esploratore in corsivo barocco. Dall'alto spuntano le **linguette rosse biforcute** (passandoci sopra si scuriscono).
 
+Una linguetta, **Tab** o *Diario* nella barra aprono il **taccuino**: un libro aperto con due pagine e la piega in mezzo, **sempre della stessa misura** (si rimpicciolisce solo su schermi troppo piccoli). Le linguette dei capitoli escono da sotto il libro a sinistra, con la coda biforcuta verso fuori. **← →** sfogliano le pagine (finito un capitolo si passa al successivo), **↑ ↓** cambiano capitolo, **Esc** o Tab chiudono. Col mouse: clic sulla pagina sinistra o destra.
+
+Il diario è un diario, non un manuale: niente spiegazioni, se un capitolo è vuoto è vuoto.
 - **Note**: tutto ciò che è stato annotato, con giorno e momento.
-- **Uccelli**: ogni uccello in uno di tre stati: **sconosciuto** (un "?"), **traccia** (la sagoma della specie e un indizio sull'habitat, non sull'ora), **osservato** (a colori, con habitat, ore, curiosità e dove l'hai visto).
-- **Voci**: quelle sentite in taverna, al massimo 2 per spedizione (in arrivo con le taverne).
-- **Ciurma**: paga giornaliera, cassa e registro delle spese.
-- **Zaino**: l'inventario personale (per ora il binocolo).
+- **Uccelli**: per specie, ogni uccello in uno di tre stati: **sconosciuto** (un "?"), **traccia** (la sagoma della specie e un indizio sull'habitat, non sull'ora), **osservato** (a colori, con habitat, ore, curiosità e dove l'hai visto).
+- **Voci**: le note delle voci sentite in taverna (al massimo 2 per spedizione).
+- **Ciurma**: in alto a destra, a penna e di sbieco, *8 monete al giorno*; sotto il registro **pagamenti** a tre colonne (chi · giorno · −monete) con le righe vuote che si riempiono man mano.
+- **Zaino**: la lista degli oggetti (per ora il binocolo).
 - **Stiva**: le cose da vendere (in arrivo con il mercato).
 
 **Le tracce.** Se sbarchi in una zona all'ora sbagliata, o se l'uccello ti vola via per sempre, trovi le sue tracce: diventa una sagoma nel diario. Gli uccelli **rari** non lasciano tracce: di loro si sa solo dalle voci.
