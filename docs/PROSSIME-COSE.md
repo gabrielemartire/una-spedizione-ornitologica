@@ -17,7 +17,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Vignetta notturna**: di notte la mappa più scura lontano dall'esploratore.
 
 ## Fatto di recente
-- [x] **Salvataggio automatico** in localStorage: un refresh non cancella più la spedizione; *Continua la spedizione* nel menu.
+- [x] **Salvataggio automatico** in localStorage: un refresh non cancella più la spedizione; *Continua la spedizione* nel menu. Ricaricare a terra costa un giorno.
 - [x] **Versione 0.2.1**: niente globo a terra; binocolo chiaro in alto a sinistra sul globo (*usa binocolo (T)*); diario su carta vecchia e taccuino come libro aperto a misura fissa, capitoli a sinistra, ← → pagine, ↑ ↓ capitoli; ciurma come registro dei pagamenti; firma in corsivo barocco; si gioca tutto da tastiera.
 - [x] **Versione 0.2**: tutto in una schermata, barra menu in alto, niente titoli sui riquadri, versione nel menu, link a GitHub nei crediti.
 - [x] **Tempo in terzi**: attraccare gratis, ripartire due momenti, aspettare a bordo uno, traversate lunghe uno ogni 60°.
@@ -55,7 +55,6 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] Tarare velocità della nave, lunghezza della traversata che costa un momento (60°), probabilità degli animali.
 
 ## Battlemap
-- [ ] **Refresh a terra**: ricaricando la pagina si torna sulla nave della zona con animali nuovi; si potrebbe usare per scappare da un orso. Se dà fastidio, salvare anche la battlemap.
 - [ ] **Altre creature**: serpente nell'erba, pipistrelli nelle rovine; creature diverse per bioma.
 - [ ] Un **verso per il cinghiale** (oggi usa quello dell'orso).
 - [ ] **Strumenti in uso**: tagliola, carne, petardo, semi, mantella.

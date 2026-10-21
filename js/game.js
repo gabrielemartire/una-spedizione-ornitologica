@@ -16,6 +16,7 @@ const Gioco = (() => {
   const DEPART_COST = 2;
   const SAVE_KEY = "spedizione-ornitologica:partita";
   const NOTEBOOK_KEY = "spedizione-ornitologica:taccuino";
+  const REFRESH_COST = 3;     // momenti persi ricaricando la pagina a terra: un giorno
   let lastSave = 0;      // ripartire costa due momenti: si arriva sempre col momento precedente
   const TIME_ICONS = { alba: "sunrise", pomeriggio: "sun", notte: "moon" };
   const SLIDE_MS = 110;       // durata dello scivolamento di una pedina
@@ -475,7 +476,8 @@ const Gioco = (() => {
     try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* niente da cancellare */ }
   }
 
-  // Si riparte da dove eri: in mare nello stesso punto, a terra di nuovo sulla nave della stessa zona, in città in porto
+  // Si riparte da dove eri: in mare nello stesso punto, in città in porto, a terra di nuovo sulla nave
+  // della stessa zona ma un giorno dopo
   function resume() {
     const data = loadSave();
     if (!data) return false;
@@ -487,8 +489,12 @@ const Gioco = (() => {
       initUi();
       const zone = world.zones.find((z) => z.id === trip.landZone);
       const city = world.cities.find((c) => c.id === trip.city);
-      if (trip.mode === "land" && zone) landAt(zone, { waited: true });
-      else {
+      if (trip.mode === "land" && zone) {
+        // Ricaricare a terra costa un giorno intero: niente fughe dagli orsi col refresh
+        if (!advance(REFRESH_COST)) return true;
+        landAt(zone, { waited: true });
+        toast("Hai perso un giorno: ti risvegli sulla nave.");
+      } else {
         Mare.enter();
         if (data.mode === "city" && city) { Mare.stop(); visitCity(city); }
       }
