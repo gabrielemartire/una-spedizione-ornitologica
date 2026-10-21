@@ -54,5 +54,6 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Mouse e touch**: in mare si guida solo da tastiera; servono comandi cliccabili (e per il telefono) per rotta, vele, cannocchiale e sbarco.
 
 ## Pubblicazione
-- [ ] Mettere il gioco online su Cloudflare Pages.
+- [x] Gioco online su GitHub Pages: https://gabrielemartire.github.io/una-spedizione-ornitologica/
+- [ ] Più avanti: Cloudflare Pages con un dominio.
 - [ ] Scegliere una licenza per il codice.

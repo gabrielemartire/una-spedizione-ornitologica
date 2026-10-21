@@ -6,6 +6,8 @@
 
 <p align="center"><em>Isole, nebbie e piume. A turni.</em></p>
 
+<p align="center"><a href="https://gabrielemartire.github.io/una-spedizione-ornitologica/"><strong>▶ Gioca nel browser</strong></a></p>
+
 ---
 
 **Anno 1500.** Hai un binocolo, un taccuino quasi vuoto e abbastanza monete per pagare la ciurma per una decina di giorni.
