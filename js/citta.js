@@ -1,8 +1,9 @@
 // Le città sono battlemap senza animali: la banchina con le navi, le strade, le case e la gente
 // che va e viene. La città è disegnata in pixel art vista dall'alto (tetti a falde, ciottoli,
 // mura); sopra restano solo le cose con cui si interagisce, ben visibili: le porte delle botteghe
-// (→) con la loro insegna, i barili, le persone. Il Forte è grande e murato, con il castello e la
-// chiesa; il porticciolo del fiordo, su un'isola di ghiaccio, è più piccolo e ha il falegname.
+// (→) con la loro insegna, i barili, le persone. Davanti a una porta, in basso, un cartellino dice
+// cos'è. Il Forte è grande e murato, con il castello e la chiesa; il porticciolo del fiordo, su
+// un'isola di ghiaccio, è più piccolo e ha il falegname, che lavora sulla banchina.
 // In città il tempo non passa, tranne dormendo in taverna.
 // Espone l'oggetto globale `Citta`.
 const Citta = (() => {
@@ -41,12 +42,11 @@ const Citta = (() => {
       taverna: { cost: 7 },
       mercato: { price: 4, refuse: ["arte"] },
       emporio: {},
-      falegname: {},
     },
   };
   const SHOP_INFO = {
     medico: ["Medico", "medicine"], taverna: ["Taverna", "tankard"], mercato: ["Mercato", "shop"],
-    emporio: ["Emporio", "locked"], falegname: ["Falegname", "hammer"],
+    emporio: ["Emporio", "locked"],
   };
 
   const GROG = "«Il grog è un miscuglio segreto che contiene una o più di queste sostanze: cherosene, glicol propilene, dolcificanti artificiali, acido solforico, rum, acetone, colorante rosso n.2, detriti, grasso per motore, acido per la batteria e/o peperone. Come puoi ben immaginare è una delle sostanze più caustiche e volatili conosciute dall'uomo.»";
@@ -239,12 +239,14 @@ const Citta = (() => {
     placeShop(m, "medico", { x: 10, y: 4 }, roads);
     placeShop(m, "taverna", { x: 10, y: 9 }, roads);
     placeShop(m, "mercato", { x: 10, y: 13 }, roads);
-    placeShop(m, "falegname", { x: 10, y: 17 }, roads);
-    placeShop(m, "emporio", { x: 10, y: 21 }, roads);
+    placeShop(m, "emporio", { x: 10, y: 19 }, roads);
     const ship = { x: 5, y: 12 };
     set(ship.x, ship.y, "ship");
     set(ship.x + 1, ship.y, "quay"); // davanti alla nave non ci va mai niente
-    return { ...m, ship, start: { x: 6, y: 12 }, people: 6, walkable: ["quay", "road"] };
+    // il falegname lavora in fondo alla banchina, accanto alle sue casse, vicino a un peschereccio
+    const carpenter = { x: 6, y: 20 };
+    set(carpenter.x, carpenter.y, "quay");
+    return { ...m, ship, carpenter, start: { x: 6, y: 12 }, people: 6, walkable: ["quay", "road"] };
   }
 
   // --- Il disegno in pixel art ---
@@ -376,7 +378,7 @@ const Citta = (() => {
     c = { city, ...plan, player: { ...plan.start }, npcs: [], open: null, prev: null, near: null };
     // la gente: sulle strade e sulla banchina, mai addosso a te
     const spots = [];
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (plan.walkable.includes(c.map[y][x])) spots.push({ x, y });
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (plan.walkable.includes(c.map[y][x]) && !(plan.carpenter && same(plan.carpenter, { x, y }))) spots.push({ x, y });
     const ra = Math.random;
     for (let i = 0; i < plan.people && spots.length; i++) {
       const at = spots.splice(Math.floor(ra() * spots.length), 1)[0];
@@ -384,6 +386,8 @@ const Citta = (() => {
     }
     // a volte qualcuno col punto esclamativo: ti aspetta fermo, e non si sa mai cosa vuole
     if (ra() < EVENT_CHANCE && c.npcs.length) c.npcs[0].event = true;
+    // il falegname non si muove dal suo posto
+    if (plan.carpenter) c.npcs.push({ ...plan.carpenter, carpenter: true });
     Gioco.showView("city");
     build();
     drawPostcard();
@@ -398,6 +402,7 @@ const Citta = (() => {
 
   function leave() {
     clearInterval(timer);
+    hint(null);
     c = null;
   }
 
@@ -439,7 +444,7 @@ const Citta = (() => {
     };
     c.playerEl = pawn("e-player", "binoculars");
     for (const n of c.npcs) {
-      n.el = pawn(n.event ? "e-npc e-event" : "e-npc", "person");
+      n.el = pawn(n.event ? "e-npc e-event" : n.carpenter ? "e-npc e-carpenter" : "e-npc", n.carpenter ? "hammer" : "person");
       if (n.event) n.el.dataset.intent = "!";
     }
     Gioco.fitMap();
@@ -457,7 +462,7 @@ const Citta = (() => {
   function stroll() {
     if (!c || Gioco.trip.mode !== "city" || !document.body.classList.contains("in-game")) return;
     for (const n of c.npcs) {
-      if (n.event || Math.random() < 0.35) continue;
+      if (n.event || n.carpenter || Math.random() < 0.35) continue;
       const [dx, dy] = DIRS[Math.floor(Math.random() * 4)];
       const to = { x: n.x + dx, y: n.y + dy };
       if (!inside(to.x, to.y) || !c.walkable.includes(c.map[to.y][to.x])) continue;
@@ -473,6 +478,7 @@ const Citta = (() => {
     const shop = doorAt(p) || Object.entries(c.doors).find(([, d]) => same(d.sign, p))?.[0];
     const t = tileAt(p.x, p.y);
     Gioco.el.tileInfo.textContent = shop ? `${SHOP_INFO[shop][0]} · entra dalla porta` : t === TILES.ship ? "La tua nave · riparti"
+      : c.carpenter && same(c.carpenter, p) ? "Il falegname · parlaci"
       : t.talk ? `${t.name} · c'è una nota` : `${t.name} · ${t.walk ? "si passa" : "non si passa"}`;
   }
 
@@ -484,6 +490,7 @@ const Citta = (() => {
     const t = tileAt(to.x, to.y);
     const npc = c.npcs.find((n) => same(n, to));
     if (npc?.event) { meet(npc); return; }
+    if (npc?.carpenter) { hint(null); talkCarpenter(); return; }
     if (npc) { if (Math.random() < 0.3) Gioco.toast(["«Permesso!»", "«Attento a dove metti i piedi.»", "«Ehi, marinaio!»"][Math.floor(Math.random() * 3)]); return; }
     if (t.talk) { readBarrel(); return; }
     if (!t.walk) return;
@@ -493,35 +500,84 @@ const Citta = (() => {
     tileInfo(to);
     render();
     const shop = doorAt(to);
-    if (shop) { openShop(shop); return; }
-    if (t === TILES.ship) { aboard(); return; }
-    // davanti all'entrata, la bottega si presenta
-    const front = Object.entries(c.doors).find(([, d]) => same(d.front, to))?.[0];
-    if (front && front !== c.near) Gioco.toast(`${SHOP_INFO[front][0]}: la porta è qui accanto.`);
-    c.near = front || null;
+    if (shop) { hint(null); openShop(shop); return; }
+    if (t === TILES.ship) { hint(null); aboard(); return; }
+    nearby();
+  }
+
+  // --- Il cartellino in basso: davanti a una porta (o accanto al falegname) dice cosa c'è e dove andare ---
+
+  const ARROW = { "1,0": "→", "-1,0": "←", "0,1": "↓", "0,-1": "↑" };
+  const way = (from, to) => ARROW[`${to.x - from.x},${to.y - from.y}`];
+
+  function shopLine(kind) {
+    const shop = SHOPS[c.city.id][kind];
+    if (kind === "medico") return `cura le ferite${shop.cap > Gioco.MAX_HP ? " e dà un cuore in più" : ""} · ${shop.cost} m.o.`;
+    if (kind === "taverna") return `si dorme fino all'alba e si sentono storie · ${shop.cost} m.o.`;
+    if (kind === "mercato") return `compra la merce della stiva · ${shop.price} m.o. al pezzo`;
+    return "chiuso";
+  }
+
+  function nearby() {
+    const p = c.player;
+    const front = Object.entries(c.doors).find(([, d]) => same(d.front, p));
+    if (front) { const [kind, d] = front; hint(`<b>${SHOP_INFO[kind][0]}</b> · ${shopLine(kind)} <kbd>${way(p, d)}</kbd> entra`); return; }
+    const k = c.carpenter && Math.abs(c.carpenter.x - p.x) + Math.abs(c.carpenter.y - p.y) === 1;
+    hint(k ? `<b>Falegname</b> · ripara le barche, ha l'aria di uno che parla volentieri <kbd>${way(p, c.carpenter)}</kbd> parla` : null);
+  }
+
+  function hint(html) {
+    const el = document.getElementById("city-hint");
+    if (!el) return;
+    el.hidden = !html;
+    if (html) el.innerHTML = html;
   }
 
   // Si esce dalla bottega tornando in strada, dove eri
   function back() {
     c.open = null;
+    c.typing = null;
     Gioco.el.overlay.hidden = true;
     if (c.prev && doorAt(c.player)) Object.assign(c.player, c.prev);
     render();
+    nearby();
   }
 
   // --- Dialoghi: un riquadro con la domanda e le risposte ---
 
-  function dialog(title, text, buttons, open = "dialog") {
-    c.open = open;
+  // Chi parla ha la vocina e le parole compaiono una alla volta; Invio le fa comparire tutte,
+  // poi arrivano le risposte. Le descrizioni (barili, porte chiuse, la nave) non hanno voce.
+  function dialog(title, text, buttons, { voice = true } = {}) {
+    c.open = "dialog";
     const ov = Gioco.el.overlay;
-    ov.innerHTML = `<h3>${title}</h3><p>${text}</p>
-      <nav class="menu">${buttons.filter(Boolean).map(([action, label]) => `<button class="menu-item" data-city-action="${action}">${label}</button>`).join("")}</nav>`;
+    ov.innerHTML = `<h3>${title}</h3><p class="talk-text"></p>
+      <nav class="menu" hidden>${buttons.filter(Boolean).map(([action, label]) => `<button class="menu-item" data-city-action="${action}">${label}</button>`).join("")}</nav>`;
     ov.hidden = false;
-    ov.querySelector(".menu-item").focus();
+    document.activeElement?.blur();
+    const nav = ov.querySelector(".menu");
+    type(ov.querySelector(".talk-text"), text, voice, () => {
+      nav.hidden = false;
+      nav.querySelector(".menu-item").focus();
+    });
+  }
+
+  // Le parole che compaiono una alla volta; c.typing.finish() le scrive tutte subito
+  function type(node, text, voice, done) {
+    let i = 0, timer = 0;
+    const end = () => { clearTimeout(timer); node.textContent = text; c.typing = null; done(); };
+    const tick = () => {
+      if (!c || !c.typing) return;
+      node.textContent = text.slice(0, ++i);
+      if (voice && i % 2 === 0 && text[i - 1] !== " ") Suoni.play("voce");
+      if (i < text.length) timer = setTimeout(tick, TYPE_MS);
+      else end();
+    };
+    c.typing = { finish: end, skippable: c.open !== "falegname" };
+    tick();
   }
 
   function readBarrel() {
-    dialog("Un barile", "Sul barile c'è una nota attaccata con un chiodo. Vuoi leggerla?", [["grog", "Leggi la nota"], ["back", "Lascia stare"]]);
+    dialog("Un barile", "Sul barile c'è una nota attaccata con un chiodo. Vuoi leggerla?", [["grog", "Leggi la nota"], ["back", "Lascia stare"]], { voice: false });
   }
 
   // Il punto esclamativo: o ti rapina, o ti mette in mano qualcosa di strano
@@ -574,10 +630,8 @@ const Citta = (() => {
         ...items,
         ["back", "Esci"],
       ]);
-    } else if (kind === "falegname") {
-      talkCarpenter();
     } else {
-      dialog("Emporio", "La porta è chiusa. Un cartello: «Torno presto».", [["back", "Esci"]]);
+      dialog("Emporio", "La porta è chiusa. Un cartello: «Torno presto».", [["back", "Esci"]], { voice: false });
     }
   }
 
@@ -588,6 +642,7 @@ const Citta = (() => {
     c.talk = { step: 0, typing: false };
     const ov = Gioco.el.overlay;
     ov.innerHTML = `<h3>Falegname</h3><div class="talk-log"></div><nav class="menu talk-choice"></nav>`;
+    document.activeElement?.blur();
     ov.hidden = false;
     nextLine();
   }
@@ -617,20 +672,10 @@ const Citta = (() => {
     p.innerHTML = `<b>${who}:</b> <span></span>`;
     log.appendChild(p);
     const span = p.querySelector("span");
-    log.scrollTop = log.scrollHeight;
     c.talk.step++;
-    if (!typed) { span.textContent = text; nextLine(); return; }
+    if (!typed) { span.textContent = text; log.scrollTop = log.scrollHeight; nextLine(); return; }
     c.talk.typing = true;
-    let i = 0;
-    const tick = () => {
-      if (!c || c.open !== "falegname") return;
-      span.textContent = text.slice(0, ++i);
-      if (i % 2 === 0 && text[i - 1] !== " ") Suoni.play("voce");
-      log.scrollTop = log.scrollHeight;
-      if (i < text.length) setTimeout(tick, TYPE_MS);
-      else { c.talk.typing = false; nextLine(); }
-    };
-    tick();
+    type(span, text, true, () => { c.talk.typing = false; log.scrollTop = log.scrollHeight; nextLine(); });
   }
 
   // --- Le azioni delle botteghe ---
@@ -676,7 +721,7 @@ const Citta = (() => {
     dialog("La tua nave", `Giorno ${Gioco.day()}, ${Gioco.now()} · ${Gioco.trip.money} m.o.`, [
       ["sail", `Riparti <small>(due momenti: sarà ${Gioco.timeOf(Gioco.trip.third + 2)})</small>`],
       ["back", "Resta in città"],
-    ]);
+    ], { voice: false });
   }
 
   // --- Comandi ---
@@ -695,11 +740,17 @@ const Citta = (() => {
     move(...MOVES[k]);
   });
 
-  // Col falegname non si scappa: niente Esc, niente diario, e Invio non salta le sue parole
+  // Mentre qualcuno parla, Invio (o spazio) fa comparire subito tutte le parole; col falegname
+  // invece non si scappa: niente Esc, niente diario, e le sue parole non si saltano
   window.addEventListener("keydown", (e) => {
-    if (!c || c.open !== "falegname") return;
-    if (e.key === "Enter" && !c.talk.typing) return;
-    if (e.key === "Escape" || e.key === "Tab" || e.key === "Enter") { e.preventDefault(); e.stopImmediatePropagation(); }
+    if (!c || !c.open) return;
+    const block = ["Enter", " ", "Escape", "Tab"];
+    if (c.typing && block.includes(e.key)) {
+      if ((e.key === "Enter" || e.key === " ") && c.typing.skippable) c.typing.finish();
+      if (e.key !== "Escape" || c.open === "falegname") { e.preventDefault(); e.stopImmediatePropagation(); }
+      return;
+    }
+    if (c.open === "falegname" && (e.key === "Escape" || e.key === "Tab")) { e.preventDefault(); e.stopImmediatePropagation(); }
   }, true);
 
   document.addEventListener("click", (e) => {
@@ -708,7 +759,7 @@ const Citta = (() => {
     if (action === "back") back();
     else if (action === "heal") heal();
     else if (action === "sleep") sleep();
-    else if (action === "grog") dialog("La nota sul barile", GROG, [["back", "Rimetti a posto la nota"]]);
+    else if (action === "grog") dialog("La nota sul barile", GROG, [["back", "Rimetti a posto la nota"]], { voice: false });
     else if (action === "say" && !c.talk.typing) say(Gioco.trip.explorer, RODITORE[c.talk.step][1], false);
     else if (action === "sellall") {
       const refuse = SHOPS[c.city.id].mercato.refuse;

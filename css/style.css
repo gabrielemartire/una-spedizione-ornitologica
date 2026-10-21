@@ -125,11 +125,13 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .col-side { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 8px; min-height: 0; align-content: start; }
 
 .panel { border: 1px solid var(--dark); padding: 6px 10px; min-width: 0; min-height: 0; }
-.panel-a { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 4px; }
+/* Colonne e righe esplicite: un testo lungo sotto la mappa (il tipo di terreno) non deve allargare
+   il riquadro, altrimenti la mappa si rifà le misure e sembra zoomare */
+.panel-a { display: grid; grid-template-rows: minmax(0, 1fr) auto; grid-template-columns: minmax(0, 1fr); gap: 4px; }
 .panel-d { padding: 6px; }
 .panel-b { overflow: hidden; }
-.panel-foot { display: flex; justify-content: space-between; gap: 12px; font-size: 17px; min-height: 1.1em; }
-.tile-info { color: var(--mid); white-space: nowrap; }
+.panel-foot { display: flex; justify-content: space-between; gap: 12px; font-size: 17px; height: 1.2em; overflow: hidden; }
+.tile-info { color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 
 /* La barra del menu, in stile anni '90 */
 .menubar {
@@ -169,8 +171,9 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .mb-right #mb-explorer { color: var(--mid); }
 .version { color: var(--dark); font-size: 18px; margin: 0; }
 
-.view-wrap { position: relative; min-height: 0; display: grid; }
-.map-wrap { display: grid; place-content: center; min-height: 0; height: 100%; overflow: hidden; }
+.view-wrap { position: relative; min-height: 0; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
+/* contain: size: la misura del riquadro non dipende mai dalla mappa che ci sta dentro */
+.map-wrap { display: grid; place-content: center; min-height: 0; min-width: 0; height: 100%; overflow: hidden; contain: size; }
 .map-wrap[hidden], .sea-view[hidden] { display: none; }
 .sea-view { display: grid; justify-items: center; align-content: center; gap: 6px; min-height: 0; }
 .sea-view canvas { display: block; image-rendering: pixelated; }
@@ -231,9 +234,10 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .cc-barrel { color: #e8b46a; filter: drop-shadow(0 0 3px rgba(242, 194, 48, 0.8)); }
 .e-npc { color: #e8dcc0; filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000); }
 .e-npc.e-event { color: var(--bird); }
+.e-npc.e-carpenter { color: #e8a040; }
 .e-merchant { color: #e8a040; filter: drop-shadow(0 0 2px #000); }
 .cell.item .ic { opacity: 1; color: var(--bird); filter: drop-shadow(0 0 3px var(--bird)); }
-.talk-log { max-height: 40vh; overflow-y: auto; text-align: left; max-width: 640px; margin: 0 auto; }
+.talk-log { max-height: 30vh; overflow-y: auto; }
 .talk-log p { margin: 6px 0; }
 .talk-log b { color: var(--bird); font-weight: normal; }
 /* In città la cartolina è verticale: si prende tutta l'altezza della colonna */
@@ -320,18 +324,32 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .phase-banner.is-day { color: var(--paper); font-size: 40px; }
 @keyframes banner-in { from { opacity: 0; transform: translate(-50%, -8px); } }
 
+/* I dialoghi: una finestrella in basso, sopra a tutto, che si manda avanti con Invio */
 .map-overlay {
   position: absolute;
-  inset: 0;
-  display: grid;
-  place-content: center;
-  text-align: center;
-  background: rgba(15, 26, 18, 0.88);
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  z-index: 20;
+  width: min(640px, 94%);
+  max-height: 45%;
+  overflow-y: auto;
+  padding: 8px 16px 10px;
+  text-align: left;
+  background: rgba(10, 16, 12, 0.96);
+  border: 3px double var(--mid);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.6);
 }
 .map-overlay[hidden] { display: none; }
-.map-overlay h3 { margin: 0; font-size: 36px; font-weight: normal; color: var(--bird); }
+.map-overlay h3 { margin: 0; font-size: 22px; font-weight: normal; color: var(--bird); }
+.map-overlay p { margin: 2px 0 6px; line-height: 1.15; }
+.map-overlay .menu { justify-items: start; margin-top: 2px; gap: 0; }
+.map-overlay .menu[hidden] { display: none; }
+.map-overlay .menu-item { padding: 1px 8px; text-align: left; }
 .map-overlay small { color: var(--mid); }
 .map-overlay .menu-item:focus small, .map-overlay .menu-item:hover small { color: var(--paper); }
+.talk-more { float: right; color: var(--bird); animation: talk-blink 0.8s steps(2) infinite; }
+@keyframes talk-blink { 50% { opacity: 0; } }
 
 /* Gli avvisi che spariscono da soli: quello che succede adesso, non da ricordare */
 .toast {
@@ -348,6 +366,25 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
   z-index: 5;
 }
 .toast[hidden] { display: none; }
+/* In città, davanti a una porta: cos'è e da che parte si entra. Il toast, se c'è, sale sopra */
+.city-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 90%;
+  padding: 2px 12px;
+  background: rgba(10, 16, 12, 0.94);
+  border: 1px solid var(--mid);
+  color: var(--paper);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 4;
+}
+.city-hint[hidden] { display: none; }
+.city-hint b { color: var(--bird); font-weight: normal; }
+.city-hint kbd { font: inherit; color: var(--bird); border: 1px solid var(--mid); padding: 0 4px; margin: 0 2px 0 8px; }
+.city-hint:not([hidden]) ~ .toast { bottom: 40px; }
 .toast.is-in { animation: banner-in 0.2s ease-out; }
 
 .status { display: grid; gap: 2px; }
@@ -413,7 +450,8 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
   padding: 6px 14px;
   border-radius: 2px;
   box-shadow: 3px 3px 0 #8a6a40;
-  min-height: 5.2em;
+  height: 5.2em;      /* fissa: se la striscia cresce con le note, la mappa si rimpicciolisce di colpo */
+  overflow: hidden;
 }
 .ds-notes { list-style: none; margin: 0; padding: 0 120px 0 0; font-size: 19px; line-height: 1.12; }
 .ds-notes li { color: #5a4a34; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* una riga per nota: il diario non ruba spazio alla mappa */
