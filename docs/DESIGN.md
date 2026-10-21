@@ -326,6 +326,8 @@ Ogni uccello ha: bioma (o "ovunque"), a volte una caratteristica (cascata, lago,
 
 **Codice del taccuino**: per ora mostrato come `????-????-????-????` *prossimamente*.
 
+**Il taccuino resta salvato.** A fine spedizione il taccuino (nome e uccelli osservati) si salva nel browser: *Riprendi un taccuino* lo userà direttamente, senza reinserire il codice. Il codice serve solo per cambiare browser o dispositivo, o per condividerlo.
+
 **Il codice** (senza server):
 
 | Parte | Bit |

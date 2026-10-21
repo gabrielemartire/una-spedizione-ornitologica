@@ -15,6 +15,7 @@ const Gioco = (() => {
   const CREW_PAY = 8;         // la paga giornaliera della ciurma
   const DEPART_COST = 2;
   const SAVE_KEY = "spedizione-ornitologica:partita";
+  const NOTEBOOK_KEY = "spedizione-ornitologica:taccuino";
   let lastSave = 0;      // ripartire costa due momenti: si arriva sempre col momento precedente
   const TIME_ICONS = { alba: "sunrise", pomeriggio: "sun", notte: "moon" };
   const SLIDE_MS = 110;       // durata dello scivolamento di una pedina
@@ -457,6 +458,17 @@ const Gioco = (() => {
 
   function loadSave() {
     try { return JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { return null; }
+  }
+
+  // A fine spedizione il taccuino resta nel browser: "Riprendi un taccuino" lo userà senza dover scrivere il codice
+  function saveNotebook() {
+    const seen = UCCELLI.filter((u) => trip.birds[u.id]?.level === "visto").map((u) => u.id);
+    const data = { explorer: trip.explorer, birds: seen, day: day(), date: new Date().toISOString().slice(0, 10) };
+    try { localStorage.setItem(NOTEBOOK_KEY, JSON.stringify(data)); } catch (e) { /* senza memoria resterà il codice */ }
+  }
+
+  function loadNotebook() {
+    try { return JSON.parse(localStorage.getItem(NOTEBOOK_KEY)); } catch (e) { return null; }
   }
 
   function clearSave() {
@@ -1012,6 +1024,7 @@ const Gioco = (() => {
     trip.over = true;
     trip.cause = cause;
     clearSave();
+    saveNotebook();
     Mare.stop();
     if (s) s.over = true;
     Diario.close();
@@ -1302,7 +1315,7 @@ const Gioco = (() => {
 
   // Quello che serve alla navigazione (js/sea.js) e al diario (js/diario.js)
   return {
-    start, resume, save, hasSave: () => !!loadSave(), clearSave, depart, landAt, visitCity, advance, renderStatus, note, toast, timeOf, now, day, showView, iconHtml, fitMap,
+    start, resume, save, hasSave: () => !!loadSave(), clearSave, loadNotebook, depart, landAt, visitCity, advance, renderStatus, note, toast, timeOf, now, day, showView, iconHtml, fitMap,
     get trip() { return trip; },
     get el() { return el; },
     get explorer() { return explorer; },

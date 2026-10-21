@@ -46,7 +46,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 
 ## Fine spedizione
 - [ ] **Attestato PDF** con QR (oggi è un'immagine PNG).
-- [ ] **Codice del taccuino** (Crockford base32, 16 caratteri) e **Riprendi un taccuino** dal menu.
+- [ ] **Codice del taccuino** (Crockford base32, 16 caratteri) e **Riprendi un taccuino** dal menu. Il taccuino di fine partita è già salvato nel browser (`spedizione-ornitologica:taccuino`): Riprendi lo usa senza chiedere il codice, il codice serve per un altro dispositivo.
 
 ## Mondo e navigazione
 - [ ] **Altri biomi**: scogliera, montagna, foresta d'autunno, vulcanica (lava), bosco di cristallo, foresta di funghi.
