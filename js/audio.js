@@ -114,6 +114,8 @@ const Suoni = (() => {
   const effects = {
     // Interfaccia
     blip: () => tone({ freq: 880, dur: 0.05, type: "square", vol: 0.06 }),
+    // la vocina di chi parla: un pir a ogni sillaba, mai uguale
+    voce: () => tone({ freq: 380 + Math.random() * 260, dur: 0.045, type: "square", vol: 0.045 }),
     conferma: () => {
       tone({ freq: 660, dur: 0.07, type: "square", vol: 0.06 });
       tone({ freq: 990, dur: 0.1, type: "square", vol: 0.06, at: 0.07 });

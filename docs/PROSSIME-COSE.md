@@ -3,6 +3,7 @@
 Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è nel [documento di design](DESIGN.md).
 
 ## Priorità
+0. **La lista degli oggetti speciali** (quelli del punto esclamativo): ora sono quattro provvisori.
 1. **Le icone degli uccelli**: le 8 specie usano icone provvisorie di game-icons, in attesa dei disegni.
 2. **Tarare l'economia**: oggetti a 2–4 m.o. bastano a pagare la ciurma? Giocare qualche spedizione.
 3. **Codice del taccuino** e "Riprendi un taccuino" (oggi disattivato nel menu).
@@ -17,6 +18,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Vignetta notturna**: di notte la mappa più scura lontano dall'esploratore.
 
 ## Fatto di recente
+- [x] **Versione 0.3.1**: città in pixel art (tetti a falde, castello, chiesa, vicoli sfalsati), insegne sulle botteghe, barili con la nota del grog, il punto esclamativo (rapina o oggetto speciale), il falegname del porticciolo e il roditore; niente più casse davanti alla nave.
 - [x] **Versione 0.3**: le città sono battlemap (Forte e porticciolo, gente che cammina, botteghe con la porta →: medico, taverna, mercato, emporio chiuso); cartoline verticali delle città; oggetti a terra (rovine sempre, altrove 1 su 3) in stiva; due mercanti per globo che scambiano un oggetto con una voce; voci con la X dorata sul globo; porticciolo sempre su un'isola di ghiaccio; cuore in più dal medico del porticciolo; tenere premuto = correre = più rumore.
 - [x] **51 uccelli in 8 specie**, uno raro per specie; il taccuino è un solo libro con pagine numerate, schede a righe, carta in pixel art, corsivo d'epoca.
 - [x] **Salvataggio automatico** in localStorage: un refresh non cancella più la spedizione; *Continua la spedizione* nel menu. Ricaricare a terra costa un giorno.

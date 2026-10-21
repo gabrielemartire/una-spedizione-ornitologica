@@ -270,7 +270,13 @@ Servono a **vendere al mercato**, ma conviene tenerne qualcuno: **i mercanti** l
 
 ## 10. Le città
 
-Due città per globo, sempre presenti. **Sono battlemap cittadine**: la banchina con le altre navi, le strade, le case, la gente che va e viene (si muove da sola, anche se stai fermo; se le vai addosso brontola). Lungo la strada principale **le botteghe**: la porta ha il simbolo **→** (si entra), ci passi sopra e il padrone ti fa la sua domanda. Per ripartire si torna alla propria nave. In città il tempo non passa, tranne dormendo in taverna.
+Due città per globo, sempre presenti. **La città è disegnata in pixel art vista dall'alto**: tetti a falde di forme diverse (coppi, ardesia, paglia, mattoni; a L, lunghi, stretti) con comignoli e ombre, ciottoli, banchina di assi, mura coi merli. **Sopra, ben visibili, solo le cose con cui si interagisce**: le porte delle botteghe (→) con **l'insegna sul tetto** (medico, taverna, mercato, emporio, falegname), i **barili** (c'è una nota da leggere: la ricetta del grog), le persone. Davanti a una porta la bottega si presenta.
+
+**Il Forte**: mura con le torri, la porta sul mare, la strada principale che fa qualche gomito, vicoli sfalsati, **il quartiere del castello** (mura sue, torri, mastio con la bandiera) e **la piazza con la chiesa** (campanile, pozzo, bancarelle). **Il porticciolo**: la banchina, le case in fila, la neve e gli abeti, e **il falegname** (martello sull'insegna), con cui si fa la conversazione del roditore di *Monkey Island 2*: non si salta, si sceglie l'unica battuta possibile e lui risponde con la vocina, parola per parola.
+
+**Il punto esclamativo.** A volte in città qualcuno ha un **!** sopra la testa e ti aspetta fermo: ci vai e **o ti rapina** (−2…4 m.o.) **o ti dà un oggetto speciale** che finisce nello zaino (lista provvisoria: bussola che punta a sud, lettera sigillata, chiave arrugginita, uovo maculato).
+
+Le città **sono battlemap cittadine**: la banchina con le altre navi, le strade, le case, la gente che va e viene (si muove da sola, anche se stai fermo; se le vai addosso brontola). Lungo la strada principale **le botteghe**: la porta ha il simbolo **→** (si entra), ci passi sopra e il padrone ti fa la sua domanda. Per ripartire si torna alla propria nave. In città il tempo non passa, tranne dormendo in taverna.
 
 | | **Il Forte** (città grande) | **Il porticciolo del fiordo** (città piccola) |
 |---|---|---|

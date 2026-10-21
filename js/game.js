@@ -448,7 +448,7 @@ const Gioco = (() => {
     trip = {
       seed, world, third: 0, money: START_MONEY, hp: MAX_HP, explorer, mode: "sea",
       zones: {}, birds: {}, notes: [], payments: [], departures: 0, seaDist: 0, over: false,
-      hold: [], rumors: [], heard: { taverna: 0, mercante: 0 },
+      hold: [], pack: [], rumors: [], heard: { taverna: 0, mercante: 0 },
       stats: { steps: 0, landings: 0, waits: 0, hits: 0, escapes: 0, islands: new Set() },
       ship: { ...world.start, sails: 0 },
     };
@@ -494,7 +494,7 @@ const Gioco = (() => {
     try {
       const world = makeWorld(data.seed);
       explorer = data.explorer;
-      trip = { hold: [], rumors: [], heard: { taverna: 0, mercante: 0 }, ...data, world, stats: { ...data.stats, islands: new Set(data.stats.islands) } };
+      trip = { hold: [], pack: [], rumors: [], heard: { taverna: 0, mercante: 0 }, ...data, world, stats: { ...data.stats, islands: new Set(data.stats.islands) } };
       s = null;
       initUi();
       const zone = world.zones.find((z) => z.id === trip.landZone);

@@ -220,25 +220,22 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .t-bridge { color: #c8bca4; background: var(--f-deep); }
 .t-flag   { color: #e04a3a; }
 
-/* Le città */
-.c-quay   { color: #8a6a4a; background: #3a2c1e; font-size: 0.7em; }
-.c-road   { color: #7a7468; background: #2a2a26; font-size: 0.7em; }
-.c-square { color: #8a8476; background: #34322c; font-size: 0.7em; }
-.c-snow   { color: #9aa8b4; background: #c8d4dc; font-size: 0.7em; }
-.c-gate   { color: #c8bca4; background: #3a362c; font-size: 0.7em; }
-.c-house  { color: #c9a07a; background: #2e2218; }
-.c-yard   { color: #4a6a3a; background: #1e2a1a; font-size: 0.7em; }
-.c-boat   { color: #e8dcc0; background: var(--f-sea, #1e3a4e); }
-.c-decor  { color: #b08a5a; background: #2a2a26; }
-.c-buoy   { color: #e05a3a; background: #3a2c1e; }
-.c-pine   { color: #2e5a3a; background: #c8d4dc; }
-.c-door   { color: var(--bird); background: #4a3420; }
-.cell.c-door .ic { opacity: 1; }
-.game.in-city .t-sea, .game.in-city .t-ship { background: #1e3a4e; color: #4a7a94; }
-.game.in-city .t-ship { color: #e8dcc0; }
-.e-npc { color: #d8c8a8; filter: drop-shadow(0 0 1px #000); }
+/* Le città: un'immagine in pixel art sotto la griglia; sopra, ben visibili, solo le cose con cui interagire */
+.city-art { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; z-index: 0; pointer-events: none; }
+.cell.cc { background: transparent; z-index: 1; }
+.cell.cc .ic { opacity: 1; }
+.cc-ship { color: #f2e6c8; filter: drop-shadow(0 0 2px #000); }
+.cc-door { color: var(--bird); background: rgba(20, 14, 8, 0.75) !important; box-shadow: inset 0 0 0 1px var(--bird); }
+.cc-sign { color: #f2e6c8; }
+.cc-sign .ic { width: 78%; height: 78%; padding: 2px; background: #3a2414; border: 1px solid var(--bird); border-radius: 2px; filter: drop-shadow(1px 1px 0 #000); }
+.cc-barrel { color: #e8b46a; filter: drop-shadow(0 0 3px rgba(242, 194, 48, 0.8)); }
+.e-npc { color: #e8dcc0; filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000); }
+.e-npc.e-event { color: var(--bird); }
 .e-merchant { color: #e8a040; filter: drop-shadow(0 0 2px #000); }
 .cell.item .ic { opacity: 1; color: var(--bird); filter: drop-shadow(0 0 3px var(--bird)); }
+.talk-log { max-height: 40vh; overflow-y: auto; text-align: left; max-width: 640px; margin: 0 auto; }
+.talk-log p { margin: 6px 0; }
+.talk-log b { color: var(--bird); font-weight: normal; }
 /* In città la cartolina è verticale: si prende tutta l'altezza della colonna */
 .game.in-city .col-side { grid-template-rows: minmax(0, 1fr) auto; }
 .game.in-city .panel-d { display: grid; place-items: center; min-height: 0; }

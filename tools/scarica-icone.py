@@ -76,6 +76,11 @@ ICONS = {
     "shop": "delapouite/shop",
     "locked": "delapouite/locked-door",
     "bed": "delapouite/person-in-bed",
+    "hammer": "lorc/claw-hammer",
+    "church": "delapouite/church",
+    "compass": "lorc/compass",
+    "key": "delapouite/house-keys",
+    "egg": "delapouite/raw-egg",
     # Gli oggetti da trovare e vendere
     "sword": "lorc/broadsword",
     "chalice": "lorc/jeweled-chalice",

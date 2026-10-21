@@ -24,3 +24,12 @@ function oggettoACaso(r, rovine) {
   const ids = Object.keys(OGGETTI).filter((id) => !rovine || OGGETTI[id].rovine);
   return ids[Math.floor(r() * ids.length)];
 }
+
+// Gli oggetti speciali, che ti dà la gente in città: vanno nello zaino. Provvisori: la lista vera arriverà
+const OGGETTI_SPECIALI = {
+  bussola: { nome: "Bussola che punta a sud", icona: "compass" },
+  lettera: { nome: "Lettera sigillata", icona: "scroll" },
+  chiave: { nome: "Chiave arrugginita", icona: "key" },
+  uovo: { nome: "Uovo maculato", icona: "egg" },
+};
+const OGGETTI_SPECIALI_IDS = Object.keys(OGGETTI_SPECIALI);

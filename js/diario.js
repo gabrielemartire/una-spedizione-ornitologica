@@ -192,7 +192,7 @@ const Diario = (() => {
     },
 
     zaino() {
-      return `<ul class="book-items"><li>${icon("binoculars")}Binocolo</li></ul>`;
+      return `<ul class="book-items"><li>${icon("binoculars")}Binocolo</li>${trip().pack.map((it) => `<li>${icon(OGGETTI_SPECIALI[it.kind].icona)}${OGGETTI_SPECIALI[it.kind].nome}</li>`).join("")}</ul>`;
     },
 
     stiva() {

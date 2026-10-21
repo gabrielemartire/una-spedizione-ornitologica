@@ -1,34 +1,31 @@
 // Le città sono battlemap senza animali: la banchina con le navi, le strade, le case e la gente
-// che va e viene. Lungo la strada principale le botteghe: entri dalla porta (→) e il padrone ti parla.
-// Il Forte è grande e murato; il porticciolo del fiordo, su un'isola di ghiaccio, è più piccolo
-// e fa prezzi diversi. In città il tempo non passa, tranne dormendo in taverna.
+// che va e viene. La città è disegnata in pixel art vista dall'alto (tetti a falde, ciottoli,
+// mura); sopra restano solo le cose con cui si interagisce, ben visibili: le porte delle botteghe
+// (→) con la loro insegna, i barili, le persone. Il Forte è grande e murato, con il castello e la
+// chiesa; il porticciolo del fiordo, su un'isola di ghiaccio, è più piccolo e ha il falegname.
+// In città il tempo non passa, tranne dormendo in taverna.
 // Espone l'oggetto globale `Citta`.
 const Citta = (() => {
   const W = 40;
   const H = 24;
+  const PX = 8;               // pixel di disegno per casella
   const NPC_MS = 650;         // ogni quanto la gente fa un passo
+  const TYPE_MS = 32;         // la velocità con cui compaiono le parole di chi parla
+  const EVENT_CHANCE = 0.6;   // a ogni visita, qualcuno col punto esclamativo
+  const ROB = [2, 4];         // quanto ti può rubare
 
+  // walk: ci si cammina; i nomi servono a dire cosa c'è nella casella
   const TILES = {
-    sea:    { name: "Mare",               icon: "waves",    cls: "t-sea",      walk: false },
-    ship:   { name: "La tua nave",        icon: "ship",     cls: "t-ship",     walk: true },
-    boat:   { name: "Nave ormeggiata",    icon: "sailboat", cls: "c-boat",     walk: false },
-    fish:   { name: "Peschereccio",       icon: "fishboat", cls: "c-boat",     walk: false },
-    quay:   { name: "Banchina",           ch: "=",          cls: "c-quay",     walk: true },
-    road:   { name: "Strada",             ch: "·",          cls: "c-road",     walk: true },
-    square: { name: "Piazza",             ch: "·",          cls: "c-square",   walk: true },
-    snow:   { name: "Neve",               ch: "·",          cls: "c-snow",     walk: true },
-    house:  { name: "Casa",               icon: "house",    cls: "c-house",    walk: false },
-    yard:   { name: "Cortile",            ch: "\"",        cls: "c-yard",     walk: false },
-    tree:   { name: "Albero del cortile", icon: "beech",    cls: "c-yard",     walk: false },
-    wall:   { name: "Mura",               icon: "castle",   cls: "t-castle",   walk: false },
-    gate:   { name: "Porta della città",  ch: "·",          cls: "c-gate",     walk: true },
-    well:   { name: "Pozzo",              icon: "well",     cls: "c-decor",    walk: false },
-    barrel: { name: "Barili",             icon: "barrel",   cls: "c-decor",    walk: false },
-    crate:  { name: "Casse",              icon: "crate",    cls: "c-decor",    walk: false },
-    buoy:   { name: "Boe",                icon: "barrel",   cls: "c-buoy",     walk: false },
-    stall:  { name: "Bancarella",         icon: "shop",     cls: "c-decor",    walk: false },
-    pine:   { name: "Abete",              icon: "pine",     cls: "c-pine",     walk: false },
-    door:   { name: "Porta",              icon: "enter",    cls: "c-door",     walk: true },
+    sea: { name: "Mare" }, boat: { name: "Nave ormeggiata" }, fish: { name: "Peschereccio" },
+    ship: { name: "La tua nave", walk: true, icon: "ship" },
+    quay: { name: "Banchina", walk: true }, road: { name: "Strada", walk: true }, square: { name: "Piazza", walk: true },
+    court: { name: "Cortile del castello", walk: true }, gate: { name: "Porta", walk: true }, snow: { name: "Neve", walk: true },
+    house: { name: "Casa" }, yard: { name: "Orto" }, tree: { name: "Albero" }, pine: { name: "Abete" },
+    wall: { name: "Mura" }, tower: { name: "Torre" }, keep: { name: "Il castello" },
+    church: { name: "La chiesa" }, bell: { name: "Il campanile" }, well: { name: "Pozzo" }, stall: { name: "Bancarella" },
+    crate: { name: "Casse" }, buoy: { name: "Boe" },
+    barrel: { name: "Barile", icon: "barrel", talk: true },
+    door: { name: "Porta", walk: true, icon: "enter" },
   };
 
   // Le botteghe e quello che offrono, città per città
@@ -44,15 +41,31 @@ const Citta = (() => {
       taverna: { cost: 7 },
       mercato: { price: 4, refuse: ["arte"] },
       emporio: {},
+      falegname: {},
     },
   };
-  const SHOP_NAMES = { medico: "Medico", taverna: "Taverna", mercato: "Mercato", emporio: "Emporio" };
+  const SHOP_INFO = {
+    medico: ["Medico", "medicine"], taverna: ["Taverna", "tankard"], mercato: ["Mercato", "shop"],
+    emporio: ["Emporio", "locked"], falegname: ["Falegname", "hammer"],
+  };
 
-  let c = null;   // la città in cui sei: mappa, gente, botteghe
+  const GROG = "«Il grog è un miscuglio segreto che contiene una o più di queste sostanze: cherosene, glicol propilene, dolcificanti artificiali, acido solforico, rum, acetone, colorante rosso n.2, detriti, grasso per motore, acido per la batteria e/o peperone. Come puoi ben immaginare è una delle sostanze più caustiche e volatili conosciute dall'uomo.»";
+
+  // Il falegname e il roditore: la conversazione non si salta, si sceglie solo la battuta (che è una)
+  const RODITORE = [
+    ["io", "Quanto legno potrebbe rodere un roditore, se un roditore potesse rodere il legno?"],
+    ["lui", "Un roditore non potrebbe rodere nessun legno, visto che un roditore non può rodere il legno."],
+    ["io", "Ma se un roditore potesse rodere e rodesse un po' di legno, quanto legno roderebbe un roditore?"],
+    ["lui", "Anche se un roditore potesse rodere il legno, e anche se un roditore rodesse il legno, dovrebbe un roditore rodere il legno?"],
+    ["io", "Un roditore dovrebbe rodere se un roditore potesse rodere il legno, e se un roditore volesse rodere."],
+  ];
+
+  let c = null;   // la città in cui sei: mappa, edifici, gente, botteghe
   let timer = 0;
 
   const inside = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
   const same = (a, b) => a.x === b.x && a.y === b.y;
+  const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
   const tileAt = (x, y) => TILES[c.map[y][x]];
 
   function rng(seed) {
@@ -68,88 +81,309 @@ const Citta = (() => {
 
   // --- Le mappe ---
 
-  // Il Forte: il mare e la banchina a ovest, le mura tutt'intorno, la strada principale da est a ovest
-  // con le botteghe, qualche vicolo e una piazza col pozzo
-  function buildForte(r) {
-    const map = Array.from({ length: H }, () => Array(W).fill("house"));
-    const set = (x, y, t) => { if (inside(x, y)) map[y][x] = t; };
-    for (let y = 0; y < H; y++) {
-      for (let x = 0; x < 4; x++) set(x, y, "sea");
-      for (let x = 4; x < 7; x++) set(x, y, "quay");
-      set(7, y, "wall");
-    }
-    for (let x = 7; x < W; x++) { set(x, 0, "wall"); set(x, H - 1, "wall"); }
-    for (let y = 0; y < H; y++) set(W - 1, y, "wall");
-    // la strada principale, due caselle, e la porta sul mare
-    const mainY = 11;
-    for (let x = 7; x < W - 1; x++) { set(x, mainY, "road"); set(x, mainY + 1, "road"); }
-    set(7, mainY, "gate"); set(7, mainY + 1, "gate");
-    // i vicoli
-    for (const vx of [13, 22, 31]) for (let y = 1; y < H - 1; y++) set(vx, y, "road");
-    for (const vy of [4, 19]) for (let x = 8; x < W - 1; x++) set(x, vy, "road");
-    // dentro gli isolati, dietro le case, cortili e orti
-    for (let y = 1; y < H - 1; y++) for (let x = 8; x < W - 1; x++) {
-      if (map[y][x] !== "house") continue;
-      const nearStreet = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => inside(x + dx, y + dy) && ["road", "wall", "gate"].includes(map[y + dy][x + dx]));
-      if (!nearStreet) map[y][x] = r() < 0.2 ? "tree" : "yard";
-    }
-    // la piazza col pozzo
-    for (let y = 5; y <= 9; y++) for (let x = 24; x <= 30; x++) set(x, y, "square");
-    set(27, 7, "well");
-    // le bancarelle lungo la strada, vicino al mercato
-    for (const [x, y] of [[18, mainY - 1], [20, mainY - 1], [25, mainY + 2], [27, mainY + 2]]) set(x, y, "stall");
-    // sulla banchina barili e casse; in mare le altre navi
-    for (const [x, y] of [[5, 3], [6, 4], [5, 17], [6, 18], [6, 7], [5, 20]]) set(x, y, r() < 0.5 ? "barrel" : "crate");
-    for (const y of [2, 6, 16, 20]) set(1 + Math.floor(r() * 2), y, "boat");
-    // le botteghe: la porta dà sulla strada principale
-    const doors = { medico: { x: 10, y: mainY - 1 }, taverna: { x: 16, y: mainY + 2 }, mercato: { x: 19, y: mainY - 1 }, emporio: { x: 34, y: mainY + 2 } };
-    for (const d of Object.values(doors)) set(d.x, d.y, "door");
-    const ship = { x: 3, y: mainY };
-    set(ship.x, ship.y, "ship");
-    return { map, doors, ship, start: { x: 4, y: mainY }, people: 14, walkable: ["road", "square", "quay"] };
+  function blank(fill) {
+    const map = Array.from({ length: H }, () => Array(W).fill(fill));
+    const bld = Array.from({ length: H }, () => Array(W).fill(-1));
+    return { map, bld, buildings: [] };
   }
 
-  // Il porticciolo: una lunga banchina di legno sul fiordo, le case colorate affacciate, i pescherecci
-  // e le boe rosse; dietro, la neve e gli abeti
-  function buildPorto(r) {
-    const map = Array.from({ length: H }, () => Array(W).fill("snow"));
-    const set = (x, y, t) => { if (inside(x, y)) map[y][x] = t; };
-    for (let y = 0; y < H; y++) for (let x = 0; x < 6; x++) set(x, y, "sea");
-    for (let y = 3; y < H - 3; y++) for (let x = 6; x < 9; x++) set(x, y, "quay");
-    // le case in fila lungo la banchina, con le porte delle botteghe
-    for (let y = 3; y < H - 3; y++) { set(9, y, "house"); set(10, y, "house"); }
-    for (const y of [7, 15]) { set(9, y, "quay"); set(10, y, "quay"); for (let x = 11; x < 18; x++) set(x, y, "road"); }
-    const doors = { medico: { x: 9, y: 5 }, taverna: { x: 9, y: 10 }, mercato: { x: 9, y: 13 }, emporio: { x: 9, y: 18 } };
-    for (const d of Object.values(doors)) set(d.x, d.y, "door");
-    // qualche casa sparsa più in là, e gli abeti
-    for (const [x, y] of [[13, 5], [14, 5], [16, 10], [16, 11], [13, 17], [14, 17]]) set(x, y, "house");
-    for (let i = 0; i < 70; i++) {
-      const x = 18 + Math.floor(r() * (W - 18)), y = Math.floor(r() * H);
-      if (map[y][x] === "snow") set(x, y, "pine");
+  // Gli isolati diventano case: rettangoli di varie misure, a volte uniti a L; i ritagli diventano orti
+  function fillHouses(m, r, lot, roofs) {
+    const free = (x, y) => inside(x, y) && m.map[y][x] === lot;
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        if (!free(x, y)) continue;
+        let w = 2 + Math.floor(r() * 3), h = 2 + Math.floor(r() * 2);
+        while (w > 1 && ![...Array(w).keys()].every((i) => free(x + i, y))) w--;
+        while (h > 1 && ![...Array(h).keys()].every((j) => [...Array(w).keys()].every((i) => free(x + i, y + j)))) h--;
+        const cells = [];
+        for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) cells.push({ x: x + i, y: y + j });
+        if (cells.length === 1) { m.map[y][x] = r() < 0.3 ? "tree" : "yard"; continue; }
+        // a volte un'ala in più: la casa diventa a L
+        if (r() < 0.35 && free(x, y + h) && free(x + 1, y + h)) cells.push({ x, y: y + h }, { x: x + 1, y: y + h });
+        addBuilding(m, cells, "house", roofs[Math.floor(r() * roofs.length)]);
+      }
     }
-    // boe, gabbie e pescherecci
-    for (const [x, y] of [[8, 4], [8, 9], [8, 16], [8, 19]]) set(x, y, "buoy");
-    for (const [x, y] of [[6, 6], [6, 12], [6, 17]]) set(x, y, "crate");
-    for (const y of [4, 9, 15, 19]) set(4 + Math.floor(r() * 2), y, "fish");
+  }
+
+  function addBuilding(m, cells, kind, roof) {
+    const id = m.buildings.length;
+    for (const p of cells) { m.map[p.y][p.x] = kind === "house" ? "house" : kind; m.bld[p.y][p.x] = id; }
+    const xs = cells.map((p) => p.x), ys = cells.map((p) => p.y);
+    const box = { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+    m.buildings.push({ id, cells, kind, roof, box, ridge: box.x1 - box.x0 >= box.y1 - box.y0 ? "h" : "v" });
+    return id;
+  }
+
+  // Una porta di bottega: una casella di casa che dà sulla strada; l'insegna sta sul tetto, dietro la porta
+  function placeShop(m, kind, near, roads) {
+    const cand = [];
+    for (let y = 1; y < H - 1; y++) {
+      for (let x = 1; x < W - 1; x++) {
+        if (m.map[y][x] !== "house") continue;
+        for (const [dx, dy] of DIRS) {
+          const front = { x: x + dx, y: y + dy }, back = { x: x - dx, y: y - dy };
+          if (!roads.includes(m.map[front.y][front.x]) || m.bld[back.y]?.[back.x] !== m.bld[y][x]) continue;
+          cand.push({ x, y, front, sign: back, d: Math.hypot(x - near.x, y - near.y) });
+        }
+      }
+    }
+    cand.sort((a, b) => a.d - b.d);
+    const best = cand.find((cd) => !Object.values(m.doors).some((d) => m.bld[d.y][d.x] === m.bld[cd.y][cd.x]));
+    if (!best) return;
+    m.map[best.y][best.x] = "door";
+    m.doors[kind] = { x: best.x, y: best.y, front: best.front, sign: best.sign };
+  }
+
+  // Il Forte: mare e banchina a ovest, mura tutt'intorno, la strada principale che serpeggia da
+  // una porta all'altra, il quartiere del castello a nord-est, la piazza con la chiesa, vicoli sfalsati
+  function buildForte(r) {
+    const m = blank("lot");
+    m.doors = {};
+    const set = (x, y, t) => { if (inside(x, y)) m.map[y][x] = t; };
+    const rect = (x0, y0, x1, y1, t) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) set(x, y, t); };
+    rect(0, 0, 3, H - 1, "sea");
+    rect(4, 0, 6, H - 1, "quay");
+    // le mura, con le torri agli angoli e a metà
+    rect(7, 0, 7, H - 1, "wall"); rect(7, 0, W - 1, 0, "wall"); rect(7, H - 1, W - 1, H - 1, "wall"); rect(W - 1, 0, W - 1, H - 1, "wall");
+    for (const [x, y] of [[7, 0], [W - 1, 0], [7, H - 1], [W - 1, H - 1], [7, 6], [7, 17], [20, H - 1]]) set(x, y, "tower");
+    // il quartiere del castello: le sue mura, le torri, il mastio e il cortile
+    rect(28, 1, 38, 9, "court");
+    rect(28, 1, 38, 1, "wall"); rect(28, 9, 38, 9, "wall"); rect(28, 1, 28, 9, "wall");
+    for (const [x, y] of [[28, 1], [28, 9], [38, 9]]) set(x, y, "tower");
+    const keep = [];
+    for (let y = 3; y <= 6; y++) for (let x = 31; x <= 36; x++) keep.push({ x, y });
+    addBuilding(m, keep, "keep", null);
+    set(33, 9, "gate");
+    // la strada principale: due caselle, con qualche gomito
+    let y = 12;
+    m.main = [];
+    for (let x = 8; x < W - 1; x++) {
+      if ((x === 15 || x === 24 || x === 33) && r() < 0.8) y += r() < 0.5 ? -1 : 1;
+      y = Math.max(11, Math.min(14, y));
+      set(x, y, "road"); set(x, y + 1, "road");
+      m.main.push({ x, y });
+    }
+    set(7, m.main[0].y, "gate"); set(7, m.main[0].y + 1, "gate");
+    // la piazza con la chiesa e il pozzo, e la strada che la lega alla principale
+    rect(15, 4, 24, 8, "square");
+    const nave = [];
+    for (let yy = 1; yy <= 3; yy++) for (let x = 15; x <= 21; x++) nave.push({ x, y: yy });
+    addBuilding(m, nave, "church", null);
+    addBuilding(m, [{ x: 22, y: 2 }, { x: 22, y: 3 }, { x: 23, y: 2 }, { x: 23, y: 3 }], "bell", null);
+    set(22, 6, "well");
+    for (const [x, yy] of [[16, 7], [18, 7]]) set(x, yy, "stall");
+    for (let yy = 9; yy < m.main.find((p) => p.x === 20).y; yy++) set(20, yy, "road");
+    for (let yy = 10; yy < m.main.find((p) => p.x === 33).y; yy++) set(33, yy, "road");
+    // i vicoli: scendono e salgono dalla principale, facendo un gomito a metà
+    for (const [ax, dir, len] of [[11, -1, 10], [12, 1, 9], [26, 1, 9], [17, 1, 8], [35, 1, 8], [25, -1, 4]]) {
+      let x = ax, yy = m.main.find((p) => p.x === ax).y + (dir > 0 ? 2 : -1);
+      for (let k = 0; k < len && inside(x, yy); k++) {
+        if (["wall", "tower", "square", "court", "church", "bell", "keep"].includes(m.map[yy][x])) break;
+        set(x, yy, "road");
+        if (k === Math.floor(len / 2)) { x += r() < 0.5 ? 1 : -1; set(x, yy, "road"); }
+        yy += dir;
+      }
+    }
+    // un vicolo di traverso a sud
+    for (let x = 9; x < W - 2; x++) if (m.map[19][x] === "lot") set(x, 19 + (x > 24 ? 1 : 0), "road");
+    // sulla banchina barili e casse; in mare le altre navi
+    for (const [x, yy] of [[5, 3], [6, 8], [5, 16], [6, 20]]) set(x, yy, "barrel");
+    for (const [x, yy] of [[6, 4], [5, 19], [6, 17]]) set(x, yy, "crate");
+    for (const yy of [2, 7, 17, 21]) set(1 + Math.floor(r() * 2), yy, "boat");
+    fillHouses(m, r, "lot", ["coppi", "coppi", "ardesia", "paglia", "mattoni"]);
+    // due barili davanti alla taverna, uno in piazza
+    const roads = ["road", "square"];
+    placeShop(m, "medico", { x: 10, y: 10 }, roads);
+    placeShop(m, "taverna", { x: 16, y: 15 }, roads);
+    placeShop(m, "mercato", { x: 22, y: 10 }, roads);
+    placeShop(m, "emporio", { x: 31, y: 16 }, roads);
+    if (m.doors.taverna) {
+      const f = m.doors.taverna.front;
+      for (const [dx, dy] of DIRS) if (m.map[f.y + dy]?.[f.x + dx] === "road" && r() < 0.5) { set(f.x + dx, f.y + dy, "barrel"); break; }
+    }
+    set(24, 4, "barrel");
+    const ship = { x: 3, y: m.main[0].y };
+    set(ship.x, ship.y, "ship");
+    set(ship.x + 1, ship.y, "quay"); // davanti alla nave non ci va mai niente
+    return { ...m, ship, start: { x: 4, y: ship.y }, people: 16, walkable: ["road", "square", "quay", "court"] };
+  }
+
+  // Il porticciolo: una lunga banchina di legno sul fiordo, le case in fila con le botteghe,
+  // boe e pescherecci; dietro la neve, qualche casa sparsa e gli abeti
+  function buildPorto(r) {
+    const m = blank("snow");
+    m.doors = {};
+    const set = (x, y, t) => { if (inside(x, y)) m.map[y][x] = t; };
+    const rect = (x0, y0, x1, y1, t) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) set(x, y, t); };
+    rect(0, 0, 5, H - 1, "sea");
+    rect(6, 2, 8, H - 3, "quay");
+    // le case in fila lungo la banchina, a gruppi di due o tre caselle, con due passaggi verso l'interno
+    rect(9, 2, 11, H - 3, "lot");
+    for (const yy of [8, 15]) { rect(9, yy, 11, yy, "quay"); rect(12, yy, 17, yy, "road"); }
+    fillHouses(m, r, "lot", ["legno", "legno", "ardesia", "rosso"]);
+    for (const [x, yy, w, h] of [[14, 4, 2, 2], [17, 10, 2, 3], [13, 17, 3, 2], [20, 6, 2, 2]]) {
+      const cells = [];
+      for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) cells.push({ x: x + i, y: yy + j });
+      if (cells.every((p) => m.map[p.y][p.x] === "snow")) addBuilding(m, cells, "house", r() < 0.5 ? "legno" : "rosso");
+    }
+    for (let i = 0; i < 80; i++) {
+      const x = 16 + Math.floor(r() * (W - 16)), yy = Math.floor(r() * H);
+      if (m.map[yy][x] === "snow") set(x, yy, "pine");
+    }
+    for (const [x, yy] of [[8, 4], [8, 11], [8, 18]]) set(x, yy, "buoy");
+    for (const [x, yy] of [[6, 6], [6, 13], [7, 20]]) set(x, yy, "crate");
+    for (const [x, yy] of [[8, 7], [6, 16]]) set(x, yy, "barrel");
+    for (const yy of [3, 9, 15, 20]) set(3 + Math.floor(r() * 2), yy, "fish");
+    const roads = ["quay", "road"];
+    placeShop(m, "medico", { x: 10, y: 4 }, roads);
+    placeShop(m, "taverna", { x: 10, y: 9 }, roads);
+    placeShop(m, "mercato", { x: 10, y: 13 }, roads);
+    placeShop(m, "falegname", { x: 10, y: 17 }, roads);
+    placeShop(m, "emporio", { x: 10, y: 21 }, roads);
     const ship = { x: 5, y: 12 };
     set(ship.x, ship.y, "ship");
-    return { map, doors, ship, start: { x: 6, y: 13 }, people: 5, walkable: ["quay", "road"] };
+    set(ship.x + 1, ship.y, "quay"); // davanti alla nave non ci va mai niente
+    return { ...m, ship, start: { x: 6, y: 12 }, people: 6, walkable: ["quay", "road"] };
+  }
+
+  // --- Il disegno in pixel art ---
+
+  const ROOFS = {
+    coppi: ["#c8643c", "#9a4428", "#e08a5a", "#5a2414"],
+    ardesia: ["#6a7484", "#4a5262", "#8a94a4", "#2a2e38"],
+    paglia: ["#c8a050", "#9a7834", "#e0c070", "#5a4420"],
+    mattoni: ["#b04a3a", "#82322a", "#c86a54", "#4a1a14"],
+    legno: ["#5a6a80", "#3e4a5e", "#7a8aa0", "#232a36"],
+    rosso: ["#9a3a2e", "#6e261e", "#b85444", "#3a120e"],
+  };
+
+  function paint() {
+    const cv = document.createElement("canvas");
+    cv.width = W * PX;
+    cv.height = H * PX;
+    cv.className = "city-art";
+    const g = cv.getContext("2d");
+    const img = g.createImageData(cv.width, cv.height);
+    const r = rng(Gioco.trip.seed ^ 0xa11);
+    const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+    const put = (x, y, col) => { if (x < 0 || y < 0 || x >= cv.width || y >= cv.height) return; img.data.set([...(typeof col === "string" ? hex(col) : col), 255], (y * cv.width + x) * 4); };
+    const get = (x, y) => [...img.data.slice((y * cv.width + x) * 4, (y * cv.width + x) * 4 + 3)];
+    const darken = (x, y, k) => { if (x < 0 || y < 0 || x >= cv.width || y >= cv.height) return; put(x, y, get(x, y).map((v) => Math.round(v * k))); };
+    const noise = () => r();
+    const ground = { road: ["#7a7266", "#5e584e", "#948a7a"], square: ["#a49a86", "#867c6a", "#b8ae98"], court: ["#8a8274", "#6e6658", "#a09886"],
+      gate: ["#6e665a", "#504a40", "#8a8272"], snow: ["#dfe8ee", "#c4d0da", "#f2f6f8"], quay: ["#7a5a3a", "#5a4028", "#94704a"] };
+
+    for (let ty = 0; ty < H; ty++) {
+      for (let tx = 0; tx < W; tx++) {
+        const t = c.map[ty][tx], ox = tx * PX, oy = ty * PX;
+        const cellPx = (fn) => { for (let y = 0; y < PX; y++) for (let x = 0; x < PX; x++) put(ox + x, oy + y, fn(x, y)); };
+        // il fondo sotto ogni cosa: acqua, banchina, strada, neve
+        const under = ["sea", "boat", "fish", "ship"].includes(t) ? "sea" : ["barrel", "crate", "buoy"].includes(t) ? (c.city.id === "porto" && tx > 8 ? "snow" : "quay")
+          : t === "door" ? "road" : ["well", "stall"].includes(t) ? "square" : ["yard", "tree"].includes(t) ? "yard" : ["pine"].includes(t) ? "snow" : t;
+        if (under === "sea") cellPx((x, y) => ((x + y * 3 + tx * 5 + ty * 2) % 11 === 0 ? "#4a7a9a" : (y + ty) % 4 === 0 && (x + tx * 3) % 6 < 2 ? "#3a6684" : "#2a4e6a"));
+        else if (under === "quay") cellPx((x, y) => (c.city.id === "porto" ? (x === 0 || x === 4 ? ground.quay[1] : (y + tx) % 7 === 0 ? ground.quay[2] : ground.quay[0])
+          : (y === 0 || y === 4 ? ground.quay[1] : (x + ty * 3) % 9 === 0 ? ground.quay[2] : ground.quay[0])));
+        else if (under === "road" || under === "gate") cellPx((x, y) => ((x + (y >> 1) * 2 + tx) % 4 === 0 || y % 3 === 0 ? ground[under][1] : noise() < 0.08 ? ground[under][2] : ground[under][0]));
+        else if (under === "square" || under === "court") cellPx((x, y) => (x === 0 || y === 0 ? ground[under][1] : (x + y) % 5 === 0 ? ground[under][2] : ground[under][0]));
+        else if (under === "snow") cellPx(() => (noise() < 0.12 ? ground.snow[1] : noise() < 0.05 ? ground.snow[2] : ground.snow[0]));
+        else if (under === "yard") cellPx(() => (noise() < 0.2 ? "#4a6a34" : noise() < 0.1 ? "#7a9a4a" : "#5a7a3e"));
+        else if (under === "wall" || under === "tower") cellPx((x, y) => ((x + y * 2) % 5 === 0 ? "#7a7060" : "#9a8e7a"));
+        else cellPx(() => "#3a3028");
+
+        // quello che ci sta sopra
+        if (t === "tree") { for (let y = 0; y < PX; y++) for (let x = 0; x < PX; x++) { const d = Math.hypot(x - 3.5, y - 3.5); if (d < 3.6) put(ox + x, oy + y, d < 1.6 && x < 4 && y < 4 ? "#7aa04a" : x + y > 8 ? "#2e4a24" : "#4a7034"); } }
+        if (t === "pine") { for (let y = 0; y < PX; y++) for (let x = 0; x < PX; x++) { const d = Math.max(Math.abs(x - 3.5), Math.abs(y - 3.5)) + Math.min(Math.abs(x - 3.5), Math.abs(y - 3.5)) * 0.6; if (d < 4) put(ox + x, oy + y, (x + y) % 3 === 0 && d < 2.5 ? "#f2f6f8" : x + y > 8 ? "#1e3a28" : "#2e5a3a"); } }
+        if (t === "well") { for (let y = 0; y < PX; y++) for (let x = 0; x < PX; x++) { const d = Math.hypot(x - 3.5, y - 3.5); if (d < 3.8) put(ox + x, oy + y, d < 2.2 ? "#1e2a34" : "#b0a690"); } }
+        if (t === "stall") { for (let y = 1; y < PX - 1; y++) for (let x = 0; x < PX; x++) put(ox + x, oy + y, (x >> 1) % 2 ? "#e8e0d0" : "#b84a3a"); }
+        if (t === "crate") { for (let y = 1; y < 7; y++) for (let x = 1; x < 7; x++) put(ox + x, oy + y, x === 1 || y === 1 || x === 6 || y === 6 || x === y || x === 7 - y ? "#5a4028" : "#a07a4a"); }
+        if (t === "buoy") { for (let y = 0; y < PX; y++) for (let x = 0; x < PX; x++) { const d = Math.hypot(x - 3.5, y - 3.5); if (d < 3) put(ox + x, oy + y, y < 3 ? "#e86a50" : "#b03a2a"); } }
+        if (t === "boat" || t === "fish") {
+          for (let y = 1; y < 7; y++) for (let x = 0; x < PX; x++) { const half = 3 - Math.abs(x - 3.5) * 0.4; if (Math.abs(y - 3.5) < half) put(ox + x, oy + y, t === "fish" ? (Math.abs(y - 3.5) < 1 && x > 1 && x < 6 ? "#e8e8e0" : "#a83a2a") : "#6a4a2a"); }
+          if (t === "boat") for (let x = 1; x < 7; x++) put(ox + x, oy + 3, "#e8e0c8");
+        }
+        if (t === "wall" || t === "tower") {
+          // il camminamento in cima alle mura, con i merli sul bordo verso fuori
+          for (let y = 0; y < PX; y++) for (let x = 0; x < PX; x++) if ((x === 0 || y === 0 || x === 7 || y === 7) && (x + y) % 2 === 0) put(ox + x, oy + y, "#b8ac94");
+          if (t === "tower") for (let y = 0; y < PX; y++) for (let x = 0; x < PX; x++) { const d = Math.hypot(x - 3.5, y - 3.5); if (d < 3) put(ox + x, oy + y, x + y < 7 ? "#6a7484" : "#3e4654"); }
+        }
+      }
+    }
+
+    // gli edifici: tetti a falde con la luce da nord-ovest, comignoli, e l'ombra che gettano
+    for (const b of c.buildings) {
+      const own = new Set(b.cells.map((p) => `${p.x},${p.y}`));
+      const mine = (tx, ty) => own.has(`${tx},${ty}`);
+      const pal = b.kind === "church" ? ["#5a6a8a", "#3e4a66", "#7a8aaa", "#20283a"] : b.kind === "bell" ? ["#4a5470", "#2e3448", "#6a7490", "#181c28"]
+        : b.kind === "keep" ? ["#b0a690", "#8a8070", "#c8bea6", "#4a4438"] : ROOFS[b.roof];
+      const [lit, shade, ridge, edge] = pal.map(hex);
+      const bx0 = b.box.x0 * PX, by0 = b.box.y0 * PX, bx1 = (b.box.x1 + 1) * PX, by1 = (b.box.y1 + 1) * PX;
+      const midY = (by0 + by1) / 2, midX = (bx0 + bx1) / 2;
+      for (const p of b.cells) {
+        for (let y = 0; y < PX; y++) {
+          for (let x = 0; x < PX; x++) {
+            const X = p.x * PX + x, Y = p.y * PX + y;
+            const onEdge = (x === 0 && !mine(p.x - 1, p.y)) || (x === PX - 1 && !mine(p.x + 1, p.y)) || (y === 0 && !mine(p.x, p.y - 1)) || (y === PX - 1 && !mine(p.x, p.y + 1));
+            let col;
+            if (b.kind === "keep") {
+              // il mastio: un tetto piatto di pietra, i merli tutto intorno
+              col = onEdge ? ((X + Y) % 2 ? edge : ridge) : (X % 6 === 0 || Y % 6 === 0) ? shade : lit;
+            } else if (b.kind === "bell") {
+              // il campanile: un tetto a piramide, quattro falde
+              const dx = X - midX + 0.5, dy = Y - midY + 0.5;
+              col = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? lit : shade) : dy < 0 ? ridge : shade;
+              if (Math.abs(dx) < 1 && Math.abs(dy) < 1) col = hex("#f2c230");
+              if (onEdge) col = edge;
+            } else {
+              const before = b.ridge === "h" ? Y < midY : X < midX;
+              const onRidge = b.ridge === "h" ? Math.abs(Y - midY + 0.5) < 1 : Math.abs(X - midX + 0.5) < 1;
+              col = onRidge ? ridge : before ? lit : shade;
+              // file di tegole
+              if (!onRidge && (b.ridge === "h" ? X : Y) % 3 === 0) col = col.map((v) => Math.round(v * 0.86));
+              if (onEdge) col = edge;
+            }
+            put(X, Y, col);
+          }
+        }
+        // l'ombra a sud e a est, sul fondo accanto
+        if (!mine(p.x, p.y + 1) && inside(p.x, p.y + 1)) for (let x = 0; x < PX; x++) for (let y = 0; y < 2; y++) darken(p.x * PX + x + 1, (p.y + 1) * PX + y, 0.7);
+        if (!mine(p.x + 1, p.y) && inside(p.x + 1, p.y)) for (let y = 0; y < PX; y++) for (let x = 0; x < 2; x++) darken((p.x + 1) * PX + x, p.y * PX + y + 1, 0.7);
+      }
+      // comignoli sulle case, una croce sulla chiesa, la bandiera sul castello
+      if (b.kind === "house" && b.cells.length > 3) {
+        const p = b.cells[Math.floor(r() * b.cells.length)];
+        for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) put(p.x * PX + 2 + x, p.y * PX + 2 + y, y === 0 ? "#8a7a6a" : "#3a2e26");
+      }
+      if (b.kind === "church") { const x = Math.round(midX), y = by0 + 6; for (let k = -2; k <= 2; k++) { put(x + k, y, "#f2c230"); put(x, y + k, "#f2c230"); } }
+      if (b.kind === "keep") {
+        for (const [cx, cy] of [[bx0, by0], [bx1 - 1, by0], [bx0, by1 - 1], [bx1 - 1, by1 - 1]]) {
+          for (let y = -4; y <= 4; y++) for (let x = -4; x <= 4; x++) { const d = Math.hypot(x, y); if (d < 4.5) put(cx + x, cy + y, d < 1.5 ? "#2a2e38" : x + y < 0 ? "#6a7484" : "#3e4654"); }
+        }
+        for (let y = 0; y < 10; y++) put(Math.round(midX), by0 + 4 + y, "#3a2e26");
+        for (let y = 0; y < 3; y++) for (let x = 1; x < 6; x++) put(Math.round(midX) + x, by0 + 4 + y, "#c8302a");
+      }
+    }
+    g.putImageData(img, 0, 0);
+    return cv;
   }
 
   // --- Entrare e uscire ---
 
   function enter(city) {
     const trip = Gioco.trip;
-    const r = rng(trip.seed ^ (city.id === "forte" ? 0xf0f7e : 0x9077))
+    const r = rng(trip.seed ^ (city.id === "forte" ? 0xf0f7e : 0x9077));
     const plan = city.id === "forte" ? buildForte(r) : buildPorto(r);
-    c = { city, ...plan, player: { ...plan.start }, npcs: [], open: null, prev: null };
+    c = { city, ...plan, player: { ...plan.start }, npcs: [], open: null, prev: null, near: null };
     // la gente: sulle strade e sulla banchina, mai addosso a te
     const spots = [];
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (plan.walkable.includes(c.map[y][x])) spots.push({ x, y });
+    const ra = Math.random;
     for (let i = 0; i < plan.people && spots.length; i++) {
-      const at = spots.splice(Math.floor(r() * spots.length), 1)[0];
+      const at = spots.splice(Math.floor(ra() * spots.length), 1)[0];
       if (!same(at, c.player)) c.npcs.push({ ...at });
     }
+    // a volte qualcuno col punto esclamativo: ti aspetta fermo, e non si sa mai cosa vuole
+    if (ra() < EVENT_CHANCE && c.npcs.length) c.npcs[0].event = true;
     Gioco.showView("city");
     build();
     drawPostcard();
@@ -158,7 +392,7 @@ const Citta = (() => {
     clearInterval(timer);
     timer = setInterval(stroll, NPC_MS);
     Gioco.renderStatus();
-    Gioco.toast(city.id === "forte" ? "Il Forte: le botteghe sono lungo la strada principale." : "Il porticciolo: le botteghe danno sulla banchina.");
+    Gioco.toast(city.id === "forte" ? "Il Forte: le botteghe hanno l'insegna sul tetto." : "Il porticciolo: le botteghe danno sulla banchina.");
     render();
   }
 
@@ -172,20 +406,26 @@ const Citta = (() => {
     Cartolina.render({ seed: Gioco.trip.seed, tags: new Set(), time: Gioco.now(), city: c.city.id }, Gioco.el.postcard);
   }
 
-  // --- Disegno ---
+  // --- Disegno della griglia: sotto l'immagine, sopra solo ciò che si usa ---
 
   function build() {
     const el = Gioco.el;
     el.map.classList.remove("is-hit");
     el.map.innerHTML = "";
     el.map.style.gridTemplateColumns = `repeat(${W}, var(--cell))`;
+    el.map.appendChild(paint());
     el.cells = [];
+    const signs = new Map(Object.entries(c.doors).map(([kind, d]) => [`${d.sign.x},${d.sign.y}`, kind]));
     for (let y = 0; y < H; y++) {
       el.cells.push([]);
       for (let x = 0; x < W; x++) {
         const d = document.createElement("div");
         d.dataset.x = x;
         d.dataset.y = y;
+        const t = tileAt(x, y), sign = signs.get(`${x},${y}`);
+        d.className = `cell cc ${t.walk ? "walk" : "block"}${t.icon ? ` cc-${c.map[y][x]}` : ""}${sign ? " cc-sign" : ""}`;
+        if (sign) d.innerHTML = Gioco.iconHtml(SHOP_INFO[sign][1]);
+        else if (t.icon) d.innerHTML = Gioco.iconHtml(t.icon);
         el.map.appendChild(d);
         el.cells[y].push(d);
       }
@@ -198,7 +438,10 @@ const Citta = (() => {
       return e;
     };
     c.playerEl = pawn("e-player", "binoculars");
-    for (const n of c.npcs) n.el = pawn("e-npc", "person");
+    for (const n of c.npcs) {
+      n.el = pawn(n.event ? "e-npc e-event" : "e-npc", "person");
+      if (n.event) n.el.dataset.intent = "!";
+    }
     Gioco.fitMap();
     requestAnimationFrame(() => el.map.querySelectorAll(".entity").forEach((e) => e.classList.remove("no-slide")));
   }
@@ -206,27 +449,16 @@ const Citta = (() => {
   const place = (e, p) => { e.style.setProperty("--x", p.x); e.style.setProperty("--y", p.y); };
 
   function render() {
-    const el = Gioco.el;
-    for (let y = 0; y < H; y++) {
-      for (let x = 0; x < W; x++) {
-        const t = tileAt(x, y);
-        const cell = el.cells[y][x];
-        const html = t.icon ? Gioco.iconHtml(t.icon) : t.ch || "";
-        const cls = `cell ${t.cls} ${t.walk ? "walk" : "block"}`;
-        if (cell._html !== html) { cell.innerHTML = html; cell._html = html; }
-        if (cell.className !== cls) cell.className = cls;
-      }
-    }
     place(c.playerEl, c.player);
     for (const n of c.npcs) place(n.el, n);
   }
 
-  // La gente cammina per conto suo, anche se tu stai fermo
+  // La gente cammina per conto suo, anche se tu stai fermo; chi ha il punto esclamativo aspetta
   function stroll() {
     if (!c || Gioco.trip.mode !== "city" || !document.body.classList.contains("in-game")) return;
     for (const n of c.npcs) {
-      if (Math.random() < 0.35) continue;
-      const [dx, dy] = [[1, 0], [-1, 0], [0, 1], [0, -1]][Math.floor(Math.random() * 4)];
+      if (n.event || Math.random() < 0.35) continue;
+      const [dx, dy] = DIRS[Math.floor(Math.random() * 4)];
       const to = { x: n.x + dx, y: n.y + dy };
       if (!inside(to.x, to.y) || !c.walkable.includes(c.map[to.y][to.x])) continue;
       if (same(to, c.player) || c.npcs.some((o) => o !== n && same(o, to))) continue;
@@ -235,10 +467,13 @@ const Citta = (() => {
     }
   }
 
+  const doorAt = (p) => Object.entries(c.doors).find(([, d]) => same(d, p))?.[0];
+
   function tileInfo(p) {
+    const shop = doorAt(p) || Object.entries(c.doors).find(([, d]) => same(d.sign, p))?.[0];
     const t = tileAt(p.x, p.y);
-    const shop = Object.entries(c.doors).find(([, d]) => same(d, p));
-    Gioco.el.tileInfo.textContent = shop ? `${SHOP_NAMES[shop[0]]} · entra` : t === TILES.ship ? "La tua nave · riparti" : `${t.name} · ${t.walk ? "si passa" : "non si passa"}`;
+    Gioco.el.tileInfo.textContent = shop ? `${SHOP_INFO[shop][0]} · entra dalla porta` : t === TILES.ship ? "La tua nave · riparti"
+      : t.talk ? `${t.name} · c'è una nota` : `${t.name} · ${t.walk ? "si passa" : "non si passa"}`;
   }
 
   // --- Muoversi ---
@@ -247,29 +482,37 @@ const Citta = (() => {
     const p = c.player, to = { x: p.x + dx, y: p.y + dy };
     if (!inside(to.x, to.y)) return;
     const t = tileAt(to.x, to.y);
+    const npc = c.npcs.find((n) => same(n, to));
+    if (npc?.event) { meet(npc); return; }
+    if (npc) { if (Math.random() < 0.3) Gioco.toast(["«Permesso!»", "«Attento a dove metti i piedi.»", "«Ehi, marinaio!»"][Math.floor(Math.random() * 3)]); return; }
+    if (t.talk) { readBarrel(); return; }
     if (!t.walk) return;
-    if (c.npcs.some((n) => same(n, to))) { if (Math.random() < 0.3) Gioco.toast(["«Permesso!»", "«Attento a dove metti i piedi.»", "«Ehi, marinaio!»"][Math.floor(Math.random() * 3)]); return; }
     c.prev = { ...p };
     Object.assign(p, to);
     Suoni.play("passoErba");
     tileInfo(to);
     render();
-    const shop = Object.entries(c.doors).find(([, d]) => same(d, to));
-    if (shop) openShop(shop[0]);
-    else if (t === TILES.ship) aboard();
+    const shop = doorAt(to);
+    if (shop) { openShop(shop); return; }
+    if (t === TILES.ship) { aboard(); return; }
+    // davanti all'entrata, la bottega si presenta
+    const front = Object.entries(c.doors).find(([, d]) => same(d.front, to))?.[0];
+    if (front && front !== c.near) Gioco.toast(`${SHOP_INFO[front][0]}: la porta è qui accanto.`);
+    c.near = front || null;
   }
 
   // Si esce dalla bottega tornando in strada, dove eri
   function back() {
     c.open = null;
     Gioco.el.overlay.hidden = true;
-    if (c.prev) Object.assign(c.player, c.prev);
+    if (c.prev && doorAt(c.player)) Object.assign(c.player, c.prev);
     render();
   }
 
-  // --- Le botteghe: un riquadro con la domanda del padrone ---
+  // --- Dialoghi: un riquadro con la domanda e le risposte ---
 
-  function dialog(title, text, buttons) {
+  function dialog(title, text, buttons, open = "dialog") {
+    c.open = open;
     const ov = Gioco.el.overlay;
     ov.innerHTML = `<h3>${title}</h3><p>${text}</p>
       <nav class="menu">${buttons.filter(Boolean).map(([action, label]) => `<button class="menu-item" data-city-action="${action}">${label}</button>`).join("")}</nav>`;
@@ -277,8 +520,31 @@ const Citta = (() => {
     ov.querySelector(".menu-item").focus();
   }
 
+  function readBarrel() {
+    dialog("Un barile", "Sul barile c'è una nota attaccata con un chiodo. Vuoi leggerla?", [["grog", "Leggi la nota"], ["back", "Lascia stare"]]);
+  }
+
+  // Il punto esclamativo: o ti rapina, o ti mette in mano qualcosa di strano
+  function meet(npc) {
+    const trip = Gioco.trip;
+    npc.event = false;
+    npc.el.classList.remove("e-event");
+    delete npc.el.dataset.intent;
+    if (Math.random() < 0.5 && trip.money > 0) {
+      const lost = Math.min(trip.money, ROB[0] + Math.floor(Math.random() * (ROB[1] - ROB[0] + 1)));
+      trip.money -= lost;
+      Gioco.pay("rapina", lost);
+      Gioco.renderStatus();
+      dialog("Uno sconosciuto", `Ti si avvicina sorridendo, ti dà una pacca sulla spalla e sparisce tra la folla. Ti manca qualcosa: −${lost} m.o.`, [["back", "Accidenti"]]);
+    } else {
+      const kind = OGGETTI_SPECIALI_IDS[Math.floor(Math.random() * OGGETTI_SPECIALI_IDS.length)];
+      trip.pack.push({ kind });
+      Gioco.note(`${c.city.name}: uno sconosciuto mi ha dato ${OGGETTI_SPECIALI[kind].nome.toLowerCase()}.`, OGGETTI_SPECIALI[kind].icona);
+      dialog("Uno sconosciuto", `«Tenete, a me non serve più.» Ti mette in mano ${OGGETTI_SPECIALI[kind].nome.toLowerCase()} e se ne va. Finisce nello zaino.`, [["back", "Grazie…?"]]);
+    }
+  }
+
   function openShop(kind) {
-    c.open = kind;
     const trip = Gioco.trip, shop = SHOPS[c.city.id][kind], money = trip.money;
     if (kind === "medico") {
       const healed = trip.hp >= shop.cap;
@@ -300,7 +566,7 @@ const Citta = (() => {
       const buys = (it) => !shop.refuse.includes(OGGETTI[it.kind].cat);
       const items = hold.map((it, i) => buys(it)
         ? [`sell:${i}`, `${OGGETTI[it.kind].nome} <small>(+${shop.price} m.o.)</small>`]
-        : [`none`, `${OGGETTI[it.kind].nome} <small>(non gli interessa)</small>`]);
+        : ["none", `${OGGETTI[it.kind].nome} <small>(non gli interessa)</small>`]);
       const sellable = hold.filter(buys).length;
       dialog("Mercato", hold.length ? `«Volete vendere la vostra merce? ${shop.price} m.o. al pezzo.»${shop.refuse.length ? " «L'arte la lasciamo alla città.»" : ""}`
         : "«Non avete niente da vendere, mi pare.»", [
@@ -308,10 +574,66 @@ const Citta = (() => {
         ...items,
         ["back", "Esci"],
       ]);
+    } else if (kind === "falegname") {
+      talkCarpenter();
     } else {
       dialog("Emporio", "La porta è chiusa. Un cartello: «Torno presto».", [["back", "Esci"]]);
     }
   }
+
+  // --- Il falegname: una battuta alla volta, e lui risponde con la sua vocina ---
+
+  function talkCarpenter() {
+    c.open = "falegname";
+    c.talk = { step: 0, typing: false };
+    const ov = Gioco.el.overlay;
+    ov.innerHTML = `<h3>Falegname</h3><div class="talk-log"></div><nav class="menu talk-choice"></nav>`;
+    ov.hidden = false;
+    nextLine();
+  }
+
+  function nextLine() {
+    const ov = Gioco.el.overlay;
+    const choice = ov.querySelector(".talk-choice");
+    const line = RODITORE[c.talk.step];
+    if (!line) {
+      choice.innerHTML = '<button class="menu-item" data-city-action="back">Esci</button>';
+      choice.querySelector("button").focus();
+      return;
+    }
+    if (line[0] === "io") {
+      // l'unica battuta possibile, da scegliere come in ogni dialogo
+      choice.innerHTML = `<button class="menu-item" data-city-action="say">${line[1]}</button>`;
+      choice.querySelector("button").focus();
+    } else {
+      choice.innerHTML = "";
+      say("Falegname", line[1], true);
+    }
+  }
+
+  function say(who, text, typed) {
+    const log = Gioco.el.overlay.querySelector(".talk-log");
+    const p = document.createElement("p");
+    p.innerHTML = `<b>${who}:</b> <span></span>`;
+    log.appendChild(p);
+    const span = p.querySelector("span");
+    log.scrollTop = log.scrollHeight;
+    c.talk.step++;
+    if (!typed) { span.textContent = text; nextLine(); return; }
+    c.talk.typing = true;
+    let i = 0;
+    const tick = () => {
+      if (!c || c.open !== "falegname") return;
+      span.textContent = text.slice(0, ++i);
+      if (i % 2 === 0 && text[i - 1] !== " ") Suoni.play("voce");
+      log.scrollTop = log.scrollHeight;
+      if (i < text.length) setTimeout(tick, TYPE_MS);
+      else { c.talk.typing = false; nextLine(); }
+    };
+    tick();
+  }
+
+  // --- Le azioni delle botteghe ---
 
   function heal() {
     const trip = Gioco.trip, shop = SHOPS[c.city.id].medico;
@@ -351,7 +673,6 @@ const Citta = (() => {
   }
 
   function aboard() {
-    c.open = "nave";
     dialog("La tua nave", `Giorno ${Gioco.day()}, ${Gioco.now()} · ${Gioco.trip.money} m.o.`, [
       ["sail", `Riparti <small>(due momenti: sarà ${Gioco.timeOf(Gioco.trip.third + 2)})</small>`],
       ["back", "Resta in città"],
@@ -374,12 +695,21 @@ const Citta = (() => {
     move(...MOVES[k]);
   });
 
+  // Col falegname non si scappa: niente Esc, niente diario, e Invio non salta le sue parole
+  window.addEventListener("keydown", (e) => {
+    if (!c || c.open !== "falegname") return;
+    if (e.key === "Enter" && !c.talk.typing) return;
+    if (e.key === "Escape" || e.key === "Tab" || e.key === "Enter") { e.preventDefault(); e.stopImmediatePropagation(); }
+  }, true);
+
   document.addEventListener("click", (e) => {
     const action = e.target.closest("[data-city-action]")?.dataset.cityAction;
     if (!action || !c) return;
     if (action === "back") back();
     else if (action === "heal") heal();
     else if (action === "sleep") sleep();
+    else if (action === "grog") dialog("La nota sul barile", GROG, [["back", "Rimetti a posto la nota"]]);
+    else if (action === "say" && !c.talk.typing) say(Gioco.trip.explorer, RODITORE[c.talk.step][1], false);
     else if (action === "sellall") {
       const refuse = SHOPS[c.city.id].mercato.refuse;
       sell(Gioco.trip.hold.map((it, i) => (refuse.includes(OGGETTI[it.kind].cat) ? -1 : i)).filter((i) => i >= 0));
@@ -388,7 +718,7 @@ const Citta = (() => {
   });
 
   document.addEventListener("mouseover", (e) => {
-    const cell = e.target.closest("#map > div");
+    const cell = e.target.closest("#map > div.cell");
     if (cell && c && Gioco.trip?.mode === "city") tileInfo({ x: +cell.dataset.x, y: +cell.dataset.y });
   });
 
