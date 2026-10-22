@@ -2,6 +2,12 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.6.5 · 23 ottobre 2026
+
+- **L'orso** colpisce fortissimo: quattro cuori su cinque, ti lascia moribondo. Ma poi è **sazio**: resta fermo per 3 tue mosse, si allontana da te e torna a vagare. Ti riattacca solo se gli vai addosso o fai molto rumore accanto a lui.
+- **La Società ornitologica** paga **25 m.o.** per ogni specie completata (prima 8). Le specie già complete nel taccuino ripreso col codice non si ripagano: sono state premiate nella spedizione di prima.
+- I danni nei messaggi si leggono in cuori («−4 cuori», «−mezzo cuore»).
+
 ## 0.6.4 · 23 ottobre 2026
 
 - **L'orso** torna a togliere due cuori a colpo: nella 0.6.3 il danno era stato dimezzato per un malinteso. Resta fermo per 3 tue mosse dopo ogni colpo.

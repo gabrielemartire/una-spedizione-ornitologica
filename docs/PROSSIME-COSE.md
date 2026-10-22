@@ -6,7 +6,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 0. **Le cartoline delle città**: rifatte nella v0.4.1 (Forte dalla strada, porticciolo dalla foto). Ritocchi possibili: insegne delle locande più leggibili, la locanda vicina che esce dal bordo.
 1. **Tarare i ricercati**: il fuggitivo spara mezzo cuore ogni 4 battiti e scappa al tuo passo; correndo lo si prende. Da provare giocando.
 2. **Le icone degli uccelli**: le 8 specie usano icone provvisorie di game-icons, in attesa dei disegni.
-3. **Tarare l'economia**: oggetti a 2–4 m.o., premi della Società (8) e taglie (15) bastano a pagare la ciurma? Giocare qualche spedizione.
+3. **Tarare l'economia**: oggetti a 2–4 m.o., premi della Società (25) e taglie (15) bastano a pagare la ciurma? Giocare qualche spedizione.
 4. **Emporio**: altre cose sul tavolo (strumenti e trappole); oggi ci sono solo i semi.
 
 ## Versione 2
@@ -18,6 +18,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Vignetta notturna**: di notte la mappa più scura lontano dall'esploratore.
 
 ## Fatto di recente
+- [x] **Versione 0.6.5**: l'orso colpisce per quattro cuori ma poi è sazio e ti lascia andare; Società a 25 m.o. per specie, senza ripagare le specie del taccuino ripreso.
 - [x] **Versione 0.6.4**: l'orso torna a due cuori a colpo.
 - [x] **Versione 0.6.3**: l'orso toglie un cuore a colpo invece di due.
 - [x] **Versione 0.6.2**: il libretto del taccuino è un A4 da stampare da un lato e piegare in quattro; scritte a penna su una riga, QR color sabbia, isole/zone/uccelli all'interno.

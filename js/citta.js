@@ -17,7 +17,7 @@ const Citta = (() => {
   const TYPE_MS = 32;         // la velocità con cui compaiono le parole di chi parla
   const EVENT_CHANCE = 0.6;   // a ogni visita, qualcuno col punto esclamativo
   const WANTED_CHANCE = 0.6;  // a ogni visita, un avviso nuovo in bacheca (se non ce n'è uno in corso)
-  const SOCIETY_PRIZE = 8;    // il premio della Società per ogni specie completata (tutti i comuni)
+  const SOCIETY_PRIZE = 25;   // il premio della Società per ogni specie completata (tutti i comuni)
   const ROB = [2, 4];         // quanto ti può rubare
 
   // walk: ci si cammina; i nomi servono a dire cosa c'è nella casella

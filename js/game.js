@@ -75,10 +75,11 @@ const Gioco = (() => {
     tower:  { name: "Torre",            icon: "tower",      cls: "t-castle", walk: false, sight: false, tower: true },
   };
 
-  // Gli animali: l'orso di giorno, i lupi di notte, il cinghiale all'alba.
+  // Gli animali: l'orso di giorno, i lupi di notte, il cinghiale all'alba. L'orso colpisce forte (quattro
+  // cuori) ma poi è sazio: dopo il fermo torna a vagare e ti riattacca solo se lo provochi da vicino.
   // speed = passi per ogni tuo passo (l'acqua ne costa 2); il cinghiale invece carica in linea retta
   const KINDS = {
-    bear: { name: "Orso", icon: "bear", speed: { hunt: 4 / 3, search: 1, wander: 0.5 }, sight: 10, nightSight: 6, smell: 6, hearing: 2, damage: 4, rest: 3, sound: "orso", step: "passoOrso",
+    bear: { name: "Orso", icon: "bear", speed: { hunt: 4 / 3, search: 1, wander: 0.5 }, sight: 10, nightSight: 6, smell: 6, hearing: 2, damage: 8, rest: 3, sated: true, sound: "orso", step: "passoOrso",
       verb: "L'orso ti raggiunge e ti colpisce!", death: "Sbranato", deathText: "L'orso ha avuto la meglio" },
     wolf: { name: "Lupo", icon: "wolf", speed: { hunt: 1, search: 1, wander: 0.5 }, sight: 8, nightSight: 8, smell: 5, hearing: 3, damage: 2, rest: 2, sound: "lupo", step: null,
       verb: "Un lupo ti azzanna!", death: "Azzannato", deathText: "Il branco ha avuto la meglio" },
@@ -498,6 +499,8 @@ const Gioco = (() => {
     if (notebook) {
       for (const id of notebook) if (UCCELLI[id]) trip.birds[id] = { level: "visto", zone: "taccuino precedente", day: 0, time: "" };
       notebook = null;
+      // le specie già complete nel vecchio taccuino la Società le ha già premiate: non si ripagano
+      trip.society = Object.keys(SPECIE).filter((sp) => UCCELLI.filter((u) => u.specie === sp && !u.rara && !u.uovo).every((u) => trip.birds[u.id]));
     }
     initUi();
     note(Object.keys(trip.birds).length ? `Salpi dal Forte, col vecchio taccuino: ${Object.keys(trip.birds).length} uccelli già annotati.` : "Salpi dal Forte.", "ship");
@@ -1115,7 +1118,7 @@ const Gioco = (() => {
       el.map.classList.remove("is-hit");
       void el.map.offsetWidth;
       el.map.classList.add("is-hit");
-      toast(`Il ricercato ti spara! −${OUTLAW.damage} vita.`);
+      toast(`Il ricercato ti spara! ${lostHearts(OUTLAW.damage)}.`);
       if (!p.hp) die("fugitive");
       return;
     }
@@ -1209,7 +1212,9 @@ const Gioco = (() => {
     const k = KINDS[o.kind], p = s.player;
     if (o.rest) { o.rest--; o.next = null; return; }
 
-    if (sees(o) || hears(o)) {
+    // sazio, ti nota solo se gli vai addosso o se fai molto rumore vicino a lui
+    const provoked = o.sated ? dist(o, p) <= 1 || s.heard.some((n) => n.r >= 3 && dist(o, n) <= 2) : sees(o) || hears(o);
+    if (provoked) {
       if (o.mode !== "hunt") { Suoni.play(k.sound); toast(`${o.kind === "wolf" ? "Un lupo" : "L'orso"} ti ha fiutato e ti insegue!`); }
       o.mode = "hunt";
       o.last = { x: p.x, y: p.y };
@@ -1227,7 +1232,9 @@ const Gioco = (() => {
     if (!target) {
       const around = DIRS.map(([dx, dy]) => ({ x: o.x + dx, y: o.y + dy }))
         .filter((c) => inside(c.x, c.y) && beastCost(c) < Infinity && !same(c, p));
-      target = Math.random() < 0.6 ? p : pickRandom(around);
+      // sazio e ancora vicino a te, se ne va dall'altra parte
+      if (o.sated && dist(o, p) < 8) target = around.sort((a, b) => dist(b, p) - dist(a, p))[0];
+      else target = !o.sated && Math.random() < 0.6 ? p : pickRandom(around);
     }
     const path = (target && pathFrom(prev, o, target)) || [];
 
@@ -1318,19 +1325,28 @@ const Gioco = (() => {
     if (steps.length && dist(o, p) < 10) Suoni.play(k.step);
   }
 
+  // il danno detto in cuori: ogni cuore vale due punti di vita
+  function lostHearts(d) {
+    const whole = Math.floor(d / 2), half = d % 2;
+    if (!whole) return "−mezzo cuore";
+    return `−${whole} ${whole === 1 ? "cuore" : "cuori"}${half ? " e mezzo" : ""}`;
+  }
+
   function attack(o) {
     const k = KINDS[o.kind], p = s.player;
     o.rest = k.rest;
     o.energy = 0;
     o.next = null;
     if (o.kind === "boar") o.mode = "stunned";
+    // l'orso, dopo il colpo, è sazio: finito il fermo se ne va per conto suo
+    if (k.sated) { o.sated = true; o.mode = "wander"; o.last = null; }
     p.hp = Math.max(0, p.hp - k.damage);
     trip.stats.hits++;
     Suoni.play("tonfo");
     el.map.classList.remove("is-hit");
     void el.map.offsetWidth; // fa ripartire l'animazione
     el.map.classList.add("is-hit");
-    toast(`${k.verb} −${k.damage} vita.`);
+    toast(`${k.verb} ${lostHearts(k.damage)}.${k.sated && p.hp ? " Poi si siede, sazio." : ""}`);
     if (!p.hp) die(o.kind);
     else render();
   }

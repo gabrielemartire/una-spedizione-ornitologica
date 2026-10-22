@@ -243,7 +243,7 @@ Ogni creatura mostra il suo stato (`!` ti insegue o carica, `?` ti cerca, `z` si
 
 | Creatura | Comportamento | Come la gestisci |
 |---|---|---|
-| Orso | 4 passi ogni 3 tuoi quando ti insegue (più veloce di te!), al tuo passo quando ti cerca, uno ogni due quando vaga; l'acqua gli costa doppio. Dopo averti colpito (−4, cioè due cuori) resta fermo per 3 tue mosse. Tenace: ti fiuta da vicino, ti vede da lontano, aggira gli ostacoli e ti segue | Correndo non lo semini: nasconditi nell'erba alta e nei cespugli, attraversa il ruscello |
+| Orso | 4 passi ogni 3 tuoi quando ti insegue (più veloce di te!), al tuo passo quando ti cerca, uno ogni due quando vaga; l'acqua gli costa doppio. Colpisce fortissimo: **−8, cioè quattro cuori su cinque**, ti lascia moribondo. Poi però è **sazio**: resta fermo per 3 tue mosse, poi si allontana da te (finché sei a meno di 8 caselle) e torna a vagare; ti riattacca solo se gli vai addosso o fai molto rumore accanto a lui. Tenace: ti fiuta da vicino, ti vede da lontano, aggira gli ostacoli e ti segue | Correndo non lo semini: nasconditi nell'erba alta e nei cespugli, attraversa il ruscello |
 | Lupi | In branco, al tuo passo, colpiscono meno forte (−2) ma sono tanti; ci vedono bene anche di notte | Nasconditi e aspetta; *(v2: cercano di circondarti)* |
 | Cinghiale | Non sa curvare: se sei sulla sua riga o colonna, in vista, **carica in linea retta** di 2 caselle a battito (−3). Contro un ostacolo si pianta e resta stordito | Le sue linee di carica sono evidenziate: spostati di lato, oppure fallo schiantare contro un albero |
 | Serpente | Fermo nell'erba alta, morde chi è adiacente | Va notato ed evitato |
@@ -315,7 +315,7 @@ Le città **sono battlemap cittadine**: la banchina con le altre navi, le strade
 | Mercato | **2 m.o.** a oggetto, compra tutto | **4 m.o.** a oggetto, ma l'arte no |
 | Emporio | i semi, **5 m.o.** | i semi, **5 m.o.** |
 | Gendarmeria | la taglia del ricercato: **15 m.o.** | no |
-| Società ornitologica | **8 m.o.** per ogni specie completata | no |
+| Società ornitologica | **25 m.o.** per ogni specie completata | no |
 | Bacheca dei ricercati | sì | sì |
 
 **Le voci.** Una voce lega un uccello a **una zona precisa**, segnata sul globo con una **X dorata**. Dice la specie, non quale uccello: chi va a vedere può trovare un raro, o (al porticciolo) restare deluso da uno qualunque. Massimo **2 voci di taverna** a spedizione, più quelle dei mercanti. Finite le voci, in taverna si dorme e basta.
@@ -359,7 +359,7 @@ Il diario è un diario, non un manuale: niente spiegazioni, se un capitolo è vu
 
 **Altri uccelli.** Una nona specie raccoglie **6 uccelli singoli**, ognuno con la sua icona e senza raro: kiwi notturno (foresta, notte), corridore delle dune (deserto, alba; icona *ostrich*), gallo del villaggio (villaggio, alba), dodo (isola tropicale, pomeriggio), gru di carta (palude, alba), oca del lago (lago, pomeriggio). In tutto 57 uccelli, più il **Pulcino**, che non vive in nessuna zona: nasce dall'uovo maculato (non conta per il premio della Società).
 
-**Perché inseguire una specie: la Società ornitologica.** Al Forte, quando hai osservato **tutti gli uccelli comuni di una specie**, la Società ti paga **8 m.o.** (una volta per specie, entrando nella sua sede). Il taccuino dice dove cercarli: chi ha poche monete può decidere di andare a completare i gabbiani invece di girare a caso.
+**Perché inseguire una specie: la Società ornitologica.** Al Forte, quando hai osservato **tutti gli uccelli comuni di una specie**, la Società ti paga **25 m.o.** (una volta per specie, entrando nella sua sede). Le specie già complete nel taccuino ripreso col codice non si ripagano: la Società le ha premiate nella spedizione di prima. Il taccuino dice dove cercarli: chi ha poche monete può decidere di andare a completare i gabbiani invece di girare a caso.
 
 Ogni uccello ha: bioma (o "ovunque"), a volte una caratteristica (fiume, lago, cascata, rovine, villaggio, montagne, castello, vulcano), **i momenti in cui si fa vedere**, un indizio e una curiosità. Gli ID non cambiano mai: il codice del taccuino si baserà su di essi.
 
@@ -448,7 +448,7 @@ Idea: **ogni uccello ha il suo verso**, generato dal suo ID. Lo stesso uccello c
 - **Animali per momento:** alba cinghiale, pomeriggio orso, notte lupi; mai una zona vuota (§ 9.3).
 - **Esplorazione pura:** niente avvisi su uccello e animali, solo «Nessun canto» (§ 9.3).
 - **Ricercati:** bacheca nei due porti, W rossa, fumo, fuggitivo che spara, taglia di 15 m.o. alla gendarmeria del Forte (§ 9.6).
-- **Società ornitologica:** 8 m.o. per specie completata, per dare un motivo a inseguire una specie (§ 13).
+- **Società ornitologica:** 25 m.o. per specie completata, per dare un motivo a inseguire una specie; non si ripagano le specie già complete nel taccuino ripreso (§ 13).
 - **Patch note:** in `PATCH-NOTE.md` e, alla prima accensione di ogni versione, in un riquadro nel gioco (*Patch note n.m*).
 - **Un uccello per zona**, deciso al primo attracco; i rari solo con le voci, al massimo 2 (§ 13).
 - **Un'icona per specie**, le varianti cambiano colore.
