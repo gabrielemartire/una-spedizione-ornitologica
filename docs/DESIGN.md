@@ -178,7 +178,7 @@ Ogni layer ha 3–5 varianti, ognuna è un piccolo disegno ASCII con trasparenza
 
 ## 9. La battlemap (A)
 
-Una griglia fitta (**40 × 24 caselle**) generata dallo stesso seed della cartolina. Tutt'intorno una **cornice chiara** segna il bordo: oltre non si va (il nero del riquadro sembrava un passaggio).
+Una griglia fitta (**40 × 24 caselle**) generata dallo stesso seed della cartolina. Tutt'intorno una **cornice verde**, sempre la stessa in ogni bioma, a doppio filo e con un fregio barocco a ogni angolo, segna il bordo: sta appena fuori dalle caselle (non copre le icone) e oltre non si va (il nero del riquadro sembrava un passaggio).
 
 **Grafica:** icone monocromatiche da [game-icons.net](https://game-icons.net), colorate con la palette della zona. Una casella, un'icona leggibile.
 

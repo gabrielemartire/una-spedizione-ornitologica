@@ -106,21 +106,37 @@ const Diario = (() => {
       </div>`;
     box.hidden = false;
     fitBook();
-    // in quale pagina cade l'inizio di ogni capitolo, e la fine del libro
+    paginate();
+    turnTo(starts[tab]);
+    Suoni.play("pagina");
+    // se i caratteri del libro arrivano dopo, il testo si allarga: si rifà l'impaginazione e si resta sul capitolo
+    if (document.fonts.status !== "loaded") document.fonts.ready.then(() => {
+      if (!isOpen()) return;
+      const here = current;
+      paginate();
+      turnTo(starts[here]);
+    });
+  }
+
+  // In quale pagina cade l'inizio di ogni capitolo, e la fine del libro. Ogni capitolo comincia su una
+  // pagina di sinistra: se cadrebbe a destra, prima ci va una pagina bianca
+  function paginate() {
+    const box = document.getElementById("diary-popup");
     const flow = box.querySelector(".book-flow");
+    flow.querySelectorAll(".blank-page").forEach((b) => b.remove());
+    const transform = flow.style.transform;
+    flow.style.transform = "";
     const gap = parseFloat(getComputedStyle(flow).columnGap);
     const col = (flow.offsetWidth + gap) / 2;
     const left = flow.getBoundingClientRect().left;
     const pageOf = (node) => Math.round((node.getBoundingClientRect().left - left) / scale() / col);
-    // ogni capitolo comincia su una pagina di sinistra: se cadrebbe a destra, una pagina bianca prima
     starts = {};
     box.querySelectorAll(".chapter").forEach((ch) => {
       if (pageOf(ch.querySelector("h3")) % 2) ch.insertAdjacentHTML("beforebegin", '<div class="blank-page"></div>');
       starts[ch.dataset.chapter] = pageOf(ch.querySelector("h3")) / 2;
     });
     spreads = Math.floor(pageOf(box.querySelector(".book-end")) / 2) + 1;
-    turnTo(starts[tab]);
-    Suoni.play("pagina");
+    flow.style.transform = transform;
   }
 
   function turnTo(n) {

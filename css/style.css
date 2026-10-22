@@ -743,14 +743,26 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .jail-bars span { padding: 1px 5px; background: #e4d6b0; color: #2a2014; font-family: "IM Fell English", serif; font-style: italic; font-size: 15px; line-height: 1.1; max-width: 96px; }
 .jail figcaption { font-family: "IM Fell English", serif; font-style: italic; font-size: 13px; color: #8a2a1a; margin-top: 3px; }
 
-/* Il bordo della battlemap: una cornice netta, dentro la mappa, così il nero del riquadro non sembra
-   un passaggio. Oltre la cornice non si va */
+/* Il bordo della battlemap: sempre verde, in ogni bioma, con un doppio filo e un fregio barocco a ogni
+   angolo; sta appena fuori dalla mappa, così il nero del riquadro non sembra un passaggio. Oltre non si va */
 .map::after {
   content: "";
   position: absolute;
-  inset: 0;
-  border: 3px solid var(--f-light);
-  box-shadow: inset 0 0 0 1px var(--ink), inset 0 0 10px 2px rgba(0, 0, 0, 0.55);
+  inset: -12px;   /* fuori dalla mappa, con un filo di margine: non copre le icone */
+  border: 5px double #9ac46a;
+  box-shadow: inset 0 0 0 2px #0f1a12, inset 0 0 0 3px #5a7a3a;
   pointer-events: none;
   z-index: 6;
+}
+.map::before {
+  content: "";
+  position: absolute;
+  inset: -20px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34' viewBox='0 0 34 34'%3E%3Cg transform='rotate%280 17 17%29' fill='none' stroke='%23b8d88a' stroke-linecap='round'%3E%3Cpath d='M4 32 V12 Q4 4 12 4 H32' stroke-width='2.2'/%3E%3Cpath d='M9 32 V15 Q9 9 15 9 H32' stroke-width='1.2'/%3E%3Cpath d='M15 15 q5 -1 6 4 q1 5 -4 5 q-3 0 -3 -3 q0 -2 2 -2' stroke-width='1.6'/%3E%3C/g%3E%3Cg transform='rotate%280 17 17%29'%3E%3Cpath d='M4 4 l3 3 l-3 3 l-3 -3z' fill='%23e8f0c8'/%3E%3C/g%3E%3C/svg%3E") left top / 30px no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34' viewBox='0 0 34 34'%3E%3Cg transform='rotate%2890 17 17%29' fill='none' stroke='%23b8d88a' stroke-linecap='round'%3E%3Cpath d='M4 32 V12 Q4 4 12 4 H32' stroke-width='2.2'/%3E%3Cpath d='M9 32 V15 Q9 9 15 9 H32' stroke-width='1.2'/%3E%3Cpath d='M15 15 q5 -1 6 4 q1 5 -4 5 q-3 0 -3 -3 q0 -2 2 -2' stroke-width='1.6'/%3E%3C/g%3E%3Cg transform='rotate%2890 17 17%29'%3E%3Cpath d='M4 4 l3 3 l-3 3 l-3 -3z' fill='%23e8f0c8'/%3E%3C/g%3E%3C/svg%3E") right top / 30px no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34' viewBox='0 0 34 34'%3E%3Cg transform='rotate%28180 17 17%29' fill='none' stroke='%23b8d88a' stroke-linecap='round'%3E%3Cpath d='M4 32 V12 Q4 4 12 4 H32' stroke-width='2.2'/%3E%3Cpath d='M9 32 V15 Q9 9 15 9 H32' stroke-width='1.2'/%3E%3Cpath d='M15 15 q5 -1 6 4 q1 5 -4 5 q-3 0 -3 -3 q0 -2 2 -2' stroke-width='1.6'/%3E%3C/g%3E%3Cg transform='rotate%28180 17 17%29'%3E%3Cpath d='M4 4 l3 3 l-3 3 l-3 -3z' fill='%23e8f0c8'/%3E%3C/g%3E%3C/svg%3E") right bottom / 30px no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34' viewBox='0 0 34 34'%3E%3Cg transform='rotate%28270 17 17%29' fill='none' stroke='%23b8d88a' stroke-linecap='round'%3E%3Cpath d='M4 32 V12 Q4 4 12 4 H32' stroke-width='2.2'/%3E%3Cpath d='M9 32 V15 Q9 9 15 9 H32' stroke-width='1.2'/%3E%3Cpath d='M15 15 q5 -1 6 4 q1 5 -4 5 q-3 0 -3 -3 q0 -2 2 -2' stroke-width='1.6'/%3E%3C/g%3E%3Cg transform='rotate%28270 17 17%29'%3E%3Cpath d='M4 4 l3 3 l-3 3 l-3 -3z' fill='%23e8f0c8'/%3E%3C/g%3E%3C/svg%3E") left bottom / 30px no-repeat;
+  pointer-events: none;
+  z-index: 7;
 }

@@ -1526,7 +1526,8 @@ const Gioco = (() => {
   function fitMap() {
     if (!el || el.mapWrap.hidden) return;
     const box = el.mapWrap.getBoundingClientRect();
-    const cell = Math.max(10, Math.min(30, Math.floor(Math.min(box.width / W, box.height / H))));
+    const FRAME = 40;   // lo spazio per la cornice intorno, che non deve coprire le caselle del bordo
+    const cell = Math.max(10, Math.min(30, Math.floor(Math.min((box.width - FRAME) / W, (box.height - FRAME) / H))));
     el.map.style.setProperty("--cell", `${cell}px`);
   }
 

@@ -2,6 +2,11 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.6.9 · 23 ottobre 2026
+
+- **La cornice della battlemap** è sempre verde (in ogni bioma), a doppio filo, con un fregio barocco a ogni angolo; sta appena fuori dalla mappa, con un filo di margine, e non copre più le icone del bordo.
+- **Il taccuino non si scombina più**: aprendolo prima che i caratteri del libro fossero caricati, l'impaginazione veniva calcolata col carattere sbagliato e i capitoli finivano a destra (Finanze a sinistra, Zaino a destra…). Ora, quando i caratteri arrivano, le pagine si rifanno.
+
 ## 0.6.8 · 23 ottobre 2026
 
 - **La battlemap ha una cornice chiara** tutto intorno: si vede dove finisce la mappa, e il nero del riquadro non sembra più un passaggio.

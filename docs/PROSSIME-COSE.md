@@ -18,6 +18,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Vignetta notturna**: di notte la mappa più scura lontano dall'esploratore.
 
 ## Fatto di recente
+- [x] **Versione 0.6.9**: cornice verde barocca fuori dalla battlemap; il taccuino si reimpagina quando arrivano i caratteri.
 - [x] **Versione 0.6.8**: cornice chiara attorno alla battlemap; cuori di nuovo rossi.
 - [x] **Versione 0.6.7**: il diario segna solo gli sbarchi, con l'ora e se l'uccello c'era.
 - [x] **Versione 0.6.6**: i ricercati catturati nel taccuino, dietro le sbarre nella pagina della stiva.
