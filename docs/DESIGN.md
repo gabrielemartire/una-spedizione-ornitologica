@@ -243,7 +243,7 @@ Ogni creatura mostra il suo stato (`!` ti insegue o carica, `?` ti cerca, `z` si
 
 | Creatura | Comportamento | Come la gestisci |
 |---|---|---|
-| Orso | 4 passi ogni 3 tuoi quando ti insegue (più veloce di te!), al tuo passo quando ti cerca, uno ogni due quando vaga; l'acqua gli costa doppio. Dopo averti colpito (−4) si ferma per 3 battiti. Tenace: ti fiuta da vicino, ti vede da lontano, aggira gli ostacoli e ti segue | Correndo non lo semini: nasconditi nell'erba alta e nei cespugli, attraversa il ruscello |
+| Orso | 4 passi ogni 3 tuoi quando ti insegue (più veloce di te!), al tuo passo quando ti cerca, uno ogni due quando vaga; l'acqua gli costa doppio. Dopo averti colpito (−2, un cuore) resta fermo per 3 tue mosse. Tenace: ti fiuta da vicino, ti vede da lontano, aggira gli ostacoli e ti segue | Correndo non lo semini: nasconditi nell'erba alta e nei cespugli, attraversa il ruscello |
 | Lupi | In branco, al tuo passo, colpiscono meno forte (−2) ma sono tanti; ci vedono bene anche di notte | Nasconditi e aspetta; *(v2: cercano di circondarti)* |
 | Cinghiale | Non sa curvare: se sei sulla sua riga o colonna, in vista, **carica in linea retta** di 2 caselle a battito (−3). Contro un ostacolo si pianta e resta stordito | Le sue linee di carica sono evidenziate: spostati di lato, oppure fallo schiantare contro un albero |
 | Serpente | Fermo nell'erba alta, morde chi è adiacente | Va notato ed evitato |

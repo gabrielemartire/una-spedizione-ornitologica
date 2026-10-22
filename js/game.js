@@ -78,7 +78,7 @@ const Gioco = (() => {
   // Gli animali: l'orso di giorno, i lupi di notte, il cinghiale all'alba.
   // speed = passi per ogni tuo passo (l'acqua ne costa 2); il cinghiale invece carica in linea retta
   const KINDS = {
-    bear: { name: "Orso", icon: "bear", speed: { hunt: 4 / 3, search: 1, wander: 0.5 }, sight: 10, nightSight: 6, smell: 6, hearing: 2, damage: 4, rest: 3, sound: "orso", step: "passoOrso",
+    bear: { name: "Orso", icon: "bear", speed: { hunt: 4 / 3, search: 1, wander: 0.5 }, sight: 10, nightSight: 6, smell: 6, hearing: 2, damage: 2, rest: 3, sound: "orso", step: "passoOrso",
       verb: "L'orso ti raggiunge e ti colpisce!", death: "Sbranato", deathText: "L'orso ha avuto la meglio" },
     wolf: { name: "Lupo", icon: "wolf", speed: { hunt: 1, search: 1, wander: 0.5 }, sight: 8, nightSight: 8, smell: 5, hearing: 3, damage: 2, rest: 2, sound: "lupo", step: null,
       verb: "Un lupo ti azzanna!", death: "Azzannato", deathText: "Il branco ha avuto la meglio" },

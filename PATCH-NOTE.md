@@ -2,6 +2,10 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.6.3 · 23 ottobre 2026
+
+- **L'orso** toglie un cuore a colpo (prima due): prima bastavano tre colpi per morire, ora cinque. Dopo averti colpito resta fermo per 3 tue mosse, poi torna a inseguirti.
+
 ## 0.6.2 · 23 ottobre 2026
 
 - **Il libretto del taccuino è un foglio solo**: una pagina A4 verticale, da stampare **da un lato** e piegare in quattro. Prima a metà in orizzontale con la stampa fuori (la parte capovolta va dietro), poi a metà in verticale con la copertina davanti. Diventa un libretto A6: la copertina, il retro col QR e, aprendolo, due facciate con gli uccelli (la metà di sopra è stampata capovolta apposta, così dopo le pieghe si legge dritta).
