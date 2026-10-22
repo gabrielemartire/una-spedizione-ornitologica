@@ -446,6 +446,7 @@ const Gioco = (() => {
   // trip.third conta i momenti passati: 0 = alba del primo giorno, 1 = pomeriggio, 2 = notte, 3 = alba del secondo…
   let trip = null;
   let explorer = "";
+  let notebook = null;   // gli uccelli di un taccuino ripreso col codice, per la prossima spedizione
 
   // la vita massima: cinque cuori, più quello rosa della donna della torre
   const maxHp = () => MAX_HP + (trip && trip.pink ? 2 : 0);
@@ -493,8 +494,13 @@ const Gioco = (() => {
       ship: { ...world.start, sails: 0 },
     };
     s = null;
+    // il taccuino ripreso: i suoi uccelli sono già osservati
+    if (notebook) {
+      for (const id of notebook) if (UCCELLI[id]) trip.birds[id] = { level: "visto", zone: "taccuino precedente", day: 0, time: "" };
+      notebook = null;
+    }
     initUi();
-    note("Salpi dal Forte.", "ship");
+    note(Object.keys(trip.birds).length ? `Salpi dal Forte, col vecchio taccuino: ${Object.keys(trip.birds).length} uccelli già annotati.` : "Salpi dal Forte.", "ship");
     Mare.enter();
   }
 
@@ -514,7 +520,7 @@ const Gioco = (() => {
   // A fine spedizione il taccuino resta nel browser: "Riprendi un taccuino" lo userà senza dover scrivere il codice
   function saveNotebook() {
     const seen = UCCELLI.filter((u) => trip.birds[u.id]?.level === "visto").map((u) => u.id);
-    const data = { explorer: trip.explorer, birds: seen, day: day(), date: new Date().toISOString().slice(0, 10) };
+    const data = { explorer: trip.explorer, birds: seen, code: Taccuino.encode(seen), day: day(), date: new Date().toISOString().slice(0, 10) };
     try { localStorage.setItem(NOTEBOOK_KEY, JSON.stringify(data)); } catch (e) { /* senza memoria resterà il codice */ }
   }
 
@@ -1679,7 +1685,7 @@ const Gioco = (() => {
 
   // Quello che serve alla navigazione (js/sea.js) e al diario (js/diario.js)
   return {
-    start, resume, save, hasSave: () => !!loadSave(), clearSave, loadNotebook, depart, landAt, rumor, pay, earn, visitCity, maxHp, EGG_DAYS,
+    start, resume, save, setNotebook: (ids) => { notebook = ids; }, code: () => Taccuino.encode(UCCELLI.filter((u) => trip.birds[u.id]?.level === "visto").map((u) => u.id)), hasSave: () => !!loadSave(), clearSave, loadNotebook, depart, landAt, rumor, pay, earn, visitCity, maxHp, EGG_DAYS,
     wantedPoster, acceptWanted, advance, renderStatus, note, toast, timeOf, now, day, showView, iconHtml, fitMap,
     get trip() { return trip; },
     get el() { return el; },

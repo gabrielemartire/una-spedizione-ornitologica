@@ -21,7 +21,7 @@
       <nav class="menu">
         <button class="menu-item" data-action="continue" hidden>Continua la spedizione</button>
         <button class="menu-item" data-action="new">Nuova spedizione <span class="tag">prototipo</span></button>
-        <button class="menu-item" disabled>Riprendi un taccuino <span class="tag">presto</span></button>
+        <button class="menu-item" data-goto="screen-resume">Riprendi un taccuino</button>
         <button class="menu-item" data-action="toggle-sound">Suoni: <span data-label="sound">ON</span></button>
         <button class="menu-item" data-action="volume" aria-label="Volume">Volume <span class="volume" data-label="volume"></span></button>
         <button class="menu-item" data-goto="screen-sounds">Ascolta i suoni</button>
@@ -40,6 +40,20 @@
         <button class="menu-item" data-goto="screen-menu">No, torna al menu</button>
         <button class="menu-item" data-goto="screen-name">Sì, ricomincia da capo</button>
       </nav>
+    </section>
+
+    <!-- Riprendere un taccuino: il codice dell'attestato, o quello rimasto nel browser -->
+    <section id="screen-resume" class="screen">
+      <h2 class="heading">~ Riprendi un taccuino ~</h2>
+      <p class="subtitle">Scrivi il codice del tuo attestato: gli uccelli che hai già osservato saranno nel taccuino.</p>
+      <form id="resume-form" class="name-form" autocomplete="off">
+        <input id="resume-code" class="name-input code-input" maxlength="24" placeholder="XXXX-XXXX-XXXX-XXXX" aria-label="Codice del taccuino" spellcheck="false">
+        <p id="resume-msg" class="resume-msg"></p>
+        <nav class="menu">
+          <button class="menu-item" type="submit">Riprendi e salpa</button>
+          <button class="menu-item" type="button" data-goto="screen-menu">← Torna al menu</button>
+        </nav>
+      </form>
     </section>
 
     <!-- Scelta del nome -->
@@ -107,7 +121,7 @@
     <section id="screen-end" class="screen end">
       <div id="end-body"></div>
       <nav class="menu">
-        <button class="menu-item" data-end-action="download"><svg class="pdf-icon" viewBox="0 0 24 28" aria-hidden="true"><path d="M2 1h14l6 6v20H2z" fill="#e8e4c9" stroke="#0f1a12" stroke-width="1.5"/><path d="M16 1v6h6" fill="#c8c4a9" stroke="#0f1a12" stroke-width="1.5"/><rect x="0" y="13" width="20" height="9" fill="#b8302a"/><text x="10" y="20.4" font-size="7.5" font-family="monospace" font-weight="bold" fill="#fff" text-anchor="middle">PDF</text></svg> Scarica l'attestato</button>
+        <button class="menu-item" data-end-action="download"><svg class="pdf-icon" viewBox="0 0 24 28" aria-hidden="true"><path d="M2 1h14l6 6v20H2z" fill="#e8e4c9" stroke="#0f1a12" stroke-width="1.5"/><path d="M16 1v6h6" fill="#c8c4a9" stroke="#0f1a12" stroke-width="1.5"/><rect x="0" y="13" width="20" height="9" fill="#b8302a"/><text x="10" y="20.4" font-size="7.5" font-family="monospace" font-weight="bold" fill="#fff" text-anchor="middle">PDF</text></svg> Scarica il libretto del taccuino</button>
         <button class="menu-item" data-goto="screen-name">Nuova spedizione</button>
         <button class="menu-item" data-goto="screen-menu">Menu principale</button>
       </nav>
@@ -207,7 +221,9 @@
   </main>
   <!-- Le patch note: alla prima accensione dopo un aggiornamento -->
   <div id="patch" class="patch" hidden></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
   <script src="js/versione.js"></script>
+  <script src="js/taccuino.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/icons.js"></script>
   <script src="js/biomes.js"></script>

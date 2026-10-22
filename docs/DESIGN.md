@@ -371,26 +371,28 @@ Ogni uccello ha: bioma (o "ovunque"), a volte una caratteristica (fiume, lago, c
 
 **Resoconto** (fatto): una schermata con la causa della fine, giorni di viaggio, sbarchi, zone esplorate, isole toccate, passi, ferite, uccelli osservati, e la griglia del taccuino (a colori gli osservati, sagome le tracce, "?" il resto).
 
-**Attestato** (fatto, **in PDF**, con l'icona PDF sul pulsante): nome dell'esploratore, causa della fine, resoconto, la griglia degli uccelli per specie (i rari con il bordo d'oro). Il PDF è un A4 orizzontale fatto senza librerie, con dentro l'immagine dell'attestato. *(Più avanti: il codice e il QR.)*
+**L'attestato è un libretto A5** (fatto). Un PDF di due pagine A4 orizzontali, senza librerie (le pagine sono immagini JPEG): si stampa fronte e retro, girando sul lato corto, e si piega a metà.
+- **Copertina** (fuori, a destra): *Società Ornitologica dell'Arcipelago senza nome*, lo stemma (la casetta per gli uccelli in un cerchio d'oro), *Taccuino di viaggio di* e il nome in corsivo; sotto, **scritto a penna**, giorni di viaggio, isole toccate, zone esplorate, uccelli osservati; la data.
+- **Retro** (fuori, a sinistra): il **QR** (libreria qrcode-generator da cdnjs; senza connessione resta solo il codice), il codice e l'indirizzo del gioco.
+- **Dentro**: in cima il **codice del taccuino in un carattere leggibile** (monospaziato, grande); poi tutti gli uccelli, specie per specie, su due facciate (una specie può continuare sulla facciata accanto, con *segue*). Osservato: l'icona a colori e il nome (i rari con il bordo d'oro e ✦). Non osservato: un riquadro chiaro vuoto e una riga per il nome; se l'hai incrociato, il nome a matita sulla riga.
+- Non ci sono il motivo della fine, sbarchi, passi, ferite, né la versione.
 
-**Codice del taccuino**: per ora non c'è; *Riprendi un taccuino* resta nel menu, disattivato, per far capire che arriverà.
+**Codice del taccuino** (fatto): compare nella schermata di fine, nel libretto e nel QR. Il QR apre il gioco con `?taccuino=CODICE`, cioè direttamente su *Riprendi un taccuino* col codice scritto.
 
-**Nuova spedizione.** Dal menu principale; se ce n'è una in corso, prima chiede conferma (quella vecchia si perde). Dalla tendina *Spedizione* in partita non c'è più.
-
-**Il taccuino resta salvato.** A fine spedizione il taccuino (nome e uccelli osservati) si salva nel browser: *Riprendi un taccuino* lo userà direttamente, senza reinserire il codice. Il codice serve solo per cambiare browser o dispositivo, o per condividerlo.
+**Riprendi un taccuino** (fatto, nel menu): si scrive il codice (proposto quello dell'ultimo taccuino rimasto nel browser), poi il nome; la spedizione nuova parte con quegli uccelli già osservati (*visto in una spedizione precedente*). Se c'è una spedizione in corso, prima chiede conferma.
 
 **Il codice** (senza server):
 
 | Parte | Bit |
 |---|---|
 | Versione del formato | 4 |
-| Uccelli visti (uno per ID) | 60 |
+| Uccelli visti (uno per ID, oggi 58) | 60 |
 | Checksum | 16 |
 | **Totale** | **80 bit = 16 caratteri** |
 
 Codifica **Crockford base32**, che non ha lettere ambigue come I, L, O e U. Formato: `K7QF-2MXA-9PLD-R4TB`.
 
-Il checksum intercetta gli errori di battitura. Il codice è falsificabile da chi ci si mette: è un gioco, va bene così.
+Il controllo è un CRC-16: intercetta gli errori di battitura. Nel leggere si perdonano minuscole, spazi e trattini, e I, L, O valgono 1, 1, 0. Il codice è falsificabile da chi ci si mette: è un gioco, va bene così.
 
 ## 15. Stile visivo
 

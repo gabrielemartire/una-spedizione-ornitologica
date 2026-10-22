@@ -2,6 +2,15 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.6 · 23 ottobre 2026
+
+- **Il codice del taccuino.** A fine spedizione hai un codice di 16 caratteri (tipo `3MT6-10GG-420R-97SA`) che dice quali uccelli hai osservato. Nel menu c'è **Riprendi un taccuino**: lo scrivi (minuscole e trattini vanno bene) e la nuova spedizione parte con quegli uccelli già nel taccuino. Se il codice è sbagliato il gioco se ne accorge. L'ultimo codice resta anche nel browser.
+- **L'attestato è un libretto A5.** Un PDF di due pagine A4 orizzontali: si stampa fronte e retro (girando sul lato corto) e si piega a metà.
+  - **Copertina**: lo stemma della Società ornitologica, il tuo nome e il viaggio scritto a penna (giorni, isole, zone, uccelli).
+  - **Retro**: il QR e il codice.
+  - **Dentro**: in cima il codice, scritto in chiaro, poi tutti gli uccelli specie per specie: icona e nome se l'hai osservato, un riquadro vuoto e una riga per il nome se no.
+- **Il QR** apre il gioco con il codice già scritto.
+
 ## 0.5 · 23 ottobre 2026
 
 - **Gli oggetti magici.** Lo sconosciuto col punto esclamativo, in città, ti regala la lettera, la chiave o l'uovo, ognuno una sola volta per partita (finiti quelli, ti può solo rapinare). La bussola non c'è più.

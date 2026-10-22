@@ -7,8 +7,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 1. **Tarare i ricercati**: il fuggitivo spara mezzo cuore ogni 4 battiti e scappa al tuo passo; correndo lo si prende. Da provare giocando.
 2. **Le icone degli uccelli**: le 8 specie usano icone provvisorie di game-icons, in attesa dei disegni.
 3. **Tarare l'economia**: oggetti a 2–4 m.o., premi della Società (8) e taglie (15) bastano a pagare la ciurma? Giocare qualche spedizione.
-4. **Codice del taccuino** e "Riprendi un taccuino" (oggi disattivato nel menu, apposta).
-5. **Emporio**: altre cose sul tavolo (strumenti e trappole); oggi ci sono solo i semi.
+4. **Emporio**: altre cose sul tavolo (strumenti e trappole); oggi ci sono solo i semi.
 
 ## Versione 2
 - [ ] **Eventi marini**: cose che attirano l'attenzione mentre si naviga (luccichii, relitti) e si possono visitare.
@@ -19,6 +18,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Vignetta notturna**: di notte la mappa più scura lontano dall'esploratore.
 
 ## Fatto di recente
+- [x] **Versione 0.6**: codice del taccuino e *Riprendi un taccuino*; l'attestato è un libretto A5 da stampare (copertina con lo stemma della Società e il viaggio a penna, QR sul retro, dentro il codice e gli uccelli).
 - [x] **Versione 0.5**: oggetti magici (lettera e donna della torre col cuore rosa, chiave e forzieri, uovo e Pulcino), tolta la bussola; emporio aperto col tavolo e i semi che fanno tornare un uccello volato via.
 - [x] **Versione 0.4.3**: il porticciolo attaccato alla terraferma in alto; quattro pontili coi pescherecci ormeggiati.
 - [x] **Versione 0.4.2**: il porticciolo sull'acqua, con due passerelle e due file di case, il mare da tutti e due i lati, e la Taverna Pesce Sgozzato su palafitte.
@@ -51,10 +51,6 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 ## Uccelli e taccuino
 - [ ] **Comportamenti**: timido, curioso, nomade, notturno, mattiniero, ghiotto.
 - [ ] **Verso di ogni uccello** generato dal suo ID.
-
-## Fine spedizione
-- [ ] **QR sull'attestato** (il PDF c'è dalla v0.4).
-- [ ] **Codice del taccuino** (Crockford base32, 16 caratteri) e **Riprendi un taccuino** dal menu. Il taccuino di fine partita è già salvato nel browser (`spedizione-ornitologica:taccuino`): Riprendi lo usa senza chiedere il codice, il codice serve per un altro dispositivo.
 
 ## Mondo e navigazione
 - [ ] **Altri biomi**: scogliera, montagna, foresta d'autunno, vulcanica (lava), bosco di cristallo, foresta di funghi.

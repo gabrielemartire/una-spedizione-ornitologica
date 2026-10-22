@@ -11,7 +11,15 @@ function show(id, { resume = false } = {}) {
     if (!resume || !Gioco.resume()) Gioco.start(document.getElementById("player-name").value);
     return;
   }
-  if (id === "screen-menu") renderContinue();
+  if (id === "screen-menu") { renderContinue(); Gioco.setNotebook(null); }
+  if (id === "screen-resume") {
+    // il codice del QR, oppure quello dell'ultimo taccuino rimasto nel browser
+    const input = document.getElementById("resume-code");
+    input.value = urlCode || Gioco.loadNotebook()?.code || "";
+    document.getElementById("resume-msg").textContent = "";
+    input.focus();
+    return;
+  }
   if (id === "screen-end") Diario.renderEnd();
   if (id === "screen-name") {
     const input = document.getElementById("player-name");
@@ -57,6 +65,24 @@ function openMenubar() {
   drop.hidden = false;
   drop.querySelector("button").focus();
 }
+
+// Riprendere un taccuino: il codice giusto mette gli uccelli nel taccuino della prossima spedizione
+const urlCode = new URLSearchParams(location.search).get("taccuino");
+if (urlCode) history.replaceState(null, "", location.pathname);   // un refresh non riapre la ripresa
+document.getElementById("resume-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const ids = Taccuino.decode(document.getElementById("resume-code").value);
+  if (!ids) {
+    document.getElementById("resume-msg").textContent = "Il codice non torna: controlla le lettere.";
+    Suoni.play("blip");
+    return;
+  }
+  Suoni.play("conferma");
+  const saved = Gioco.loadNotebook();
+  show(Gioco.hasSave() ? "screen-confirm" : "screen-name");
+  Gioco.setNotebook(ids);
+  if (saved?.explorer && !Gioco.hasSave()) document.getElementById("player-name").value = saved.explorer;
+});
 
 document.getElementById("name-form").addEventListener("submit", (e) => {
   e.preventDefault();
@@ -185,6 +211,7 @@ document.addEventListener("click", (e) => {
 
 renderSoundLabels();
 // Un refresh durante la partita riporta dritto alla spedizione salvata
-if (Gioco.hasSave()) show("screen-game", { resume: true });
+if (urlCode) show("screen-resume");   // arrivati dal QR dell'attestato
+else if (Gioco.hasSave()) show("screen-game", { resume: true });
 else { renderContinue(); focusFirst(); }
 showPatchNotes();
