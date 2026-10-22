@@ -4,7 +4,7 @@
 // (→) con la loro insegna, i barili, la bacheca dei ricercati, le persone. Davanti a una porta, in
 // basso, un cartellino dice cos'è. Il Forte è grande e murato, con il castello, la chiesa, la
 // gendarmeria e la Società ornitologica; il porticciolo del fiordo, su un'isola di ghiaccio, è più
-// piccolo e ha il falegname, che lavora sulla banchina.
+// piccolo e sta sull'acqua: due passerelle con le loro case, la taverna su palafitte, il falegname.
 // In città il tempo non passa, tranne dormendo in taverna.
 // Espone l'oggetto globale `Citta`.
 const Citta = (() => {
@@ -47,7 +47,7 @@ const Citta = (() => {
     },
     porto: {
       medico: { cost: 3, cap: Gioco.MAX_HP + 2 }, // cinque cuori e uno in più, che il Forte non ripristina
-      taverna: { cost: 7 },
+      taverna: { cost: 7, name: "Taverna Pesce Sgozzato" },
       mercato: { price: 4, refuse: ["arte"] },
       emporio: {},
     },
@@ -57,6 +57,9 @@ const Citta = (() => {
     medico: ["Medico", "medicine"], taverna: ["Taverna", "tankard"], mercato: ["Mercato", "shop"],
     emporio: ["Emporio", "locked"], gendarmeria: ["Gendarmeria", "manacles"], societa: ["Società ornitologica", "birdhouse"],
   };
+
+  // il nome della bottega: in una città può avere il suo
+  const shopName = (kind) => (c && SHOPS[c.city.id][kind]?.name) || SHOP_INFO[kind][0];
 
   const GROG = "«Il grog è un miscuglio segreto che contiene una o più di queste sostanze: cherosene, glicol propilene, dolcificanti artificiali, acido solforico, rum, acetone, colorante rosso n.2, detriti, grasso per motore, acido per la batteria e/o peperone. Come puoi ben immaginare è una delle sostanze più caustiche e volatili conosciute dall'uomo.»";
 
@@ -99,7 +102,7 @@ const Citta = (() => {
   }
 
   // Gli isolati diventano case: rettangoli di varie misure, a volte uniti a L; i ritagli diventano orti
-  function fillHouses(m, r, lot, roofs) {
+  function fillHouses(m, r, lot, roofs, spare = () => (r() < 0.3 ? "tree" : "yard")) {
     const free = (x, y) => inside(x, y) && m.map[y][x] === lot;
     for (let y = 0; y < H; y++) {
       for (let x = 0; x < W; x++) {
@@ -109,7 +112,7 @@ const Citta = (() => {
         while (h > 1 && ![...Array(h).keys()].every((j) => [...Array(w).keys()].every((i) => free(x + i, y + j)))) h--;
         const cells = [];
         for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) cells.push({ x: x + i, y: y + j });
-        if (cells.length === 1) { m.map[y][x] = r() < 0.3 ? "tree" : "yard"; continue; }
+        if (cells.length === 1) { m.map[y][x] = spare(); continue; }
         // a volte un'ala in più: la casa diventa a L
         if (r() < 0.35 && free(x, y + h) && free(x + 1, y + h)) cells.push({ x, y: y + h }, { x: x + 1, y: y + h });
         addBuilding(m, cells, "house", roofs[Math.floor(r() * roofs.length)]);
@@ -232,37 +235,38 @@ const Citta = (() => {
     return { ...m, ship, start: { x: 5, y: ship.y }, people: 16, walkable: ["road", "square", "quay", "court"] };
   }
 
-  // Il porticciolo: una lunga banchina di legno sul fiordo, le case in fila con le botteghe,
-  // boe e pescherecci; dietro la neve, qualche casa sparsa e gli abeti
+  // Il porticciolo: tutto sull'acqua. Due passerelle di legno parallele, ognuna con la sua fila di case,
+  // il mare a ovest (con la tua nave) e di nuovo a est (coi pescherecci e un pontile); la taverna sta
+  // sul lato del mare, su palafitte sospese sull'acqua
   function buildPorto(r) {
-    const m = blank("snow");
+    const m = blank("sea");
     m.doors = {};
     m.vessels = [];
+    m.stilts = [];
     const set = (x, y, t) => { if (inside(x, y)) m.map[y][x] = t; };
     const rect = (x0, y0, x1, y1, t) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) set(x, y, t); };
-    rect(0, 0, 5, H - 1, "sea");
-    rect(6, 2, 8, H - 3, "quay");
-    // le case in fila lungo la banchina, a gruppi di due o tre caselle, con due passaggi verso l'interno
-    rect(9, 2, 11, H - 3, "lot");
-    for (const yy of [8, 15]) { rect(9, yy, 11, yy, "quay"); rect(12, yy, 17, yy, "road"); }
-    fillHouses(m, r, "lot", ["legno", "legno", "ardesia", "rosso"]);
-    for (const [x, yy, w, h] of [[14, 4, 2, 2], [17, 10, 2, 3], [13, 17, 3, 2], [20, 6, 2, 2]]) {
-      const cells = [];
-      for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) cells.push({ x: x + i, y: yy + j });
-      if (cells.every((p) => m.map[p.y][p.x] === "snow")) addBuilding(m, cells, "house", r() < 0.5 ? "legno" : "rosso");
-    }
-    for (let i = 0; i < 80; i++) {
-      const x = 16 + Math.floor(r() * (W - 16)), yy = Math.floor(r() * H);
-      if (m.map[yy][x] === "snow") set(x, yy, "pine");
-    }
-    for (const [x, yy] of [[6, 6], [6, 13], [7, 20]]) set(x, yy, "crate");
-    for (const [x, yy] of [[8, 7], [6, 16]]) set(x, yy, "barrel");
-    for (const [x, yy] of [[3, 2], [3, 18], [0, 10]]) vessel(m, "fish", x, yy, 2, 4);
-    const roads = ["quay", "road"];
+    rect(6, 2, 8, H - 3, "quay");                 // la prima passerella, sul mare dove ormeggia la tua nave
+    rect(9, 2, 11, H - 3, "lot");                 // la prima fila di case
+    rect(12, 2, 14, H - 3, "quay");               // la seconda passerella
+    rect(15, 2, 17, H - 3, "lot");                // la seconda fila di case, che dà di nuovo sul mare
+    for (const yy of [8, 15]) rect(9, yy, 11, yy, "quay");   // i passaggi tra le due passerelle
+    rect(15, 12, 17, 12, "quay");                 // un passaggio verso il pontile sul mare a est
+    rect(18, 12, 24, 12, "quay");
+    // la taverna del Pesce Sgozzato, su palafitte nel mare, attaccata alla prima passerella
+    const tav = [];
+    for (let y = 2; y <= 5; y++) for (let x = 2; x <= 5; x++) tav.push({ x, y });
+    m.stilts.push(addBuilding(m, tav, "house", "legno"));
+    m.map[4][5] = "door";
+    m.doors.taverna = { x: 5, y: 4, front: { x: 6, y: 4 }, sign: { x: 4, y: 4 } };
+    fillHouses(m, r, "lot", ["legno", "legno", "ardesia", "rosso"], () => "crate");   // sull'acqua niente orti: casse
+    for (const [x, yy] of [[6, 7], [6, 13], [7, 20], [12, 5], [14, 18]]) set(x, yy, "crate");
+    for (const [x, yy] of [[8, 8], [6, 16], [14, 10]]) set(x, yy, "barrel");
+    for (const [x, yy] of [[3, 18], [0, 10]]) vessel(m, "fish", x, yy, 2, 4);
+    for (const [x, yy] of [[20, 14], [21, 6], [28, 3], [30, 15], [35, 9]]) vessel(m, "fish", x, yy, 2, 4);
+    const roads = ["quay"];
     placeShop(m, "medico", { x: 10, y: 4 }, roads);
-    placeShop(m, "taverna", { x: 10, y: 9 }, roads);
-    placeShop(m, "mercato", { x: 10, y: 13 }, roads);
-    placeShop(m, "emporio", { x: 10, y: 19 }, roads);
+    placeShop(m, "mercato", { x: 16, y: 6 }, roads);
+    placeShop(m, "emporio", { x: 16, y: 18 }, roads);
     set(8, 10, "board"); // la bacheca dei ricercati, sulla banchina
     const ship = { x: 6, y: 12 };
     vessel(m, "hull", 3, ship.y - 4, 3, 9);
@@ -271,7 +275,7 @@ const Citta = (() => {
     // il falegname lavora in fondo alla banchina, accanto alle sue casse, vicino a un peschereccio
     const carpenter = { x: 6, y: 20 };
     set(carpenter.x, carpenter.y, "quay");
-    return { ...m, ship, carpenter, start: { x: 7, y: 12 }, people: 6, walkable: ["quay", "road"] };
+    return { ...m, ship, carpenter, start: { x: 7, y: 12 }, people: 9, walkable: ["quay"] };
   }
 
   // --- Il disegno in pixel art ---
@@ -306,7 +310,7 @@ const Citta = (() => {
         const t = c.map[ty][tx], ox = tx * PX, oy = ty * PX;
         const cellPx = (fn) => { for (let y = 0; y < PX; y++) for (let x = 0; x < PX; x++) put(ox + x, oy + y, fn(x, y)); };
         // il fondo sotto ogni cosa: acqua, banchina, strada, neve
-        const under = ["sea", "boat", "fish", "hull"].includes(t) ? "sea" : ["barrel", "crate", "ship"].includes(t) ? (c.city.id === "porto" && tx > 8 ? "snow" : "quay")
+        const under = ["sea", "boat", "fish", "hull"].includes(t) ? "sea" : ["barrel", "crate", "ship"].includes(t) ? "quay"
           : t === "door" ? "road" : ["well", "stall"].includes(t) ? "square" : ["yard", "tree"].includes(t) ? "yard" : ["pine"].includes(t) ? "snow" : t;
         if (under === "sea") cellPx((x, y) => ((x + y * 3 + tx * 5 + ty * 2) % 11 === 0 ? "#4a7a9a" : (y + ty) % 4 === 0 && (x + tx * 3) % 6 < 2 ? "#3a6684" : "#2a4e6a"));
         else if (under === "quay") cellPx((x, y) => (c.city.id === "porto" ? (x === 0 || x === 4 ? ground.quay[1] : (y + tx) % 7 === 0 ? ground.quay[2] : ground.quay[0])
@@ -333,6 +337,15 @@ const Citta = (() => {
     }
 
     for (const v of c.vessels) drawVessel(v, put, darken);
+    // le palafitte: sotto le case sospese sull'acqua, i pali e il loro riflesso
+    for (const id of c.stilts || []) {
+      const b = c.buildings[id];
+      for (let x = b.box.x0 * PX + 2; x < (b.box.x1 + 1) * PX; x += 6) {
+        for (let y = 0; y < 7; y++) put(x, (b.box.y1 + 1) * PX + y, y < 4 ? "#3a2614" : "#1e3a50");
+        put(x + 1, (b.box.y1 + 1) * PX, "#5a3a20");
+      }
+      for (let x = b.box.x0 * PX; x < (b.box.x1 + 1) * PX; x++) put(x, (b.box.y1 + 1) * PX + 7, "#4a7a9a");
+    }
 
     // gli edifici: tetti a falde con la luce da nord-ovest, comignoli, e l'ombra che gettano
     for (const b of c.buildings) {
@@ -566,7 +579,7 @@ const Citta = (() => {
   function tileInfo(p) {
     const shop = doorAt(p) || Object.entries(c.doors).find(([, d]) => same(d.sign, p))?.[0];
     const t = tileAt(p.x, p.y);
-    Gioco.el.tileInfo.textContent = shop ? `${SHOP_INFO[shop][0]} · entra dalla porta` : t === TILES.ship ? "La tua nave · riparti"
+    Gioco.el.tileInfo.textContent = shop ? `${shopName(shop)} · entra dalla porta` : t === TILES.ship ? "La tua nave · riparti"
       : c.carpenter && same(c.carpenter, p) ? "Il falegname · parlaci"
       : t === TILES.board ? `${t.name} · leggi gli avvisi`
       : t.talk ? `${t.name} · c'è una nota` : `${t.name} · ${t.walk ? "si passa" : "non si passa"}`;
@@ -618,7 +631,7 @@ const Citta = (() => {
   function nearby() {
     const p = c.player;
     const front = Object.entries(c.doors).find(([, d]) => same(d.front, p));
-    if (front) { const [kind, d] = front; hint(`<b>${SHOP_INFO[kind][0]}</b> · ${shopLine(kind)} <kbd>${way(p, d)}</kbd> entra`); return; }
+    if (front) { const [kind, d] = front; hint(`<b>${shopName(kind)}</b> · ${shopLine(kind)} <kbd>${way(p, d)}</kbd> entra`); return; }
     const board = DIRS.map(([dx, dy]) => ({ x: p.x + dx, y: p.y + dy })).find((q) => inside(q.x, q.y) && c.map[q.y][q.x] === "board");
     if (board) { hint(`<b>Bacheca dei ricercati</b> · ${c.poster && !Gioco.trip.wanted ? "c'è un avviso nuovo" : "avvisi vecchi"} <kbd>${way(p, board)}</kbd> leggi`); return; }
     const k = c.carpenter && Math.abs(c.carpenter.x - p.x) + Math.abs(c.carpenter.y - p.y) === 1;
@@ -777,7 +790,7 @@ const Citta = (() => {
         ["back", "Esci"],
       ]);
     } else if (kind === "taverna") {
-      dialog("Taverna", `«Una notte in locanda? ${shop.cost} m.o. Si dorme fino all'alba, e qualcuno al bancone parla sempre troppo.»`, [
+      dialog(shopName("taverna"), `«Una notte in locanda? ${shop.cost} m.o. Si dorme fino all'alba, e qualcuno al bancone parla sempre troppo.»`, [
         money >= shop.cost && ["sleep", `Sì, una notte (−${shop.cost} m.o.)`],
         money < shop.cost && ["none", "Non ho abbastanza monete"],
         ["back", "Esci"],

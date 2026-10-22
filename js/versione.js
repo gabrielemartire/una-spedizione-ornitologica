@@ -1,9 +1,8 @@
 // La versione del gioco, mostrata nel menu e nella barra in alto, e le sue novità: alla prima
 // accensione di una versione nuova compaiono come "Patch note" (le stesse di PATCH-NOTE.md)
-const VERSIONE = "v0.4.1";
+const VERSIONE = "v0.4.2";
 const NOVITA = [
-  "<b>Il Forte</b> ha una cartolina nuova: dall'alto di una strada, le mura lungo il mare con la nave ormeggiata e la torre di guardia, l'arco, la salita al castello sulla collina, il mercato. Di notte fiaccole sulle mura e il castello acceso; all'alba non c'è nessuno.",
-  "<b>Il porticciolo</b> ridisegnato: la banchina di assi bagnate nella foschia, un peschereccio di legno del Cinquecento e una fila di locande a un piano, con le finestre calde e il fumo dai comignoli.",
-  "Col binocolo, il porticciolo visto dal mare è come la sua cartolina.",
+  "<b>Il porticciolo</b> sta tutto sull'acqua: due passerelle di legno, ognuna con la sua fila di case, il mare da tutti e due i lati, un pontile e i pescherecci.",
+  "La taverna del porticciolo ora è la <b>Taverna Pesce Sgozzato</b>, su palafitte sul mare.",
 ];
 document.querySelectorAll("[data-version]").forEach((el) => { el.textContent = VERSIONE; });
