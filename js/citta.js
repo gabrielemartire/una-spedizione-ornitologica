@@ -760,7 +760,6 @@ const Citta = (() => {
       if (jailed) jailed.delivered = true;
       Gioco.earn(`taglia: ${w.name}`, Gioco.BOUNTY);
       Suoni.play("monete");
-      Gioco.note(`Consegnato ${w.name} alla gendarmeria: +${Gioco.BOUNTY} m.o.`, "manacles");
       Gioco.renderStatus();
       dialog("Gendarmeria", `«Ah, ${w.name}! Finalmente. Ecco la taglia: ${Gioco.BOUNTY} m.o.»`, [["back", "Esci"]]);
     } else if (w) {
@@ -781,7 +780,6 @@ const Citta = (() => {
       const names = done.map((sp) => SPECIE[sp].nome).join(", ");
       Gioco.earn(`premio Società: ${names}`, done.length * SOCIETY_PRIZE);
       Suoni.play("monete");
-      Gioco.note(`La Società ornitologica premia ${names}: +${done.length * SOCIETY_PRIZE} m.o.`, "birdhouse");
       Gioco.renderStatus();
       dialog("Società ornitologica", `«Magnifico! ${names}: tutti nel vostro taccuino. La Società vi riconosce ${done.length * SOCIETY_PRIZE} m.o.»`, [["back", "Esci"]]);
     } else {
@@ -814,7 +812,6 @@ const Citta = (() => {
       const kind = left[Math.floor(Math.random() * left.length)];
       trip.gifts.push(kind);
       trip.pack.push({ kind, day: Gioco.day() });
-      Gioco.note(`${c.city.name}: uno sconosciuto mi ha dato ${OGGETTI_SPECIALI[kind].nome.toLowerCase()}.`, OGGETTI_SPECIALI[kind].icona);
       dialog("Uno sconosciuto", `«Tenete, a me non serve più.» Ti mette in mano ${OGGETTI_SPECIALI[kind].nome.toLowerCase()} e se ne va. Finisce nello zaino.`, [["back", "Grazie…?"]]);
     }
   }

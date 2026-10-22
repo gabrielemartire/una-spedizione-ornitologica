@@ -18,6 +18,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Vignetta notturna**: di notte la mappa più scura lontano dall'esploratore.
 
 ## Fatto di recente
+- [x] **Versione 0.6.7**: il diario segna solo gli sbarchi, con l'ora e se l'uccello c'era.
 - [x] **Versione 0.6.6**: i ricercati catturati nel taccuino, dietro le sbarre nella pagina della stiva.
 - [x] **Versione 0.6.5**: l'orso colpisce per quattro cuori ma poi è sazio e ti lascia andare; Società a 25 m.o. per specie, senza ripagare le specie del taccuino ripreso.
 - [x] **Versione 0.6.4**: l'orso torna a due cuori a colpo.

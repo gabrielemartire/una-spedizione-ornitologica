@@ -2,6 +2,10 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.6.7 · 23 ottobre 2026
+
+- **Il diario segna solo gli sbarchi**: giorno e momento, la zona, e se l'uccello c'era (*c'era un uccello*, *nessun uccello, ora sbagliata*, *l'uccello è volato via*, *uccello già nel taccuino*). Tutte le altre note sono tolte.
+
 ## 0.6.6 · 23 ottobre 2026
 
 - **I ricercati catturati** nel taccuino: nel capitolo **Stiva**, in basso nella pagina di destra, ognuno in una cella con le sbarre, col nome dentro; sotto, *in stiva* finché non lo consegni alla gendarmeria del Forte, poi *consegnato*, e il giorno della cattura.

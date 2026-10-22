@@ -503,7 +503,6 @@ const Gioco = (() => {
       trip.society = Object.keys(SPECIE).filter((sp) => UCCELLI.filter((u) => u.specie === sp && !u.rara && !u.uovo).every((u) => trip.birds[u.id]));
     }
     initUi();
-    note(Object.keys(trip.birds).length ? `Salpi dal Forte, col vecchio taccuino: ${Object.keys(trip.birds).length} uccelli già annotati.` : "Salpi dal Forte.", "ship");
     Mare.enter();
   }
 
@@ -613,13 +612,14 @@ const Gioco = (() => {
       memory.gone = false;
       memory.seededAt = null;
       back = true;
-      note(`${zone.name}: i semi sono spariti. Forse qualcuno è tornato.`, "seeds");
     }
     if (back) {
       const spots = gen.free.filter((c) => dist(c, gen.start) >= 10 && bandCells(gen.map, c).length >= 3);
       if (spots.length) Object.assign(gen.bird, pickRandom(spots));
     }
     const present = !!bird && !memory.done && !memory.gone && bird.ore.includes(time);
+    // il diario segna solo gli sbarchi: dove, a che ora (lo dice la data della nota) e se l'uccello c'era
+    note(`${zone.name}: ${present ? "c'era un uccello." : memory.done ? "uccello già nel taccuino." : memory.gone ? "l'uccello è volato via." : bird ? "nessun uccello, ora sbagliata." : "nessun uccello."}`, "bird");
     // L'oggetto della zona si decide al primo sbarco, e resta lì finché non lo prendi
     const ri = rng(zone.seed ^ 0x17e3);
     if (memory.item === undefined) memory.item = gen.ruin || ri() < ITEM_CHANCE ? { kind: oggettoACaso(ri, !!gen.ruin), taken: false } : null;
@@ -670,7 +670,7 @@ const Gioco = (() => {
 
     // All'ora sbagliata l'uccello non c'è, ma a volte lascia tracce (i rari no: di quelli si sa solo dalle voci)
     if (bird && !present && !memory.done && !memory.gone) {
-      if (!bird.rara && learn(bird, "traccia")) note(`${zone.name}, ${time}: tracce di un uccello. «${bird.indizio}» Forse non è la sua ora.`, "bird");
+      if (!bird.rara) learn(bird, "traccia");
       toast("<em>«Nessun canto. Forse non è l'ora giusta.»</em>", true);
     } else if (memory.done) {
       toast("L'uccello di questa zona è già nel taccuino.");
@@ -718,7 +718,6 @@ const Gioco = (() => {
     const zone = trip.world.zones[poster.zone];
     trip.wanted = { ...poster, until: trip.third + WANTED_DAYS * 3, state: "free" };
     trip.wantedDay = day();
-    note(`Ricercato: ${poster.name}, nascosto a ${zone.name}. Segnato sul globo con una W. Hai ${WANTED_DAYS} giorni.`, "wanted");
   }
 
   // Passato il tempo, il ricercato ancora libero lascia l'arcipelago
@@ -726,7 +725,6 @@ const Gioco = (() => {
     const w = trip.wanted;
     if (!w || w.state !== "free" || trip.third < w.until) return;
     trip.wanted = null;
-    note(`${w.name} ha lasciato l'arcipelago. L'avviso è scaduto.`, "wanted");
     if (s && s.fugitive) { s.fugitive = null; el.ents.fugitive.hidden = true; }
   }
 
@@ -766,7 +764,6 @@ const Gioco = (() => {
       const who = { forte: "Un vecchio marinaio, al bancone del Forte", porto: "Un pescatore, al porticciolo", mercante: "Il mercante" }[source];
       const msg = `${who}: «A ${zone.name} c'è un ${SPECIE[u.specie].nome.split(" ")[0].toLowerCase()} che nessuno ha mai disegnato.» Segnato sul globo con una X.`;
       trip.rumors.unshift({ msg, day: day(), time: now() });
-      note(`Una voce su ${zone.name}: segnata sul globo.`, "scroll");
       return true;
     }
     return false;
@@ -778,7 +775,7 @@ const Gioco = (() => {
     Cartolina.render({ seed: s.seed, tags: s.tags, time: s.time, bird: s.bird.present && !s.bird.gone && !s.bird.observed, smoke: !!s.fugitive }, el.postcard);
   }
 
-  // Il diario annota solo le cose utili; il resto è un avviso che sparisce
+  // Il diario annota solo gli sbarchi (vedi landAt); il resto è un avviso che sparisce
   function note(msg, icon = null) {
     trip.notes.unshift({ msg, icon, day: day(), time: now() });
     Diario.renderStrip();
@@ -897,7 +894,6 @@ const Gioco = (() => {
     trip.zones[s.zone.id].item.taken = true;
     s.item = null;
     Suoni.play("monete");
-    note(`${s.zone.name}: trovato ${it.nome.toLowerCase()}. In stiva.`, it.icona);
     toast(`Hai trovato: ${it.nome}. Finisce in stiva.`);
   }
 
@@ -913,7 +909,6 @@ const Gioco = (() => {
     trip.zones[s.zone.id].chestOpen = true;
     s.chest = null;
     Suoni.play("monete");
-    note(`${s.zone.name}: aperto un forziere con la chiave. Dentro ${OGGETTI[kind].nome.toLowerCase()} e ${coins} m.o.`, "chestopen");
     toast(`Il forziere si apre: ${OGGETTI[kind].nome} e ${coins} m.o.`);
     render();
   }
@@ -940,7 +935,6 @@ const Gioco = (() => {
     trip.pink = true;
     s.player.hp += 2;
     Suoni.play("osservato");
-    note(`${s.zone.name}: consegnata la lettera alla donna della torre. Un bacio, e un cuore rosa in più.`, "woman");
     showOverlay("La donna della torre", "Legge la lettera in silenzio, poi ride e piange insieme. Scende di corsa, ti abbraccia e ti dà un bacio. «Grazie!» <br>Hai un cuore in più, rosa, per sempre.", [["leave-lady", "Arrossisci e riparti"]]);
   }
 
@@ -953,7 +947,6 @@ const Gioco = (() => {
     trip.pack.splice(trip.pack.findIndex((it) => it.kind === "semi"), 1);
     memory.seededAt = trip.third;
     Suoni.play("cespuglio");
-    note(`${s.zone.name}: sparsi i semi. Bisogna aspettare un momento.`, "seeds");
     toast("Spargi i semi. Ora bisogna aspettare un momento.");
   }
 
@@ -963,7 +956,6 @@ const Gioco = (() => {
     if (i < 0) return;
     trip.pack.splice(i, 1);
     trip.birds[PULCINO] = { level: "visto", zone: "nato dall'uovo", day: day(), time: now() };
-    note("L'uovo maculato si è schiuso: è nato un Pulcino! È nel taccuino.", "chick");
     setTimeout(() => toast("Crac! L'uovo si è schiuso: un Pulcino nel taccuino."), 1500);
   }
 
@@ -1007,7 +999,6 @@ const Gioco = (() => {
       learn(b.info, "visto");
       trip.zones[s.zone.id].done = true;
       Suoni.play("osservato");
-      note(`${s.zone.name}, ${s.time}: osservato il ${b.info.nome}!`, "quill");
       toast(`${b.info.nome} annotato nel taccuino! Torna alla nave.`);
       drawPostcard();
     } else if (d <= OBSERVE) {
@@ -1081,8 +1072,7 @@ const Gioco = (() => {
       b.gone = true;
       trip.zones[s.zone.id].gone = true;
       drawPostcard();
-      if (!b.info.rara && learn(b.info, "traccia")) note(`${s.zone.name}: un uccello ti è volato via sotto il naso. «${b.info.indizio}»`, "bird");
-      else note(`${s.zone.name}: l'uccello è volato via per sempre.`, "bird");
+      if (!b.info.rara) learn(b.info, "traccia");
       toast(`${reason}: l'uccello vola via dalla zona.`);
       return;
     }
@@ -1144,7 +1134,6 @@ const Gioco = (() => {
       s.fugitive = null;
       el.ents.fugitive.hidden = true;
       trip.wanted = null;
-      note(`${s.zone.name}: il ricercato è scappato. L'avviso è perso.`, "wanted");
       toast("Il ricercato è sparito oltre il bosco. Addio taglia.");
     }
   }
@@ -1156,7 +1145,6 @@ const Gioco = (() => {
     trip.wanted.state = "caught";
     (trip.captured ||= []).push({ name: trip.wanted.name, day: day(), delivered: false });   // nel taccuino, dietro le sbarre
     Suoni.play("tonfo");
-    note(`${s.zone.name}: preso ${trip.wanted.name}! In stiva, da consegnare alla gendarmeria del Forte.`, "manacles");
     toast(`Preso! ${trip.wanted.name} finisce in stiva.`);
   }
 
