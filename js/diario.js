@@ -1,7 +1,7 @@
 // Il diario di viaggio: in basso le ultime cose annotate, con una linguetta che apre il
 // taccuino intero: un solo libro a due pagine, numerate di seguito, con un capitolo per
 // linguetta (note, uccelli, voci, finanze, zaino, stiva). Qui anche il resoconto di fine
-// spedizione e l'attestato da scaricare: un libretto A5 in PDF, col codice del taccuino e il QR.
+// spedizione e l'attestato da scaricare: un foglio A4 da piegare in quattro, col codice e il QR.
 // Espone l'oggetto globale `Diario`.
 const Diario = (() => {
   const TABS = [
@@ -267,38 +267,38 @@ const Diario = (() => {
           <div class="end-grid">${grid}</div>
         </div>
       </div>
-      <p class="end-code">Codice del taccuino: <b>${Gioco.code()}</b> <span>· annotalo, o scarica il libretto: c'è anche il QR</span></p>`;
+      <p class="end-code">Codice del taccuino: <b>${Gioco.code()}</b> <span>· annotalo, o scarica il libretto: si stampa da un lato e si piega in quattro</span></p>`;
   }
 
-  // --- L'attestato: un libretto A5 ---
-  // Un PDF di due pagine A4 orizzontali, da stampare fronte e retro (girando sul lato corto) e piegare
-  // a metà: diventa un libretto A5. Fuori: a destra la copertina con lo stemma della Società
-  // ornitologica, il nome e qualche notizia del viaggio; a sinistra il retro col QR per riprendere il
-  // taccuino. Dentro: in cima il codice, scritto bene, poi tutti gli uccelli, specie per specie.
-  const PAGE_W = 1754, PAGE_H = 1240, HALF = PAGE_W / 2, MARGIN = 64;   // A4 orizzontale a 150 dpi
-  const INK = "#1e2418", SEPIA = "#6a4a2c", RED = "#8a2a1a", GOLD = "#b8862a", PAPER = "#f2ead2";
+  // --- L'attestato: un libretto da un foglio solo ---
+  // Un PDF di una pagina A4 verticale, stampata da un lato solo e piegata in quattro: prima a metà in
+  // orizzontale (la stampa resta fuori), poi a metà in verticale. Diventa un libretto A6:
+  //   metà in basso, dritta:   a sinistra il retro (il QR), a destra la copertina
+  //   metà in alto, capovolta: l'interno, due facciate con gli uccelli (dopo le pieghe si legge dritto)
+  // Le cose scritte a penna stanno su una riga, come negli spazi di un modulo; il nome resta in corsivo barocco.
+  const PAGE_W = 1654, PAGE_H = 2339;                 // A4 verticale a 200 dpi
+  const PW = PAGE_W / 2, PH = PAGE_H / 2;             // una facciata del libretto (A6)
+  const INK = "#1e2418", SEPIA = "#6a4a2c", GOLD = "#b8862a", PAPER = "#f2ead2", PEN = "#23305a";
   const SERIF = "'IM Fell English', Georgia, serif", MONO = "'Courier New', Courier, monospace";
+  const HAND = "'Cedarville Cursive', cursive", BAROQUE = "'Pinyon Script', cursive";
 
-  function page() {
+  function canvas(w, h) {
     const c = document.createElement("canvas");
-    c.width = PAGE_W;
-    c.height = PAGE_H;
+    c.width = w;
+    c.height = h;
     const g = c.getContext("2d");
     g.fillStyle = PAPER;
-    g.fillRect(0, 0, PAGE_W, PAGE_H);
-    // una cornice per ogni facciata, e i segni della piega in mezzo
-    for (const x0 of [0, HALF]) {
-      g.strokeStyle = SEPIA;
-      g.lineWidth = 3;
-      g.strokeRect(x0 + 34, 34, HALF - 68, PAGE_H - 68);
-      g.lineWidth = 1;
-      g.strokeRect(x0 + 44, 44, HALF - 88, PAGE_H - 88);
-    }
-    g.strokeStyle = "rgba(106, 74, 44, 0.5)";
-    g.setLineDash([8, 8]);
-    for (const [y0, y1] of [[0, 26], [PAGE_H - 26, PAGE_H]]) { g.beginPath(); g.moveTo(HALF, y0); g.lineTo(HALF, y1); g.stroke(); }
-    g.setLineDash([]);
+    g.fillRect(0, 0, w, h);
     return { c, g };
+  }
+
+  // la cornice di una facciata
+  function frame(g, ox, oy) {
+    g.strokeStyle = SEPIA;
+    g.lineWidth = 3;
+    g.strokeRect(ox + 34, oy + 34, PW - 68, PH - 68);
+    g.lineWidth = 1;
+    g.strokeRect(ox + 44, oy + 44, PW - 88, PH - 88);
   }
 
   function write(g, str, x, y, { size = 24, font = SERIF, color = INK, align = "left", weight = "", italic = false } = {}) {
@@ -306,6 +306,14 @@ const Diario = (() => {
     g.fillStyle = color;
     g.textAlign = align;
     g.fillText(str, x, y);
+  }
+
+  // scritto a penna su una riga, come nello spazio apposito di un modulo
+  function penLine(g, str, x, y, w, { size = 40, font = HAND, align = "left" } = {}) {
+    g.strokeStyle = "rgba(106, 74, 44, 0.55)";
+    g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(x, y + 8); g.lineTo(x + w, y + 8); g.stroke();
+    write(g, str, align === "center" ? x + w / 2 : x + 6, y, { size, font, color: PEN, align });
   }
 
   function drawIcon(g, name, x, y, size, color) {
@@ -318,109 +326,126 @@ const Diario = (() => {
     g.restore();
   }
 
-  // Fuori: il retro col QR (a sinistra) e la copertina (a destra)
-  function outside(t, code) {
-    const { c, g } = page();
-    // la copertina: lo stemma della Società, il nome, il viaggio
-    const cx = HALF + HALF / 2;
-    write(g, "Società Ornitologica", cx, 150, { size: 64, align: "center" });
-    write(g, "dell'Arcipelago senza nome · fondata nel 1500", cx, 196, { size: 26, color: SEPIA, align: "center", italic: true });
+  // La copertina: lo stemma della Società, il nome, i giorni di viaggio e la data a penna
+  function cover(g, ox, oy, t) {
+    frame(g, ox, oy);
+    const cx = ox + PW / 2;
+    write(g, "Società Ornitologica", cx, oy + 160, { size: 62, align: "center" });
     g.strokeStyle = GOLD;
     g.lineWidth = 6;
-    g.beginPath(); g.arc(cx, 420, 170, 0, Math.PI * 2); g.stroke();
+    g.beginPath(); g.arc(cx, oy + 400, 160, 0, Math.PI * 2); g.stroke();
     g.lineWidth = 2;
-    g.beginPath(); g.arc(cx, 420, 152, 0, Math.PI * 2); g.stroke();
-    drawIcon(g, "birdhouse", cx - 110, 310, 220, "#2f4a2a");
-    write(g, "Taccuino di viaggio di", cx, 680, { size: 34, color: SEPIA, align: "center", italic: true });
-    write(g, t.explorer, cx, 770, { size: 92, font: "'Pinyon Script', cursive", align: "center" });
-    // le notizie del viaggio, scritte a penna
-    const seen = UCCELLI.filter((u) => t.birds[u.id]?.level === "visto").length;
-    const zones = Object.values(t.zones).filter((z) => z.visited).length;
-    const n = (k, one, many) => `${k} ${k === 1 ? one : many}`;
-    const lines = [
-      `${n(Gioco.day(), "giorno", "giorni")} di viaggio`,
-      `${n(t.stats.islands.size, "isola toccata", "isole toccate")}, ${n(zones, "zona esplorata", "zone esplorate")}`,
-      `${n(seen, "uccello osservato", "uccelli osservati")} su ${UCCELLI.length}`,
-    ];
-    lines.forEach((l, i) => write(g, l, cx, 880 + i * 62, { size: 50, font: "'Pinyon Script', cursive", color: "#23305a", align: "center" }));
-    write(g, new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" }), cx, PAGE_H - 90, { size: 26, color: SEPIA, align: "center", italic: true });
+    g.beginPath(); g.arc(cx, oy + 400, 142, 0, Math.PI * 2); g.stroke();
+    drawIcon(g, "birdhouse", cx - 104, oy + 296, 208, "#2f4a2a");
+    write(g, "Taccuino di viaggio di", cx, oy + 660, { size: 32, color: SEPIA, align: "center", italic: true });
+    penLine(g, t.explorer, ox + 110, oy + 760, PW - 220, { size: 88, font: BAROQUE, align: "center" });
+    const days = Gioco.day();
+    write(g, "giorni di viaggio", ox + 110, oy + 880, { size: 26, color: SEPIA, italic: true });
+    penLine(g, `${days} ${days === 1 ? "giorno" : "giorni"}`, ox + 330, oy + 880, PW - 440);
+    write(g, "data", ox + 110, oy + 960, { size: 26, color: SEPIA, italic: true });
+    penLine(g, new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" }), ox + 330, oy + 960, PW - 440);
+  }
 
-    // il retro: il QR che apre il gioco col codice già scritto
-    const bx = HALF / 2, size = 440;
-    write(g, "Per riprendere il taccuino", bx, 200, { size: 44, align: "center" });
+  // Il retro: il QR (color sabbia) che apre il gioco col codice già scritto, e il codice
+  function back(g, ox, oy, code) {
+    frame(g, ox, oy);
+    const bx = ox + PW / 2;
+    write(g, "Per riprendere il taccuino", bx, oy + 170, { size: 44, align: "center" });
     if (typeof qrcode === "function") {
       const qr = qrcode(0, "M");
       qr.addData(Taccuino.link(code));
       qr.make();
-      const n = qr.getModuleCount(), cell = Math.floor(size / (n + 8));
-      const x0 = Math.round(bx - (cell * n) / 2), y0 = 260;
-      g.fillStyle = "#fff";
+      const n = qr.getModuleCount(), cell = Math.floor(440 / (n + 8));
+      const x0 = Math.round(bx - (cell * n) / 2), y0 = oy + 250;
+      g.fillStyle = "#efe2bc";
       g.fillRect(x0 - cell * 4, y0 - cell * 4, cell * (n + 8), cell * (n + 8));
-      g.fillStyle = INK;
+      g.fillStyle = "#4a3a22";
       for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (qr.isDark(r, k)) g.fillRect(x0 + k * cell, y0 + r * cell, cell, cell);
     } else {
-      write(g, "(il QR non si è potuto disegnare: serve la connessione)", bx, 480, { size: 24, color: SEPIA, align: "center", italic: true });
+      write(g, "(il QR non si è potuto disegnare: serve la connessione)", bx, oy + 460, { size: 24, color: SEPIA, align: "center", italic: true });
     }
-    write(g, "inquadra il codice col telefono, oppure scrivilo", bx, 780, { size: 28, color: SEPIA, align: "center", italic: true });
-    write(g, "nel menu, alla voce «Riprendi un taccuino»:", bx, 818, { size: 28, color: SEPIA, align: "center", italic: true });
-    write(g, code, bx, 890, { size: 52, font: MONO, weight: "bold", align: "center" });
-    write(g, "Una spedizione ornitologica", bx, PAGE_H - 130, { size: 32, align: "center" });
-    write(g, "gabrielemartire.github.io/una-spedizione-ornitologica", bx, PAGE_H - 90, { size: 22, color: SEPIA, align: "center" });
-    return c;
+    write(g, "inquadra il codice col telefono, oppure scrivilo", bx, oy + 780, { size: 28, color: SEPIA, align: "center", italic: true });
+    write(g, "nel menu, alla voce «Riprendi un taccuino»", bx, oy + 818, { size: 28, color: SEPIA, align: "center", italic: true });
+    write(g, code, bx, oy + 900, { size: 54, font: MONO, weight: "bold", align: "center" });
+    write(g, "Una spedizione ornitologica", bx, oy + PH - 130, { size: 32, align: "center" });
+    write(g, "gabrielemartire.github.io/una-spedizione-ornitologica", bx, oy + PH - 90, { size: 22, color: SEPIA, align: "center" });
   }
 
-  // Dentro: il codice in cima, il resoconto, poi gli uccelli specie per specie, su due facciate
-  function inside(t, code) {
-    const { c, g } = page();
-    let x = MARGIN + 20, y = 120;
-    const colW = HALF - 2 * (MARGIN + 20);
-    write(g, "Codice del taccuino", x, y, { size: 26, color: SEPIA, italic: true });
-    write(g, code, x, y + 64, { size: 62, font: MONO, weight: "bold" });
-    y += 96;
+  // L'interno: due facciate. In cima, a penna, isole, zone e uccelli; poi gli uccelli specie per specie
+  function insideSpread(t) {
+    const { c, g } = canvas(PAGE_W, PH);
+    frame(g, 0, 0);
+    frame(g, PW, 0);
+    const colW = PW - 2 * 82;
+    let x = 82, y = 100;
+    const seen = UCCELLI.filter((u) => t.birds[u.id]?.level === "visto").length;
+    const zones = Object.values(t.zones).filter((z) => z.visited).length;
+    for (const [label, value] of [["isole toccate", t.stats.islands.size], ["zone esplorate", zones], ["uccelli osservati", `${seen} su ${UCCELLI.length}`]]) {
+      write(g, label, x, y, { size: 24, color: SEPIA, italic: true });
+      penLine(g, String(value), x + 220, y, colW - 220, { size: 36 });
+      y += 54;
+    }
+    y += 4;
     g.strokeStyle = SEPIA; g.lineWidth = 2; g.beginPath(); g.moveTo(x, y); g.lineTo(x + colW, y); g.stroke();
-    y += 44;
+    y += 14;
 
-    const ROW = 24, bottom = PAGE_H - 64;
-    // si va a capo sulla facciata di destra quando non c'è più posto; una specie può continuare di là
+    const ROW = 22, bottom = PH - 62;
+    // si va sulla facciata di destra quando non c'è più posto; una specie può continuare di là
     const room = (h) => {
       if (y + h <= bottom) return false;
-      x = HALF + MARGIN + 20;
-      y = 110;
+      x = PW + 82;
+      y = 80;
       return true;
     };
     const heading = (info, birds, more) => {
-      const seen = birds.filter((u) => t.birds[u.id]?.level === "visto").length;
-      write(g, info.nome + (more ? " (segue)" : ""), x, y + 26, { size: 28, weight: "bold" });
-      write(g, `${info.latino} · ${seen}/${birds.length}`, x + colW, y + 26, { size: 19, color: SEPIA, align: "right", italic: true });
-      y += 38;
+      const n = birds.filter((u) => t.birds[u.id]?.level === "visto").length;
+      write(g, info.nome + (more ? " (segue)" : ""), x, y + 26, { size: 26, weight: "bold" });
+      write(g, `${info.latino} · ${n}/${birds.length}`, x + colW, y + 26, { size: 18, color: SEPIA, align: "right", italic: true });
+      y += 36;
     };
     Object.entries(SPECIE).forEach(([sp, info]) => {
       const birds = UCCELLI.filter((u) => u.specie === sp);
-      room(38 + ROW * 2);   // il titolo non resta mai da solo in fondo
+      room(36 + ROW * 2);   // il titolo non resta mai da solo in fondo
       heading(info, birds, false);
       for (const u of birds) {
         if (room(ROW)) heading(info, birds, true);
-        const known = t.birds[u.id] || {};
-        const level = known.level;
+        const level = t.birds[u.id]?.level;
         // osservato: il disegno a colori e il nome; altrimenti un riquadro chiaro vuoto e la riga per il nome
-        // (se l'hai incrociato, il nome a matita sulla riga)
+        // (se l'hai incrociato, il nome a penna sulla riga)
         if (level === "visto") {
           g.fillStyle = "#2a2014";
-          g.fillRect(x, y, 20, 20);
-          if (u.rara) { g.strokeStyle = GOLD; g.lineWidth = 3; g.strokeRect(x - 2, y - 2, 24, 24); }
-          drawIcon(g, iconaUccello(u), x + 2, y + 2, 16, u.colore);
-          write(g, u.nome + (u.rara ? "  ✦" : ""), x + 32, y + 17, { size: 21 });
+          g.fillRect(x, y, 18, 18);
+          if (u.rara) { g.strokeStyle = GOLD; g.lineWidth = 3; g.strokeRect(x - 2, y - 2, 22, 22); }
+          drawIcon(g, iconaUccello(u), x + 2, y + 2, 14, u.colore);
+          write(g, u.nome + (u.rara ? "  ✦" : ""), x + 30, y + 16, { size: 20 });
         } else {
           g.strokeStyle = "rgba(106, 74, 44, 0.35)";
           g.lineWidth = 1.5;
-          g.strokeRect(x + 0.5, y + 0.5, 19, 19);
-          g.beginPath(); g.moveTo(x + 32, y + 20); g.lineTo(x + colW * 0.62, y + 20); g.stroke();
-          if (level === "traccia") write(g, u.nome, x + 32, y + 16, { size: 20, color: "#8a7a64", italic: true });
+          g.strokeRect(x + 0.5, y + 0.5, 17, 17);
+          g.beginPath(); g.moveTo(x + 30, y + 18); g.lineTo(x + colW * 0.7, y + 18); g.stroke();
+          if (level === "traccia") write(g, u.nome, x + 34, y + 15, { size: 20, font: HAND, color: PEN });
         }
         y += ROW;
       }
-      y += 16;
+      y += 12;
     });
+    return c;
+  }
+
+  // Il foglio: in basso retro e copertina dritti, in alto l'interno capovolto; i segni delle pieghe
+  function sheet(t, code) {
+    const { c, g } = canvas(PAGE_W, PAGE_H);
+    back(g, 0, PH, code);
+    cover(g, PW, PH, t);
+    g.save();
+    g.translate(PAGE_W, PH);
+    g.rotate(Math.PI);
+    g.drawImage(insideSpread(t), 0, 0);
+    g.restore();
+    g.strokeStyle = "rgba(106, 74, 44, 0.45)";
+    g.setLineDash([10, 10]);
+    for (const [x0, y0, x1, y1] of [[PW, 0, PW, 26], [PW, PAGE_H - 26, PW, PAGE_H], [0, PH, 26, PH], [PAGE_W - 26, PH, PAGE_W, PH]]) { g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); }
+    g.setLineDash([]);
     return c;
   }
 
@@ -428,10 +453,9 @@ const Diario = (() => {
     const t = trip();
     if (!t) return;
     try {
-      await Promise.all(["48px 'Pinyon Script'", "32px 'IM Fell English'", "italic 32px 'IM Fell English'"].map((f) => document.fonts.load(f)));
+      await Promise.all(["48px 'Pinyon Script'", "40px 'Cedarville Cursive'", "32px 'IM Fell English'", "italic 32px 'IM Fell English'"].map((f) => document.fonts.load(f)));
     } catch (e) { /* va bene anche il carattere di riserva */ }
-    const code = Gioco.code();
-    const blob = pdfFromCanvases([outside(t, code), inside(t, code)]);
+    const blob = pdfFromCanvases([sheet(t, Gioco.code())]);
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = `taccuino-${t.explorer.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "esploratore"}.pdf`;
@@ -439,10 +463,10 @@ const Diario = (() => {
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   }
 
-  // Un PDF con una pagina A4 orizzontale per canvas, ognuna con dentro l'immagine in JPEG: niente
-  // librerie, il formato regge un'immagine per pagina con pochi oggetti
+  // Un PDF con una pagina A4 per canvas (verticale o orizzontale come il canvas), ognuna con dentro
+  // l'immagine in JPEG: niente librerie, il formato regge un'immagine per pagina con pochi oggetti
   function pdfFromCanvases(canvases) {
-    const pw = 842, ph = 595;
+    const [pw, ph] = canvases[0].width < canvases[0].height ? [595, 842] : [842, 595];
     const enc = new TextEncoder();
     const parts = [];
     const offsets = [];

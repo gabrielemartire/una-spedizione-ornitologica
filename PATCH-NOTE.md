@@ -2,6 +2,13 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.6.2 · 23 ottobre 2026
+
+- **Il libretto del taccuino è un foglio solo**: una pagina A4 verticale, da stampare **da un lato** e piegare in quattro. Prima a metà in orizzontale con la stampa fuori (la parte capovolta va dietro), poi a metà in verticale con la copertina davanti. Diventa un libretto A6: la copertina, il retro col QR e, aprendolo, due facciate con gli uccelli (la metà di sopra è stampata capovolta apposta, così dopo le pieghe si legge dritta).
+- **A penna, su una riga**: le cose scritte a mano (giorni di viaggio, data, isole, zone, uccelli osservati, i nomi degli uccelli solo incrociati) sono in una grafia semplice e stanno su una riga, come negli spazi di un modulo. Il nome resta in corsivo barocco.
+- In copertina restano lo stemma, il nome, i giorni di viaggio e la data; tolto il motto della Società. **Isole toccate, zone esplorate e uccelli osservati** sono dentro, in cima. Il codice resta sul retro, col QR.
+- Il **QR** è color sabbia.
+
 ## 0.6.1 · 23 ottobre 2026
 
 - **Il mercante** ha l'icona di una persona (non più l'incappucciato) e accanto il suo **carretto di merce**: occupa due caselle. Si parla con lui andando contro di lui o contro il carretto; quando se ne va, sparisce anche il carretto.

@@ -371,10 +371,13 @@ Ogni uccello ha: bioma (o "ovunque"), a volte una caratteristica (fiume, lago, c
 
 **Resoconto** (fatto): una schermata con la causa della fine, giorni di viaggio, sbarchi, zone esplorate, isole toccate, passi, ferite, uccelli osservati, e la griglia del taccuino (a colori gli osservati, sagome le tracce, "?" il resto).
 
-**L'attestato è un libretto A5** (fatto). Un PDF di due pagine A4 orizzontali, senza librerie (le pagine sono immagini JPEG): si stampa fronte e retro, girando sul lato corto, e si piega a metà.
-- **Copertina** (fuori, a destra): *Società Ornitologica dell'Arcipelago senza nome*, lo stemma (la casetta per gli uccelli in un cerchio d'oro), *Taccuino di viaggio di* e il nome in corsivo; sotto, **scritto a penna**, giorni di viaggio, isole toccate, zone esplorate, uccelli osservati; la data.
-- **Retro** (fuori, a sinistra): il **QR** (libreria qrcode-generator da cdnjs; senza connessione resta solo il codice), il codice e l'indirizzo del gioco.
-- **Dentro**: in cima il **codice del taccuino in un carattere leggibile** (monospaziato, grande); poi tutti gli uccelli, specie per specie, su due facciate (una specie può continuare sulla facciata accanto, con *segue*). Osservato: l'icona a colori e il nome (i rari con il bordo d'oro e ✦). Non osservato: un riquadro chiaro vuoto e una riga per il nome; se l'hai incrociato, il nome a matita sulla riga.
+**L'attestato è un libretto da un foglio solo** (fatto). Un PDF di una pagina A4 verticale (immagine JPEG, senza librerie), da stampare **da un lato** e piegare in quattro: prima a metà in orizzontale con la stampa fuori, poi a metà in verticale. Diventa un libretto A6.
+- **Metà in basso, dritta**: a sinistra il **retro**, a destra la **copertina**.
+- **Metà in alto, capovolta**: l'**interno**, due facciate; dopo le pieghe si legge dritto.
+- **Copertina**: *Società Ornitologica*, lo stemma (la casetta per gli uccelli in un cerchio d'oro), *Taccuino di viaggio di* e il nome in corsivo barocco; sotto, giorni di viaggio e data.
+- **Retro**: il **QR** color sabbia (libreria qrcode-generator da cdnjs; senza connessione resta solo il codice), il codice in chiaro e l'indirizzo del gioco.
+- **Interno**: in cima isole toccate, zone esplorate, uccelli osservati su 58; poi tutti gli uccelli, specie per specie (una specie può continuare sulla facciata accanto, con *segue*). Osservato: l'icona a colori e il nome (i rari col bordo d'oro e ✦). Non osservato: un riquadro chiaro vuoto e una riga per il nome; se l'hai incrociato, il nome scritto a penna sulla riga.
+- **Tutto ciò che è scritto a penna sta su una riga**, come negli spazi di un modulo, in una grafia semplice (Cedarville Cursive); solo il nome è in corsivo barocco (Pinyon Script).
 - Non ci sono il motivo della fine, sbarchi, passi, ferite, né la versione.
 
 **Codice del taccuino** (fatto): compare nella schermata di fine, nel libretto e nel QR. Il QR apre il gioco con `?taccuino=CODICE`, cioè direttamente su *Riprendi un taccuino* col codice scritto.
