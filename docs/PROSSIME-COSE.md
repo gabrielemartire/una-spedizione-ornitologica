@@ -18,6 +18,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Vignetta notturna**: di notte la mappa più scura lontano dall'esploratore.
 
 ## Fatto di recente
+- [x] **Versione 0.6.4**: l'orso torna a due cuori a colpo.
 - [x] **Versione 0.6.3**: l'orso toglie un cuore a colpo invece di due.
 - [x] **Versione 0.6.2**: il libretto del taccuino è un A4 da stampare da un lato e piegare in quattro; scritte a penna su una riga, QR color sabbia, isole/zone/uccelli all'interno.
 - [x] **Versione 0.6.1**: il mercante è una persona col carretto di merce accanto (due caselle).

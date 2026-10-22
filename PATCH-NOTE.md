@@ -2,6 +2,10 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.6.4 · 23 ottobre 2026
+
+- **L'orso** torna a togliere due cuori a colpo: nella 0.6.3 il danno era stato dimezzato per un malinteso. Resta fermo per 3 tue mosse dopo ogni colpo.
+
 ## 0.6.3 · 23 ottobre 2026
 
 - **L'orso** toglie un cuore a colpo (prima due): prima bastavano tre colpi per morire, ora cinque. Dopo averti colpito resta fermo per 3 tue mosse, poi torna a inseguirti.
