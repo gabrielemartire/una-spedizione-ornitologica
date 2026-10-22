@@ -18,6 +18,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Vignetta notturna**: di notte la mappa più scura lontano dall'esploratore.
 
 ## Fatto di recente
+- [x] **Versione 0.6.1**: il mercante è una persona col carretto di merce accanto (due caselle).
 - [x] **Versione 0.6**: codice del taccuino e *Riprendi un taccuino*; l'attestato è un libretto A5 da stampare (copertina con lo stemma della Società e il viaggio a penna, QR sul retro, dentro il codice e gli uccelli).
 - [x] **Versione 0.5**: oggetti magici (lettera e donna della torre col cuore rosa, chiave e forzieri, uovo e Pulcino), tolta la bussola; emporio aperto col tavolo e i semi che fanno tornare un uccello volato via.
 - [x] **Versione 0.4.3**: il porticciolo attaccato alla terraferma in alto; quattro pontili coi pescherecci ormeggiati.

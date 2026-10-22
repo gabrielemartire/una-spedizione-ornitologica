@@ -234,6 +234,7 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .e-npc.e-event { color: var(--bird); }
 .e-npc.e-carpenter { color: #e8a040; }
 .e-merchant { color: #e8a040; filter: drop-shadow(0 0 2px #000); }
+.e-cart { color: #c89058; filter: drop-shadow(0 0 2px #000); }
 .e-fugitive { color: #e0402a; filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 1px #000); }
 .cc-board { color: #f0d8a0; filter: drop-shadow(0 0 3px rgba(242, 194, 48, 0.8)); }
 .cc-sign { color: #f4ecd8; background: rgba(20, 14, 8, 0.82) !important; box-shadow: inset 0 0 0 1px #c8a060; border-radius: 2px; }

@@ -2,6 +2,10 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.6.1 · 23 ottobre 2026
+
+- **Il mercante** ha l'icona di una persona (non più l'incappucciato) e accanto il suo **carretto di merce**: occupa due caselle. Si parla con lui andando contro di lui o contro il carretto; quando se ne va, sparisce anche il carretto.
+
 ## 0.6 · 23 ottobre 2026
 
 - **Il codice del taccuino.** A fine spedizione hai un codice di 16 caratteri (tipo `3MT6-10GG-420R-97SA`) che dice quali uccelli hai osservato. Nel menu c'è **Riprendi un taccuino**: lo scrivi (minuscole e trattini vanno bene) e la nuova spedizione parte con quegli uccelli già nel taccuino. Se il codice è sbagliato il gioco se ne accorge. L'ultimo codice resta anche nel browser.

@@ -625,7 +625,9 @@ const Gioco = (() => {
       : gen.free.filter((c) => dist(c, gen.start) >= 8 && DIRS.some(([dx, dy]) => inside(c.x + dx, c.y + dy) && gen.map[c.y + dy][c.x + dx] === "tree"));
     const itemAt = itemSpots.length ? itemSpots[Math.floor(rp() * itemSpots.length)] : null;
     const merchant = trip.world.merchants.find((m) => m.zone === zone.id && !memory.traded);
-    const merchantSpots = gen.free.filter((c) => dist(c, gen.start) >= 4 && dist(c, gen.start) <= 9 && (!itemAt || !same(c, itemAt)));
+    // il mercante e, accanto a lui (a est), il suo carretto: servono due caselle libere
+    const isFree = (c) => gen.free.some((f) => same(f, c)) && (!itemAt || !same(c, itemAt));
+    const merchantSpots = gen.free.filter((c) => dist(c, gen.start) >= 4 && dist(c, gen.start) <= 9 && isFree(c) && isFree({ x: c.x + 1, y: c.y }));
     const merchantAt = merchant && merchantSpots.length ? merchantSpots[Math.floor(rp() * merchantSpots.length)] : null;
     s = {
       zone,
@@ -640,7 +642,7 @@ const Gioco = (() => {
       bird: { ...gen.bird, info: bird, present, observed: false, gone: false },
       beasts: spawnBeasts(gen, zone, time),
       item: memory.item && !memory.item.taken && itemAt ? { ...itemAt, kind: memory.item.kind } : null,
-      merchant: merchantAt ? { ...merchantAt, wants: merchant.wants } : null,
+      merchant: merchantAt ? { ...merchantAt, wants: merchant.wants, cart: { x: merchantAt.x + 1, y: merchantAt.y } } : null,
       fugitive: hideout(gen, zone, itemAt, merchantAt, rp),
       chest: chestSpot(gen, zone, memory, itemAt, merchantAt, rp),
       tower: gen.tower,
@@ -677,7 +679,7 @@ const Gioco = (() => {
   // Il forziere chiuso, nelle zone che ne hanno uno e finché non lo apri: vicino agli alberi, lontano dalla nave
   function chestSpot(gen, zone, memory, itemAt, merchantAt, r) {
     if (!trip.world.chests.includes(zone.id) || memory.chestOpen) return null;
-    const ok = (c) => dist(c, gen.start) >= 8 && (!itemAt || !same(c, itemAt)) && (!merchantAt || !same(c, merchantAt)) && !same(c, gen.bird);
+    const ok = (c) => dist(c, gen.start) >= 8 && (!itemAt || !same(c, itemAt)) && (!merchantAt || (!same(c, merchantAt) && !same(c, { x: merchantAt.x + 1, y: merchantAt.y }))) && !same(c, gen.bird);
     const spots = gen.free.filter((c) => ok(c) && DIRS.some(([dx, dy]) => inside(c.x + dx, c.y + dy) && ["tree", "rock"].includes(gen.map[c.y + dy][c.x + dx])));
     const pool = spots.length ? spots : gen.free.filter(ok);
     return pool.length ? pool[Math.floor(r() * pool.length)] : null;
@@ -687,7 +689,7 @@ const Gioco = (() => {
   function hideout(gen, zone, itemAt, merchantAt, r) {
     const w = trip.wanted;
     if (!w || w.state !== "free" || w.zone !== zone.id) return null;
-    const ok = (c) => dist(c, gen.start) >= 14 && dist(c, gen.bird) >= 4 && (!itemAt || !same(c, itemAt)) && (!merchantAt || !same(c, merchantAt))
+    const ok = (c) => dist(c, gen.start) >= 14 && dist(c, gen.bird) >= 4 && (!itemAt || !same(c, itemAt)) && (!merchantAt || (!same(c, merchantAt) && !same(c, { x: merchantAt.x + 1, y: merchantAt.y })))
       && c.x < W - 2 && c.y > 1 && c.y < H - 2;
     const woods = gen.free.filter((c) => ok(c) && DIRS.some(([dx, dy]) => inside(c.x + dx, c.y + dy) && gen.map[c.y + dy][c.x + dx] === "tree"));
     const spots = woods.length ? woods : gen.free.filter(ok);
@@ -840,7 +842,7 @@ const Gioco = (() => {
   }
 
   function occupied(c) {
-    return (!!s.chest && same(s.chest, c)) || s.beasts.some((o) => same(o, c)) || (birdActive() && same(s.bird, c)) || (!!s.merchant && same(s.merchant, c)) || (!!s.fugitive && same(s.fugitive, c));
+    return (!!s.chest && same(s.chest, c)) || s.beasts.some((o) => same(o, c)) || (birdActive() && same(s.bird, c)) || (!!s.merchant && (same(s.merchant, c) || same(s.merchant.cart, c))) || (!!s.fugitive && same(s.fugitive, c));
   }
 
   // Tenere premuto è correre: ogni tre passi di fila il rumore sale di uno, fino a tre
@@ -853,7 +855,7 @@ const Gioco = (() => {
     if (!inside(n.x, n.y)) return false;
     const t = tile(s.map, n.x, n.y);
     if (t.gate) { toast("Il ponte levatoio è alzato. Entrare nel castello? Un'altra volta."); return false; }
-    if (s.merchant && same(s.merchant, n)) { meetMerchant(); return false; }
+    if (s.merchant && (same(s.merchant, n) || same(s.merchant.cart, n))) { meetMerchant(); return false; }
     if (s.fugitive && same(s.fugitive, n)) { capture(); return true; }
     if (s.chest && same(s.chest, n)) { openChest(); return false; }
     if (t.tower) { meetLady(); return false; }
@@ -977,7 +979,7 @@ const Gioco = (() => {
     trip.hold.splice(i, 1);
     trip.zones[s.zone.id].traded = true;
     s.merchant = null;
-    el.ents.merchant.hidden = true;
+    el.ents.merchant.hidden = el.ents.cart.hidden = true;
     const heard = rumor("mercante");
     toast(heard ? "Il mercante si avvicina e sussurra. È nel diario." : "Il mercante prende l'oggetto, ma non sa niente di nuovo.");
     leaveMerchant();
@@ -1235,7 +1237,7 @@ const Gioco = (() => {
         if (o.mode === "hunt" && o.energy >= 1) { slide(o, steps); return attack(o); }
         break;
       }
-      if (o.energy < beastCost(c) || s.beasts.some((other) => other !== o && same(other, c)) || (s.fugitive && same(s.fugitive, c))) break;
+      if (o.energy < beastCost(c) || s.beasts.some((other) => other !== o && same(other, c)) || (s.fugitive && same(s.fugitive, c)) || (s.merchant && (same(s.merchant, c) || same(s.merchant.cart, c)))) break;
       o.energy -= beastCost(c);
       o.x = c.x;
       o.y = c.y;
@@ -1488,8 +1490,9 @@ const Gioco = (() => {
     el.ents = { bird: pawn("e-bird", s.bird.info ? iconaUccello(s.bird.info) : "bird"), player: pawn("e-player", "binoculars") };
     el.ents.bird.style.setProperty("--bird-color", s.bird.info?.colore || "#f2c230");
     el.ents.merchant = pawn("e-merchant", "merchant");
-    el.ents.merchant.hidden = !s.merchant;
-    if (s.merchant) place(el.ents.merchant, s.merchant);
+    el.ents.cart = pawn("e-cart", "cart");
+    el.ents.merchant.hidden = el.ents.cart.hidden = !s.merchant;
+    if (s.merchant) { place(el.ents.merchant, s.merchant); place(el.ents.cart, s.merchant.cart); }
     el.ents.fugitive = pawn("e-fugitive", "bandit");
     el.ents.fugitive.hidden = !s.fugitive;
     if (s.fugitive) { place(el.ents.fugitive, s.fugitive); s.fugitive.el = el.ents.fugitive; s.fugitive.slideEnd = 0; }

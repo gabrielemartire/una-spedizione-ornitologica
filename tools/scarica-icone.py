@@ -65,7 +65,8 @@ ICONS = {
     # Le città: porte delle botteghe, gente, navi, banchina
     "enter": "delapouite/entry-door",
     "person": "delapouite/walk",
-    "merchant": "lorc/cowled",
+    "merchant": "delapouite/person",
+    "cart": "delapouite/old-wagon",
     "sailboat": "delapouite/sailboat",
     "fishboat": "delapouite/fishing-boat",
     "pier": "delapouite/wooden-pier",

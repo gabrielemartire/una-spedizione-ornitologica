@@ -268,7 +268,7 @@ Il contatto toglie **punti vita** (vita iniziale: 10). Ci si cura **solo in citt
 
 Servono a **vendere al mercato**, ma conviene tenerne qualcuno: **i mercanti** li vogliono.
 
-**I mercanti.** Due per globo, ognuno in una zona, incappucciati vicino alla riva. Ognuno cerca **un oggetto preciso**: se ce l'hai e glielo dai, ti racconta **una voce** (in più rispetto alle 2 di taverna). Poi se ne va.
+**I mercanti.** Due per globo, ognuno in una zona, vicino alla riva: una persona (icona *person*) con accanto, a est, **il suo carretto di merce** (icona *old-wagon*), quindi due caselle. Si parla con lui andando contro l'uno o l'altro. Ognuno cerca **un oggetto preciso**: se ce l'hai e glielo dai, ti racconta **una voce** (in più rispetto alle 2 di taverna). Poi se ne va.
 
 *(Più avanti: peso e limite della stiva.)*
 
