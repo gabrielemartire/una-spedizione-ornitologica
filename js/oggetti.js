@@ -19,11 +19,13 @@ function oggettoACaso(r, rovine) {
   return ids[Math.floor(r() * ids.length)];
 }
 
-// Gli oggetti speciali, che ti dà la gente in città: vanno nello zaino. Provvisori: la lista vera arriverà
+// Gli oggetti magici, che ti dà lo sconosciuto col punto esclamativo (uno per tipo a partita), e i semi
+// dell'emporio: vanno nello zaino. La lettera va consegnata alla donna della torre, la chiave apre i
+// forzieri, l'uovo dopo tredici giorni si schiude, i semi fanno tornare un uccello volato via
 const OGGETTI_SPECIALI = {
-  bussola: { nome: "Bussola che punta a sud", icona: "compass" },
   lettera: { nome: "Lettera sigillata", icona: "scroll" },
   chiave: { nome: "Chiave arrugginita", icona: "key" },
   uovo: { nome: "Uovo maculato", icona: "egg" },
+  semi: { nome: "Sacchetto di semi", icona: "seeds" },
 };
-const OGGETTI_SPECIALI_IDS = Object.keys(OGGETTI_SPECIALI);
+const OGGETTI_SPECIALI_IDS = ["lettera", "chiave", "uovo"];   // quelli che regala lo sconosciuto

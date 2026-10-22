@@ -140,7 +140,7 @@ const Cartolina = (() => {
     // in fila, in ordine casuale, senza mai coprirsi. Ognuno ha una larghezza minima e massima:
     // prima si riserva il minimo, poi si divide lo spazio avanzato.
     const GAP = 4;
-    const items = [["fiume", 28, 28], ["lago", 40, 26], ["castello", 30, 30], ["villaggio", 34, 14], ["rovine", 26, 14]]
+    const items = [["fiume", 28, 28], ["lago", 40, 26], ["castello", 30, 30], ["villaggio", 34, 14], ["rovine", 26, 14], ["torre", 14, 12]]
       .filter(([tag]) => zone.tags.has(tag))
       .map(([tag, max, min]) => ({ tag, max, min, w: min }))
       .sort(() => r() - 0.5);
@@ -684,6 +684,14 @@ const Cartolina = (() => {
         for (let y = 0; y < 5; y++) px(x0 + 15, base - 25 - y, P.stoneShadow); // l'asta
         block(x0 + 16, base - 30, 4, 2, P.roof, P.roofShadow); // la bandiera
       }
+    }
+    // La torre della donna: alta e stretta, col tetto a punta e una finestra (accesa di notte)
+    if (zone.tags.has("torre") && spots.torre) {
+      const x0 = spots.torre.x + Math.floor(spots.torre.w / 2) - 4, base = groundAt(x0, 8);
+      block(x0, base - 30, 8, 30, P.stone, P.stoneShadow);
+      for (let k = 0; k < 9; k++) for (let x = x0 - 1 + Math.floor(k / 2); x <= x0 + 8 - Math.floor(k / 2); x++) px(x, base - 31 - k, (lightLeft ? x > x0 + 4 : x < x0 + 4) ? P.roofShadow : P.roof);
+      for (let y = base - 24; y < base - 20; y++) for (let x = x0 + 3; x < x0 + 5; x++) px(x, y, night ? P.windowLit : P.window);
+      block(x0 + 3, base - 5, 2, 5, P.window, P.window);
     }
     if (zone.tags.has("villaggio")) {
       const spot = spots.villaggio;

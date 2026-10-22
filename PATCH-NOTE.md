@@ -2,6 +2,14 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.5 · 23 ottobre 2026
+
+- **Gli oggetti magici.** Lo sconosciuto col punto esclamativo, in città, ti regala la lettera, la chiave o l'uovo, ognuno una sola volta per partita (finiti quelli, ti può solo rapinare). La bussola non c'è più.
+- **La lettera e la donna della torre.** In ogni mappa c'è una torre, in una zona a caso (si vede nella cartolina e col binocolo). Ti avvicini e la donna si affaccia: senza lettera piange e guarda il mare; se le dai la lettera ti ringrazia e ti bacia, e hai **un cuore rosa in più, per sempre**, che i medici curano come gli altri.
+- **La chiave e i forzieri.** Circa una zona su otto ha un forziere chiuso. Con la chiave si apre: dentro un oggetto rituale e 5–10 m.o. La chiave resta per tutta la partita.
+- **L'uovo.** Tredici giorni dopo averlo avuto si schiude: nel taccuino, tra gli altri uccelli, arriva il **Pulcino**. Nello zaino si vede quanti giorni mancano.
+- **L'emporio** è aperto nelle due città: la merce sta su un tavolo, per ora solo i **semi** (5 m.o.). In una zona dove l'uccello è volato via per sempre, li spargi con **E**; aspettato un momento a bordo, l'uccello torna nella zona, in un punto a caso (non dove sono i semi), e si fa vedere nelle sue ore.
+
 ## 0.4.3 · 23 ottobre 2026
 
 - **Il porticciolo** è attaccato alla terraferma: in alto la riva innevata con gli abeti, da cui partono le due passerelle.

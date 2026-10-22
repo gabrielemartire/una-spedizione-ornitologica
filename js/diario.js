@@ -176,7 +176,7 @@ const Diario = (() => {
         const birds = UCCELLI.filter((u) => u.specie === sp);
         const seen = birds.filter((u) => t.birds[u.id]?.level === "visto").length;
         // dove cercarli: i posti dei comuni, così si può partire a caccia di una specie intera
-        const where = [...new Set(birds.filter((u) => !u.rara).map((u) => habitatUccello(u).toLowerCase()))].join(" · ");
+        const where = [...new Set(birds.filter((u) => !u.rara && !u.uovo).map((u) => habitatUccello(u).toLowerCase()))].join(" · ");
         const paid = (t.society || []).includes(sp);
         return `<h4>${info.nome} <small>${info.latino} · ${seen}/${birds.length}</small></h4>
           <p class="sp-where">Si trovano: ${where}.${paid ? " <b>Premio della Società riscosso.</b>" : ""}</p>
@@ -198,7 +198,9 @@ const Diario = (() => {
     },
 
     zaino() {
-      return `<ul class="book-items"><li>${icon("binoculars")}Binocolo</li>${trip().pack.map((it) => `<li>${icon(OGGETTI_SPECIALI[it.kind].icona)}${OGGETTI_SPECIALI[it.kind].nome}</li>`).join("")}</ul>`;
+      // l'uovo dice quanto manca; la chiave resta per tutta la spedizione
+      const extra = (it) => it.kind === "uovo" ? ` <small>(si schiude fra ${Math.max(1, Gioco.EGG_DAYS - (Gioco.day() - (it.day || 1)))} giorni)</small>` : "";
+      return `<ul class="book-items"><li>${icon("binoculars")}Binocolo</li>${trip().pack.map((it) => `<li>${icon(OGGETTI_SPECIALI[it.kind].icona)}${OGGETTI_SPECIALI[it.kind].nome}${extra(it)}</li>`).join("")}</ul>`;
     },
 
     stiva() {

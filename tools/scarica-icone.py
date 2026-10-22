@@ -78,7 +78,6 @@ ICONS = {
     "bed": "delapouite/person-in-bed",
     "hammer": "lorc/claw-hammer",
     "church": "delapouite/church",
-    "compass": "lorc/compass",
     "key": "delapouite/house-keys",
     "egg": "delapouite/raw-egg",
     # Gli oggetti da trovare e vendere: solo oggetti rituali
@@ -103,6 +102,13 @@ ICONS = {
     "manacles": "lorc/manacles",
     "prisoner": "delapouite/prisoner",
     "birdhouse": "delapouite/bird-house",
+    # Gli oggetti magici: la torre della donna, i forzieri, i semi dell'emporio, il pulcino dell'uovo
+    "tower": "lorc/stone-tower",
+    "woman": "delapouite/woman-elf-face",
+    "chest": "lorc/locked-chest",
+    "chestopen": "skoll/open-treasure-chest",
+    "seeds": "delapouite/plant-seed",
+    "chick": "delapouite/chicken",
 }
 
 BASE = "https://raw.githubusercontent.com/game-icons/icons/master/{}.svg"

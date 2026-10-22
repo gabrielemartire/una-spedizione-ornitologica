@@ -5,11 +5,10 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 ## Priorità
 0. **Le cartoline delle città**: rifatte nella v0.4.1 (Forte dalla strada, porticciolo dalla foto). Ritocchi possibili: insegne delle locande più leggibili, la locanda vicina che esce dal bordo.
 1. **Tarare i ricercati**: il fuggitivo spara mezzo cuore ogni 4 battiti e scappa al tuo passo; correndo lo si prende. Da provare giocando.
-2. **La lista degli oggetti speciali** (quelli del punto esclamativo): ora sono quattro provvisori.
-3. **Le icone degli uccelli**: le 8 specie usano icone provvisorie di game-icons, in attesa dei disegni.
-4. **Tarare l'economia**: oggetti a 2–4 m.o., premi della Società (8) e taglie (15) bastano a pagare la ciurma? Giocare qualche spedizione.
-5. **Codice del taccuino** e "Riprendi un taccuino" (oggi disattivato nel menu, apposta).
-6. **Emporio**: strumenti e trappole.
+2. **Le icone degli uccelli**: le 8 specie usano icone provvisorie di game-icons, in attesa dei disegni.
+3. **Tarare l'economia**: oggetti a 2–4 m.o., premi della Società (8) e taglie (15) bastano a pagare la ciurma? Giocare qualche spedizione.
+4. **Codice del taccuino** e "Riprendi un taccuino" (oggi disattivato nel menu, apposta).
+5. **Emporio**: altre cose sul tavolo (strumenti e trappole); oggi ci sono solo i semi.
 
 ## Versione 2
 - [ ] **Eventi marini**: cose che attirano l'attenzione mentre si naviga (luccichii, relitti) e si possono visitare.
@@ -20,6 +19,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Vignetta notturna**: di notte la mappa più scura lontano dall'esploratore.
 
 ## Fatto di recente
+- [x] **Versione 0.5**: oggetti magici (lettera e donna della torre col cuore rosa, chiave e forzieri, uovo e Pulcino), tolta la bussola; emporio aperto col tavolo e i semi che fanno tornare un uccello volato via.
 - [x] **Versione 0.4.3**: il porticciolo attaccato alla terraferma in alto; quattro pontili coi pescherecci ormeggiati.
 - [x] **Versione 0.4.2**: il porticciolo sull'acqua, con due passerelle e due file di case, il mare da tutti e due i lati, e la Taverna Pesce Sgozzato su palafitte.
 - [x] **Versione 0.4.1**: cartoline nuove del Forte (vista dalla strada, mura sul mare, arco, castello sulla collina, mercato; fiaccole di notte, nessuno all'alba) e del porticciolo (banchina nella foschia, peschereccio del Cinquecento, locande a un piano); il porticciolo dal mare come la sua cartolina.
@@ -44,7 +44,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [x] **Biomi**: foresta, taiga, isole ghiacciate, palude, tropicale, deserto, su un pianeta più piccolo con isole sparse ovunque.
 
 ## Città
-- [ ] **Emporio**: tagliole, carne, petardi, semi, mantella; binocolo migliorabile.
+- [ ] **Emporio**: tagliole, carne, petardi, mantella; binocolo migliorabile (i semi ci sono dalla v0.5).
 - [ ] **Stiva con un limite** (peso o posti).
 - [ ] Voci di tesori, oltre a quelle sugli uccelli.
 

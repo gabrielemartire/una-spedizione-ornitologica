@@ -38,27 +38,30 @@ const Citta = (() => {
   // Le botteghe e quello che offrono, città per città
   const SHOPS = {
     forte: {
-      medico: { cost: 5, cap: Gioco.MAX_HP },
+      medico: { cost: 5, extra: 0 },
       taverna: { cost: 11 },
       mercato: { price: 2, refuse: [] },
-      emporio: {},
+      emporio: { semi: 5 },
       gendarmeria: {},
       societa: {},
     },
     porto: {
-      medico: { cost: 3, cap: Gioco.MAX_HP + 2 }, // cinque cuori e uno in più, che il Forte non ripristina
+      medico: { cost: 3, extra: 2 }, // tutti i cuori e uno in più, che il Forte non ripristina
       taverna: { cost: 7, name: "Taverna Pesce Sgozzato" },
       mercato: { price: 4, refuse: ["arte"] },
-      emporio: {},
+      emporio: { semi: 5 },
     },
   };
   // il nome e l'icona dell'insegna sul tetto (game-icons.net)
   const SHOP_INFO = {
     medico: ["Medico", "medicine"], taverna: ["Taverna", "tankard"], mercato: ["Mercato", "shop"],
-    emporio: ["Emporio", "locked"], gendarmeria: ["Gendarmeria", "manacles"], societa: ["Società ornitologica", "birdhouse"],
+    emporio: ["Emporio", "seeds"], gendarmeria: ["Gendarmeria", "manacles"], societa: ["Società ornitologica", "birdhouse"],
   };
 
   // il nome della bottega: in una città può avere il suo
+  // fin dove cura il medico: la vita massima (col cuore rosa, se c'è) più l'eventuale cuore in più
+  const healCap = (shop) => Gioco.maxHp() + shop.extra;
+
   const shopName = (kind) => (c && SHOPS[c.city.id][kind]?.name) || SHOP_INFO[kind][0];
 
   const GROG = "«Il grog è un miscuglio segreto che contiene una o più di queste sostanze: cherosene, glicol propilene, dolcificanti artificiali, acido solforico, rum, acetone, colorante rosso n.2, detriti, grasso per motore, acido per la batteria e/o peperone. Come puoi ben immaginare è una delle sostanze più caustiche e volatili conosciute dall'uomo.»";
@@ -626,7 +629,8 @@ const Citta = (() => {
 
   function shopLine(kind) {
     const shop = SHOPS[c.city.id][kind];
-    if (kind === "medico") return `cura le ferite${shop.cap > Gioco.MAX_HP ? " e dà un cuore in più" : ""} · ${shop.cost} m.o.`;
+    if (kind === "medico") return `cura le ferite${shop.extra ? " e dà un cuore in più" : ""} · ${shop.cost} m.o.`;
+    if (kind === "emporio") return `semi per far tornare un uccello volato via · ${shop.semi} m.o.`;
     if (kind === "taverna") return `si dorme fino all'alba e si sentono storie · ${shop.cost} m.o.`;
     if (kind === "mercato") return `compra la merce della stiva · ${shop.price} m.o. al pezzo`;
     if (kind === "gendarmeria") return `paga le taglie dei ricercati · ${Gioco.BOUNTY} m.o.`;
@@ -696,6 +700,29 @@ const Citta = (() => {
     tick();
   }
 
+  // L'emporio: un tavolo con la merce sopra (per ora solo i semi); si sceglie con le frecce
+  function emporio() {
+    const shop = SHOPS[c.city.id].emporio, money = Gioco.trip.money;
+    const goods = [["semi", shop.semi]];
+    dialog("Emporio", "«Guardate pure, è tutto sul tavolo.»", [
+      ...goods.map(([kind, price]) => [money >= price ? `buy:${kind}` : "none",
+        `${Gioco.iconHtml(OGGETTI_SPECIALI[kind].icona)} ${OGGETTI_SPECIALI[kind].nome} <small>(${price} m.o.${money < price ? ", non ti bastano" : ""})</small>`]),
+      ["back", "Esci"],
+    ]);
+    Gioco.el.overlay.querySelector(".menu").classList.add("shop-table");
+  }
+
+  function buy(kind) {
+    const trip = Gioco.trip, price = SHOPS[c.city.id].emporio[kind];
+    trip.money -= price;
+    Gioco.pay(`emporio: ${OGGETTI_SPECIALI[kind].nome.toLowerCase()}`, price);
+    trip.pack.push({ kind });
+    Suoni.play("monete");
+    Gioco.renderStatus();
+    Gioco.toast(`${OGGETTI_SPECIALI[kind].nome}: nello zaino. A terra si spargono con E dove un uccello è volato via.`);
+    emporio();
+  }
+
   // La bacheca dei ricercati: l'avviso in corso, oppure uno nuovo da accettare
   function readBoard() {
     const trip = Gioco.trip, w = trip.wanted;
@@ -746,7 +773,7 @@ const Citta = (() => {
     const trip = Gioco.trip;
     trip.society ||= [];
     const done = Object.keys(SPECIE).filter((sp) => !trip.society.includes(sp)
-      && UCCELLI.filter((u) => u.specie === sp && !u.rara).every((u) => trip.birds[u.id]?.level === "visto"));
+      && UCCELLI.filter((u) => u.specie === sp && !u.rara && !u.uovo).every((u) => trip.birds[u.id]?.level === "visto"));
     if (done.length) {
       trip.society.push(...done);
       const names = done.map((sp) => SPECIE[sp].nome).join(", ");
@@ -770,15 +797,21 @@ const Citta = (() => {
     npc.event = false;
     npc.el.classList.remove("e-event");
     delete npc.el.dataset.intent;
-    if (Math.random() < 0.5 && trip.money > 0) {
+    // ogni oggetto magico lo regala una volta sola a partita; finiti quelli, resta solo la rapina
+    trip.gifts ||= trip.pack.map((it) => it.kind);
+    const left = OGGETTI_SPECIALI_IDS.filter((k) => !trip.gifts.includes(k));
+    if (!left.length && trip.money <= 0) {
+      dialog("Uno sconosciuto", "Ti squadra dalla testa ai piedi, vede le tasche vuote e se ne va.", [["back", "Meglio così"]]);
+    } else if (!left.length || (Math.random() < 0.5 && trip.money > 0)) {
       const lost = Math.min(trip.money, ROB[0] + Math.floor(Math.random() * (ROB[1] - ROB[0] + 1)));
       trip.money -= lost;
       Gioco.pay("rapina", lost);
       Gioco.renderStatus();
       dialog("Uno sconosciuto", `Ti si avvicina sorridendo, ti dà una pacca sulla spalla e sparisce tra la folla. Ti manca qualcosa: −${lost} m.o.`, [["back", "Accidenti"]]);
     } else {
-      const kind = OGGETTI_SPECIALI_IDS[Math.floor(Math.random() * OGGETTI_SPECIALI_IDS.length)];
-      trip.pack.push({ kind });
+      const kind = left[Math.floor(Math.random() * left.length)];
+      trip.gifts.push(kind);
+      trip.pack.push({ kind, day: Gioco.day() });
       Gioco.note(`${c.city.name}: uno sconosciuto mi ha dato ${OGGETTI_SPECIALI[kind].nome.toLowerCase()}.`, OGGETTI_SPECIALI[kind].icona);
       dialog("Uno sconosciuto", `«Tenete, a me non serve più.» Ti mette in mano ${OGGETTI_SPECIALI[kind].nome.toLowerCase()} e se ne va. Finisce nello zaino.`, [["back", "Grazie…?"]]);
     }
@@ -787,8 +820,8 @@ const Citta = (() => {
   function openShop(kind) {
     const trip = Gioco.trip, shop = SHOPS[c.city.id][kind], money = trip.money;
     if (kind === "medico") {
-      const healed = trip.hp >= shop.cap;
-      const extra = shop.cap > Gioco.MAX_HP ? " e un cuore in più" : "";
+      const healed = trip.hp >= healCap(shop);
+      const extra = shop.extra ? " e un cuore in più" : "";
       dialog("Medico", healed ? "«Siete sano come un pesce. Tornate quando sanguinate.»"
         : `«Volete curarvi le ferite${extra}? ${shop.cost} m.o.»`, [
         !healed && money >= shop.cost && ["heal", `Sì, curami (−${shop.cost} m.o.)`],
@@ -819,7 +852,7 @@ const Citta = (() => {
     } else if (kind === "societa") {
       societa();
     } else {
-      dialog("Emporio", "La porta è chiusa. Un cartello: «Torno presto».", [["back", "Esci"]], { voice: false });
+      emporio();
     }
   }
 
@@ -872,10 +905,10 @@ const Citta = (() => {
   function heal() {
     const trip = Gioco.trip, shop = SHOPS[c.city.id].medico;
     trip.money -= shop.cost;
-    trip.hp = Math.max(trip.hp, shop.cap);
+    trip.hp = Math.max(trip.hp, healCap(shop));
     Gioco.pay("medico", shop.cost);
     Suoni.play("monete");
-    Gioco.toast(shop.cap > Gioco.MAX_HP ? "Ferite curate, e ti senti più forte del solito." : "Ferite curate.");
+    Gioco.toast(shop.extra ? "Ferite curate, e ti senti più forte del solito." : "Ferite curate.");
     Gioco.renderStatus();
     back();
   }
@@ -949,6 +982,7 @@ const Citta = (() => {
     else if (action === "heal") heal();
     else if (action === "sleep") sleep();
     else if (action === "wanted") acceptWanted();
+    else if (action.startsWith("buy:")) buy(action.slice(4));
     else if (action === "grog") dialog("La nota sul barile", GROG, [["back", "Rimetti a posto la nota"]], { voice: false });
     else if (action === "say" && !c.talk.typing) say(Gioco.trip.explorer, RODITORE[c.talk.step][1], false);
     else if (action === "sellall") {

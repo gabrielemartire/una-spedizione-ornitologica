@@ -293,7 +293,15 @@ Due città per globo, sempre presenti. **La città è disegnata in pixel art vis
 
 **La città ha tutta la sua zona.** Il Forte e il porticciolo occupano un'intera zona della loro isola: dovunque si attracchi lì, si entra in porto, e **col binocolo si vede la città dal mare** (il Forte con le mura, il castello e la chiesa; il porticciolo con le case colorate sotto le montagne innevate).
 
-**Il punto esclamativo.** A volte in città qualcuno ha un **!** sopra la testa e ti aspetta fermo: ci vai e **o ti rapina** (−2…4 m.o.) **o ti dà un oggetto speciale** che finisce nello zaino (lista provvisoria: bussola che punta a sud, lettera sigillata, chiave arrugginita, uovo maculato).
+**Il punto esclamativo.** A volte in città qualcuno ha un **!** sopra la testa e ti aspetta fermo: ci vai e **o ti rapina** (−2…4 m.o.) **o ti dà un oggetto magico** che finisce nello zaino. Gli oggetti magici sono tre e ognuno si riceve **una sola volta per partita**; finiti quelli, lo sconosciuto può solo rapinarti.
+
+| Oggetto magico | A cosa serve |
+|---|---|
+| **Lettera sigillata** | In ogni mappa c'è **una torre** (tag `torre`, in una zona a caso senza castello né vulcano: si vede nella cartolina e col binocolo, sulla battlemap è di pietra, due caselle per due, con la donna alla finestra). Ti avvicini e lei si affaccia: **senza lettera piange** e guarda il mare; **con la lettera** ti ringrazia, scende, ti bacia: **un cuore rosa in più, per sempre** (la vita massima passa da 10 a 12), che i medici curano come gli altri. Poi lei ha solo una battuta di ringraziamento. |
+| **Chiave arrugginita** | Apre i **forzieri chiusi**: circa una zona su otto (almeno una) ne ha uno, vicino ad alberi o rocce. Senza chiave: «Un forziere chiuso. Serve una chiave.» Dentro: un oggetto rituale e 5–10 m.o. **La chiave resta** per tutta la partita. |
+| **Uovo maculato** | **Tredici giorni** dopo averlo avuto (ovunque tu sia) si schiude: nel taccuino arriva il **Pulcino**, tra gli altri uccelli. Nello zaino si vede quanti giorni mancano. |
+
+**L'emporio.** Entrando, la merce è appoggiata su un **tavolo di legno** e si sceglie con le frecce. Per ora c'è solo il **sacchetto di semi** (5 m.o.): in una zona dove l'uccello è **volato via per sempre**, lo spargi con **E**; aspettato almeno un momento (1/3 di giorno), l'uccello **torna nella zona**, in un punto a caso della battlemap (non dove sono i semi), e si fa vedere nelle sue ore. Un sacchetto, un uccello.
 
 Le città **sono battlemap cittadine**: la banchina con le altre navi, le strade, le case, la gente che va e viene (si muove da sola, anche se stai fermo; se le vai addosso brontola). Lungo la strada principale **le botteghe**: la porta ha il simbolo **→** (si entra), ci passi sopra e il padrone ti fa la sua domanda. Per ripartire si torna alla propria nave. In città il tempo non passa, tranne dormendo in taverna.
 
@@ -305,7 +313,7 @@ Le città **sono battlemap cittadine**: la banchina con le altre navi, le strade
 | Medico | «Volete curarvi le ferite?» **5 m.o.**, cura completa (5 cuori) | **3 m.o.**, 5 cuori **+ 1 in più**; quel cuore il Forte non lo ripristina |
 | Taverna | «Una notte in locanda?» **11 m.o.**: dormi fino all'alba (la ciurma si paga) e senti una voce, sempre su un uccello raro | la **Taverna Pesce Sgozzato**, su palafitte: **7 m.o.**, ma la voce è su un raro solo l'84% delle volte |
 | Mercato | **2 m.o.** a oggetto, compra tutto | **4 m.o.** a oggetto, ma l'arte no |
-| Emporio | chiuso, per ora | chiuso, per ora |
+| Emporio | i semi, **5 m.o.** | i semi, **5 m.o.** |
 | Gendarmeria | la taglia del ricercato: **15 m.o.** | no |
 | Società ornitologica | **8 m.o.** per ogni specie completata | no |
 | Bacheca dei ricercati | sì | sì |
@@ -349,7 +357,7 @@ Il diario è un diario, non un manuale: niente spiegazioni, se un capitolo è vu
 
 **Specie e varianti.** Ogni specie ha **una sola icona** (provvisoria: arriveranno i disegni); le varianti si distinguono per colore e nome. **8 specie, 51 uccelli**, in `js/uccelli.js`: Pettirosso (*Erithacus ignifer*), Gufo selenicus, Airone di nebbia, Cinciallegra di vetro, Corvo dei campanili, Colibrì d'ambra, Gabbiano di tempesta, Fenice. **Ogni specie ha un uccello raro.**
 
-**Altri uccelli.** Una nona specie raccoglie **6 uccelli singoli**, ognuno con la sua icona e senza raro: kiwi notturno (foresta, notte), corridore delle dune (deserto, alba; icona *ostrich*), gallo del villaggio (villaggio, alba), dodo (isola tropicale, pomeriggio), gru di carta (palude, alba), oca del lago (lago, pomeriggio). In tutto 57 uccelli.
+**Altri uccelli.** Una nona specie raccoglie **6 uccelli singoli**, ognuno con la sua icona e senza raro: kiwi notturno (foresta, notte), corridore delle dune (deserto, alba; icona *ostrich*), gallo del villaggio (villaggio, alba), dodo (isola tropicale, pomeriggio), gru di carta (palude, alba), oca del lago (lago, pomeriggio). In tutto 57 uccelli, più il **Pulcino**, che non vive in nessuna zona: nasce dall'uovo maculato (non conta per il premio della Società).
 
 **Perché inseguire una specie: la Società ornitologica.** Al Forte, quando hai osservato **tutti gli uccelli comuni di una specie**, la Società ti paga **8 m.o.** (una volta per specie, entrando nella sua sede). Il taccuino dice dove cercarli: chi ha poche monete può decidere di andare a completare i gabbiani invece di girare a caso.
 

@@ -144,19 +144,22 @@ const UCCELLI = [
     "Una piega bianca tra le canne.", "Leggera come un foglio, e piegata con cura.", { latino: "Grus chartacea", icona: "crane" }),
   u(56, "altro", "Oca del lago", "#d8d8c8", ["pomeriggio"], null, "lago",
     "Starnazzi sulla riva del lago.", "Fa la guardia meglio di un cane.", { latino: "Anser lacustris", icona: "goose" }),
+  // non vive in nessuna zona: nasce dall'uovo maculato, dopo tredici giorni nello zaino
+  u(57, "altro", "Pulcino", "#f2d04a", ["alba", "pomeriggio", "notte"], null, null,
+    "", "Pigola dietro a chi l'ha covato, convinto che sia sua madre.", { latino: "Pullus ovi maculati", icona: "chick", uovo: true }),
 ];
 
 const iconaUccello = (u) => u.icona || SPECIE[u.specie].icona;
 
 // Dove vive, a parole: il bioma e la caratteristica che cerca
-const habitatUccello = (u) => [u.bioma ? BIOMI[u.bioma].nome : null, u.tratto].filter(Boolean).join(", ") || "ovunque";
+const habitatUccello = (u) => u.uovo ? "nato dall'uovo" : [u.bioma ? BIOMI[u.bioma].nome : null, u.tratto].filter(Boolean).join(", ") || "ovunque";
 
 // Una zona va bene per un uccello se ne rispetta il bioma e la caratteristica
 const zonaAdatta = (u, tags, biome) => (!u.bioma || u.bioma === biome) && (!u.tratto || tags.has(u.tratto));
 
 // L'uccello di una zona (mai un raro: quelli arrivano con le voci): tra quelli adatti al bioma e alle caratteristiche, chi vuole una caratteristica ha un po' di precedenza
 function uccelloPerZona(tags, biome, r) {
-  const fits = UCCELLI.filter((u) => !u.rara && zonaAdatta(u, tags, biome));
+  const fits = UCCELLI.filter((u) => !u.rara && !u.uovo && zonaAdatta(u, tags, biome));
   const special = fits.filter((u) => u.tratto);
   const pool = special.length && r() < 0.5 ? special : fits.filter((u) => !u.tratto);
   const list = pool.length ? pool : fits;

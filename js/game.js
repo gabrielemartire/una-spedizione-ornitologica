@@ -24,6 +24,11 @@ const Gioco = (() => {
   const WANTED_EVERY = 6;
   const WANTED_DAYS = 3;
   const BOUNTY = 15;
+  // Gli oggetti magici: l'uovo si schiude dopo EGG_DAYS giorni; un forziere ogni CHEST_EVERY zone
+  const EGG_DAYS = 13;
+  const CHEST_EVERY = 8;
+  const CHEST_COINS = [5, 10];
+  const PULCINO = 57;         // l'uccello che nasce dall'uovo
   // Il fuggitivo: ti vede come un animale, spara da vicino ogni `reload` battiti, scappa dal bordo
   // della mappa solo se sei lontano; damage = mezzi cuori
   const OUTLAW = { sight: 8, nightSight: 5, hearing: 2, range: 6, reload: 4, damage: 1, escape: 10,
@@ -66,6 +71,8 @@ const Gioco = (() => {
     gate:   { name: "Ponte levatoio",   icon: "drawbridge", cls: "t-gate",   walk: false, sight: false, gate: true },
     bridge: { name: "Ponte",            icon: "bridge",     cls: "t-bridge", walk: true,  sight: true, noise: 1, sound: "macerie" },
     flag:   { name: "Bandiera",         icon: "flag",       cls: "t-flag",   walk: false, sight: true },
+    // La torre della donna che aspetta una lettera
+    tower:  { name: "Torre",            icon: "tower",      cls: "t-castle", walk: false, sight: false, tower: true },
   };
 
   // Gli animali: l'orso di giorno, i lupi di notte, il cinghiale all'alba.
@@ -182,6 +189,7 @@ const Gioco = (() => {
   function zoneName(tags, place) {
     if (tags.has("vulcano")) return `${place} sotto il vulcano`;
     if (tags.has("castello")) return `${place} del castello`;
+    if (tags.has("torre")) return `${place} della torre`;
     if (tags.has("cascata")) return `${place} della cascata`;
     if (tags.has("lago")) return `${place} sul lago`;
     if (tags.has("rovine")) return `${place} con le rovine`;
@@ -284,6 +292,7 @@ const Gioco = (() => {
     if (tags.has("villaggio")) placeHamlet(map, r);
     const castle = tags.has("castello") ? placeCastle(map, r) : null;
     if (castle) feature.push(...castle.cells);
+    const tower = tags.has("torre") ? placeTower(map, r) : null;
     if (ruin) feature.push(...[...ruin.interior].map(unkey));
     // Le pozze della palude, poi la vegetazione del bioma
     blob("water", look.pools, 1, 0.75);
@@ -300,6 +309,7 @@ const Gioco = (() => {
 
     const reach = bfs(map, start).depth;
     if (ruin && ![...ruin.interior].some((k) => reach.has(k))) return null;
+    if (tower && !tower.some((c) => DIRS.some(([dx, dy]) => reach.has(key({ x: c.x + dx, y: c.y + dy }))))) return null;
     const free = [...reach.keys()].map(unkey).filter((c) => map[c.y][c.x] === "grass" || map[c.y][c.x] === "tall");
 
     // L'uccello ama stare vicino all'acqua o agli alberi; chi cerca una caratteristica le sta vicino
@@ -323,7 +333,16 @@ const Gioco = (() => {
     if (!lair.length) return null;
     lair.sort(() => r() - 0.5);
 
-    return { map, start, bird, lair, free, ruin };
+    return { map, start, bird, lair, free, ruin, tower };
+  }
+
+  // La torre: due caselle per due, di pietra, con un anello d'erba intorno per arrivarci
+  function placeTower(map, r) {
+    const x0 = 20 + Math.floor(r() * (W - 26)), y0 = 3 + Math.floor(r() * (H - 9));
+    for (let y = y0 - 1; y <= y0 + 2; y++) for (let x = x0 - 1; x <= x0 + 2; x++) if (inside(x, y)) map[y][x] = "grass";
+    const cells = [];
+    for (let y = y0; y <= y0 + 1; y++) for (let x = x0; x <= x0 + 1; x++) { map[y][x] = "tower"; cells.push({ x, y }); }
+    return cells;
   }
 
   // Il villaggio della cartolina: qualche casa al margine orientale della zona
@@ -428,6 +447,9 @@ const Gioco = (() => {
   let trip = null;
   let explorer = "";
 
+  // la vita massima: cinque cuori, più quello rosa della donna della torre
+  const maxHp = () => MAX_HP + (trip && trip.pink ? 2 : 0);
+
   const timeOf = (third) => TIMES[((third % 3) + 3) % 3];
   const now = () => timeOf(trip.third);
   const day = () => Math.floor(trip.third / 3) + 1;
@@ -445,6 +467,11 @@ const Gioco = (() => {
     const pickZone = (ok) => { const pool = wild.filter(ok); return pool.length ? pool[Math.floor(r() * pool.length)] : null; };
     if (r() < 0.8) pickZone((z) => z.biome !== "ghiaccio")?.tags.add("castello");
     if (r() < 0.6) pickZone((z) => !z.tags.has("castello"))?.tags.add("vulcano");
+    // la torre della donna: sempre una, in una zona qualunque senza castello né vulcano
+    pickZone((z) => !z.tags.has("castello") && !z.tags.has("vulcano"))?.tags.add("torre");
+    // i forzieri chiusi: uno ogni CHEST_EVERY zone, almeno uno
+    const rc = rng(seed ^ 0x7c4e57);
+    world.chests = wild.slice().sort(() => rc() - 0.5).slice(0, Math.max(1, Math.round(wild.length / CHEST_EVERY))).map((z) => z.id);
     for (const z of world.zones) z.name = zoneName(z.tags, z.place);
     // Due mercanti girano per il globo, ognuno in una zona, e cercano un oggetto preciso
     const rm = rng(seed ^ 0x3e7c11);
@@ -510,6 +537,7 @@ const Gioco = (() => {
       trip = { hold: [], pack: [], rumors: [], heard: { taverna: 0, mercante: 0 }, ...data, world, stats: { ...data.stats, islands: new Set(data.stats.islands) } };
       // gli oggetti delle versioni vecchie (spade, piume…) non esistono più: diventano idoli
       trip.hold = trip.hold.map((it) => (OGGETTI[it.kind] ? it : { kind: "idolo" }));
+      trip.pack = trip.pack.filter((it) => OGGETTI_SPECIALI[it.kind]);   // la bussola non c'è più
       for (const m of Object.values(trip.zones)) if (m.item && !OGGETTI[m.item.kind]) m.item.kind = "idolo";
       s = null;
       initUi();
@@ -569,6 +597,18 @@ const Gioco = (() => {
       trip.stats.islands.add(zone.island);
     }
     if (!waited) trip.stats.landings++;
+    // i semi sparsi: passato almeno un momento, l'uccello volato via torna nella zona (non dove sono i semi)
+    let back = false;
+    if (memory.gone && memory.seededAt != null && trip.third > memory.seededAt) {
+      memory.gone = false;
+      memory.seededAt = null;
+      back = true;
+      note(`${zone.name}: i semi sono spariti. Forse qualcuno è tornato.`, "seeds");
+    }
+    if (back) {
+      const spots = gen.free.filter((c) => dist(c, gen.start) >= 10 && bandCells(gen.map, c).length >= 3);
+      if (spots.length) Object.assign(gen.bird, pickRandom(spots));
+    }
     const present = !!bird && !memory.done && !memory.gone && bird.ore.includes(time);
     // L'oggetto della zona si decide al primo sbarco, e resta lì finché non lo prendi
     const ri = rng(zone.seed ^ 0x17e3);
@@ -596,6 +636,9 @@ const Gioco = (() => {
       item: memory.item && !memory.item.taken && itemAt ? { ...itemAt, kind: memory.item.kind } : null,
       merchant: merchantAt ? { ...merchantAt, wants: merchant.wants } : null,
       fugitive: hideout(gen, zone, itemAt, merchantAt, rp),
+      chest: chestSpot(gen, zone, memory, itemAt, merchantAt, rp),
+      tower: gen.tower,
+      towerMet: false,
       run: 0,
       ticks: 0,
       noise: 0,
@@ -623,6 +666,15 @@ const Gioco = (() => {
     if (s.merchant) setTimeout(() => s && s.zone === zone && toast("Qualcuno col cappuccio aspetta vicino alla riva."), 3200);
     if (s.fugitive) setTimeout(() => s && s.zone === zone && toast("Odore di fumo: qualcuno ha acceso un fuoco, più in là."), 1600);
     render();
+  }
+
+  // Il forziere chiuso, nelle zone che ne hanno uno e finché non lo apri: vicino agli alberi, lontano dalla nave
+  function chestSpot(gen, zone, memory, itemAt, merchantAt, r) {
+    if (!trip.world.chests.includes(zone.id) || memory.chestOpen) return null;
+    const ok = (c) => dist(c, gen.start) >= 8 && (!itemAt || !same(c, itemAt)) && (!merchantAt || !same(c, merchantAt)) && !same(c, gen.bird);
+    const spots = gen.free.filter((c) => ok(c) && DIRS.some(([dx, dy]) => inside(c.x + dx, c.y + dy) && ["tree", "rock"].includes(gen.map[c.y + dy][c.x + dx])));
+    const pool = spots.length ? spots : gen.free.filter(ok);
+    return pool.length ? pool[Math.floor(r() * pool.length)] : null;
   }
 
   // Il nascondiglio del ricercato: lontano dalla nave, vicino agli alberi, dove l'avviso lo dà
@@ -688,7 +740,7 @@ const Gioco = (() => {
     };
     const known = (u) => trip.birds[u.id]?.level === "visto" || Object.values(trip.zones).some((m) => m.rumor && m.bird === u.id);
     const rare = r() < RARE_RUMOR[source];
-    const birds = UCCELLI.filter((u) => !!u.rara === rare && !known(u)).sort(() => r() - 0.5);
+    const birds = UCCELLI.filter((u) => !!u.rara === rare && !u.uovo && !known(u)).sort(() => r() - 0.5);
     for (const u of birds) {
       // la zona: una che gli vada bene, meglio se mai visitata; altrimenti una del suo bioma
       const zones = trip.world.zones.filter(free);
@@ -782,7 +834,7 @@ const Gioco = (() => {
   }
 
   function occupied(c) {
-    return s.beasts.some((o) => same(o, c)) || (birdActive() && same(s.bird, c)) || (!!s.merchant && same(s.merchant, c)) || (!!s.fugitive && same(s.fugitive, c));
+    return (!!s.chest && same(s.chest, c)) || s.beasts.some((o) => same(o, c)) || (birdActive() && same(s.bird, c)) || (!!s.merchant && same(s.merchant, c)) || (!!s.fugitive && same(s.fugitive, c));
   }
 
   // Tenere premuto è correre: ogni tre passi di fila il rumore sale di uno, fino a tre
@@ -797,6 +849,8 @@ const Gioco = (() => {
     if (t.gate) { toast("Il ponte levatoio è alzato. Entrare nel castello? Un'altra volta."); return false; }
     if (s.merchant && same(s.merchant, n)) { meetMerchant(); return false; }
     if (s.fugitive && same(s.fugitive, n)) { capture(); return true; }
+    if (s.chest && same(s.chest, n)) { openChest(); return false; }
+    if (t.tower) { meetLady(); return false; }
     if (!t.walk || occupied(n)) return false;
     s.run = held ? s.run + 1 : 0;
     if (s.run === RUN_STEP && !trip.ranOnce) { trip.ranOnce = true; toast("Stai correndo: fai più rumore."); }
@@ -811,6 +865,8 @@ const Gioco = (() => {
     s.noise = t.noise ? t.noise + (s.time === "notte" ? 1 : 0) + runNoise() : 0;
     if (s.item && same(s.item, n)) pickUp();
     s.heard.push({ ...n, r: s.noise });
+    // accanto alla torre, la donna si affaccia
+    if (s.tower && !s.towerMet && s.tower.some((c) => Math.abs(c.x - n.x) + Math.abs(c.y - n.y) === 1)) { s.towerMet = true; meetLady(); }
     if (s.fugitive && Math.abs(s.fugitive.x - n.x) + Math.abs(s.fugitive.y - n.y) <= 1) { capture(); return true; }
 
     // L'uccello reagisce subito: troppo vicino o troppo rumore
@@ -831,6 +887,72 @@ const Gioco = (() => {
     Suoni.play("monete");
     note(`${s.zone.name}: trovato ${it.nome.toLowerCase()}. In stiva.`, it.icona);
     toast(`Hai trovato: ${it.nome}. Finisce in stiva.`);
+  }
+
+  const hasPack = (kind) => trip.pack.some((it) => it.kind === kind);
+
+  // Il forziere: con la chiave si apre (la chiave resta), dentro un oggetto rituale e qualche moneta
+  function openChest() {
+    if (!hasPack("chiave")) { toast("Un forziere chiuso. Serve una chiave."); return; }
+    const kind = oggettoACaso(Math.random, true);
+    const coins = CHEST_COINS[0] + Math.floor(Math.random() * (CHEST_COINS[1] - CHEST_COINS[0] + 1));
+    trip.hold.push({ kind });
+    earn("forziere", coins);
+    trip.zones[s.zone.id].chestOpen = true;
+    s.chest = null;
+    Suoni.play("monete");
+    note(`${s.zone.name}: aperto un forziere con la chiave. Dentro ${OGGETTI[kind].nome.toLowerCase()} e ${coins} m.o.`, "chestopen");
+    toast(`Il forziere si apre: ${OGGETTI[kind].nome} e ${coins} m.o.`);
+    render();
+  }
+
+  // La donna nella torre: senza la lettera piange; con la lettera ringrazia e ti dà un bacio, un cuore rosa per sempre
+  function meetLady() {
+    const memory = trip.zones[s.zone.id];
+    s.over = true;
+    if (memory.ladyHappy) {
+      showOverlay("La donna della torre", "«Ogni sera rileggo la sua lettera. Grazie ancora, viaggiatore.»", [["leave-lady", "Saluta"]]);
+    } else if (hasPack("lettera")) {
+      showOverlay("La donna della torre", "Una donna si affaccia alla finestra della torre, gli occhi rossi di pianto. «Avete… avete una lettera per me?»", [
+        ["give-letter", "Dalle la lettera sigillata"],
+        ["leave-lady", "Non ora"],
+      ]);
+    } else {
+      showOverlay("La donna della torre", "Dalla finestra della torre una donna piange, e guarda il mare. «Nessuna lettera… nemmeno oggi.»", [["leave-lady", "Lasciala"]]);
+    }
+  }
+
+  function giveLetter() {
+    trip.pack.splice(trip.pack.findIndex((it) => it.kind === "lettera"), 1);
+    trip.zones[s.zone.id].ladyHappy = true;
+    trip.pink = true;
+    s.player.hp += 2;
+    Suoni.play("osservato");
+    note(`${s.zone.name}: consegnata la lettera alla donna della torre. Un bacio, e un cuore rosa in più.`, "woman");
+    showOverlay("La donna della torre", "Legge la lettera in silenzio, poi ride e piange insieme. Scende di corsa, ti abbraccia e ti dà un bacio. «Grazie!» <br>Hai un cuore in più, rosa, per sempre.", [["leave-lady", "Arrossisci e riparti"]]);
+  }
+
+  // I semi: si spargono dove l'uccello è volato via per sempre; aspettato un momento, torna nella zona
+  function sowSeeds() {
+    const memory = trip.zones[s.zone.id];
+    if (!hasPack("semi")) { toast("Non hai semi. Li vende l'emporio."); return; }
+    if (!memory.gone) { toast(memory.done ? "L'uccello di qui è già nel taccuino." : "I semi servono a far tornare un uccello volato via."); return; }
+    if (memory.seededAt != null) { toast("I semi sono già sparsi. Aspetta un momento."); return; }
+    trip.pack.splice(trip.pack.findIndex((it) => it.kind === "semi"), 1);
+    memory.seededAt = trip.third;
+    Suoni.play("cespuglio");
+    note(`${s.zone.name}: sparsi i semi. Bisogna aspettare un momento.`, "seeds");
+    toast("Spargi i semi. Ora bisogna aspettare un momento.");
+  }
+
+  // L'uovo: passati EGG_DAYS giorni da quando l'hai avuto, si schiude e nel taccuino arriva il Pulcino
+  function hatchEggs() {
+    const i = trip.pack.findIndex((it) => it.kind === "uovo" && day() - (it.day || 1) >= EGG_DAYS);
+    if (i < 0) return;
+    trip.pack.splice(i, 1);
+    trip.birds[PULCINO] = { level: "visto", zone: "nato dall'uovo", day: day(), time: now() };
+    note("L'uovo maculato si è schiuso: è nato un Pulcino! È nel taccuino.", "chick");
+    setTimeout(() => toast("Crac! L'uovo si è schiuso: un Pulcino nel taccuino."), 1500);
   }
 
   // Il mercante vuole un oggetto preciso: se ce l'hai, in cambio ti racconta una voce
@@ -907,6 +1029,7 @@ const Gioco = (() => {
     }
     trip.money -= CREW_PAY;
     pay("ciurma", CREW_PAY);
+    hatchEggs();
     showDayBanner();
     Suoni.play("monete");
     return true;
@@ -1217,7 +1340,7 @@ const Gioco = (() => {
       : trip.zones[s.zone.id].done ? "Questa zona non ha altro da mostrarti."
       : b.present ? "Torni a bordo senza averlo osservato."
       : "Nessun uccello, a quest'ora. Forse più tardi?";
-    showOverlay("Di nuovo a bordo", `${esito}<br>Giorno ${day()}, ${now()} · ${trip.money} monete · Vita ${s.player.hp}/${MAX_HP}`, [
+    showOverlay("Di nuovo a bordo", `${esito}<br>Giorno ${day()}, ${now()} · ${trip.money} monete · Vita ${s.player.hp}/${maxHp()}`, [
       ["sail", `Riparti <small>(due momenti: sarà ${timeOf(trip.third + DEPART_COST)})</small>`],
       ["wait", `Aspetta a bordo <small>(un momento: sarà ${timeOf(trip.third + 1)})</small>`],
       ["stay", "Resta a terra"],
@@ -1314,7 +1437,7 @@ const Gioco = (() => {
   }
 
   const KEYS_HELP = {
-    land: "frecce/WASD muovi (tieni premuto: corri) · spazio osserva · Invio aspetta · ⚓ torna a bordo · Tab diario · Esc menu",
+    land: "frecce/WASD muovi (tieni premuto: corri) · spazio osserva · Invio aspetta · E semi · ⚓ torna a bordo · Tab diario · Esc menu",
     city: "frecce/WASD muovi · → entra nelle botteghe · torna alla nave per ripartire · Tab diario · Esc menu",
     sea: "← → rotta · ↑ ↓ vele · T binocolo · Invio sbarca o attracca · Tab diario · Esc menu",
   };
@@ -1439,6 +1562,8 @@ const Gioco = (() => {
         } else if (band.has(k)) cls += " band";
         if (reach.has(k)) cls += danger.has(k) ? " danger" : " reach";
         if (s.item && s.item.x === x && s.item.y === y && !roofed.has(k)) { icon = OGGETTI[s.item.kind].icona; cls += " item"; }
+        if (s.chest && s.chest.x === x && s.chest.y === y) { icon = "chest"; cls += " chest"; }
+        if (t.tower && s.tower && x === s.tower[0].x + 1 && y === s.tower[0].y) { icon = "woman"; cls += " lady"; }   // alla finestra, lei
         if (next.has(k)) cls += " bear-next";
 
         // Si tocca il DOM solo se la casella è cambiata
@@ -1477,7 +1602,12 @@ const Gioco = (() => {
     const land = trip.mode === "land" && s;
     const time = land ? s.time : now();
     const hp = land ? s.player.hp : trip.hp;
-    const hearts = "♥".repeat(Math.ceil(hp / 2)) + "♡".repeat(Math.max(0, Math.ceil(MAX_HP / 2) - Math.ceil(hp / 2)));
+    // i cuori: cinque rossi, poi quello rosa (se c'è), poi quelli in più del medico del porticciolo
+    const slots = Math.max(Math.ceil(maxHp() / 2), Math.ceil(hp / 2));
+    const hearts = Array.from({ length: slots }, (_, i) => {
+      const pink = trip.pink && i === MAX_HP / 2;
+      return `<span${pink ? ' class="pink"' : ""}>${i < Math.ceil(hp / 2) ? "♥" : "♡"}</span>`;
+    }).join("");
     const thirds = TIMES.map((t) => `<i class="${t === time ? "is-now" : ""}" title="${t}">${iconHtml(TIME_ICONS[t])}</i>`).join("");
     let html = `
       <div class="status-day"><b>Giorno ${day()}</b><span class="thirds">${thirds}</span></div>
@@ -1507,11 +1637,12 @@ const Gioco = (() => {
   document.addEventListener("keydown", (e) => {
     if (!document.body.classList.contains("in-game") || !trip || trip.mode !== "land" || !s || s.over || Diario.isOpen()) return;
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
-    if (!MOVES[k] && k !== " " && k !== "o" && k !== "Enter" && k !== ".") return;
+    if (!MOVES[k] && k !== " " && k !== "o" && k !== "Enter" && k !== "." && k !== "e") return;
     e.preventDefault();
     e.stopImmediatePropagation(); // le frecce muovono l'esploratore, non il menu
     if (MOVES[k]) act("move", ...MOVES[k], e.repeat);
     else if (k === "Enter" || k === ".") act("wait");
+    else if (k === "e") sowSeeds();
     else act("observe");
   });
 
@@ -1522,6 +1653,8 @@ const Gioco = (() => {
     if (action === "stay") stay();
     if (action === "trade") trade();
     if (action === "leave-merchant") leaveMerchant();
+    if (action === "give-letter") giveLetter();
+    if (action === "leave-lady") leaveMerchant();
 
     const cell = e.target.closest("#map > div");
     if (cell && canAct()) {
@@ -1546,7 +1679,7 @@ const Gioco = (() => {
 
   // Quello che serve alla navigazione (js/sea.js) e al diario (js/diario.js)
   return {
-    start, resume, save, hasSave: () => !!loadSave(), clearSave, loadNotebook, depart, landAt, rumor, pay, earn, visitCity,
+    start, resume, save, hasSave: () => !!loadSave(), clearSave, loadNotebook, depart, landAt, rumor, pay, earn, visitCity, maxHp, EGG_DAYS,
     wantedPoster, acceptWanted, advance, renderStatus, note, toast, timeOf, now, day, showView, iconHtml, fitMap,
     get trip() { return trip; },
     get el() { return el; },
