@@ -80,7 +80,6 @@ const Cartolina = (() => {
 
   function compose(zone) {
     [PW, PH] = zone.city ? [80, 120] : [120, 80];
-    const finish = () => (zone.style ? stylize(buf, PW, PH, zone.style) : buf);
     const r = rng(zone.seed ^ 0x5bd1e995);
     const biome = BIOMI[[...zone.tags].find((t) => BIOMI[t]) || "foresta"];
     const P = { ...PALETTES[zone.time] };
@@ -207,7 +206,7 @@ const Cartolina = (() => {
     };
     // Una casa di città vista di fronte: intonaco colorato, travi, tetto di coppi rossi o d'ardesia, finestre
     const PLASTER = ["#f0dcb0", "#e8b47a", "#d8806a", "#c8d4dc", "#f4ecd8", "#e8c860"];
-    const townHouse = (x0, y0, w, h, roofH, { plaster = PLASTER[Math.floor(r() * PLASTER.length)], slate = r() < 0.35, timber = r() < 0.5 } = {}) => {
+    const townHouse = (x0, y0, w, h, roofH, { plaster = PLASTER[Math.floor(r() * PLASTER.length)], slate = r() < 0.35, timber = r() < 0.5, lights = 0.7 } = {}) => {
       const wall = tint(plaster), wallShadow = tint(shade(plaster, 0.72)), beam = tint("#3a2618");
       const roof = tint(slate ? "#4a5468" : "#c04a2e"), roofDark = tint(slate ? "#2a3040" : "#7a2a1a"), roofLight = tint(slate ? "#6a7488" : "#e07050");
       block(x0, y0, w, h, wall, wallShadow);
@@ -220,7 +219,7 @@ const Cartolina = (() => {
       }
       for (let y = y0 + 2; y < y0 + h - 4; y += 6) {
         for (let x = x0 + 2; x < x0 + w - 2; x += 4) {
-          const on = night && r() < 0.7;
+          const on = night && r() < lights;
           for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) px(x + dx, y + dy, on ? P.windowLit : tint("#2a2430"));
           px(x, y + 2, beam); px(x + 1, y + 2, beam); // il davanzale
         }
@@ -248,152 +247,240 @@ const Cartolina = (() => {
         px(mx, base - size - mh - 1, tint("#c8302a")); px(mx + 1, base - size - mh - 1, tint("#c8302a"));
       }
     };
-    // Montagne a punta fino a `base`: [x della cima, y della cima, pendenza]; la cima innevata
-    const peaks = (base, list) => {
-      for (const [cx, cy, slope] of list) {
-        for (let y = cy; y < base; y++) {
-          const half = (y - cy) * slope * 1.4;
-          for (let x = Math.floor(cx - half); x <= cx + half; x++) {
-            const left = x < cx, lit = lightLeft ? left : !left;
-            const snowy = y - cy < 6 + Math.abs(Math.sin(x * 1.7)) * 3;
-            px(x, y, snowy ? (lit ? P.snow : P.snowShadow) : lit ? P.far : P.farShadow);
+
+    // Il Forte (80 × 120), visto dall'alto di una strada: a sinistra le mura che corrono lungo il mare
+    // verso il fondo, con una nave ormeggiata e una torre di guardia a metà; in fondo un arco nelle
+    // mura e la salita al castello sulla collina, tra due palazzi; a destra le case; in primo piano la
+    // strada col mercato e la gente. Di notte fiaccole sulle mura, poche finestre e il castello acceso;
+    // all'alba non c'è nessuno in giro
+    const drawForte = () => {
+      const dawn = zone.time === "alba";
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const depth = (y) => Math.max(0, Math.min(1, (PH - y) / (PH - 56)));   // 0 in primo piano, 1 all'arco
+      const stone = tint("#d0bc98"), stoneShadow = tint("#94805e"), stoneDark = tint("#5a4a36"), walk = tint("#b8a47e");
+      const red = tint("#c8302a"), gold = tint("#f2c230");
+      // il castello di notte è illuminato: pietra calda, non spenta dal buio
+      const cStone = night ? "#d8a860" : stone, cShadow = night ? "#9a6a3a" : stoneShadow, cWin = night ? "#fff0a0" : tint("#2a2430");
+      // la fiaccola: un palo, la fiamma e un piccolo alone caldo sulla pietra
+      const torch = (x, y) => {
+        for (let yy = y - 3; yy <= y + 2; yy++) for (let xx = x - 2; xx <= x + 2; xx++) if (Math.hypot(xx - x, yy - y + 0.5) < 2.6) px(xx, yy, "#7a4a24");
+        px(x, y + 1, tint("#2a1a10")); px(x, y + 2, tint("#2a1a10"));
+        px(x, y, "#ff9a30"); px(x, y - 1, "#ffd060"); px(x - 1, y, "#e8702a"); px(x + 1, y, "#e8702a");
+      };
+
+      // il mare a sinistra, fino all'orizzonte
+      for (let y = HY - 2; y < PH; y++) for (let x = 0; x < 40; x++) {
+        let c = ramp([P.waterLight, P.water, P.waterDark], (y - HY) / 60, x, y);
+        if ((y * 5 + Math.floor((x + y * 3) / 4)) % 13 === 0) c = P.foam;
+        px(x, y, c);
+      }
+      // la collina col castello, in fondo al centro
+      for (let x = 14; x < PW; x++) {
+        const top = Math.round(24 + ((x - 46) / 26) ** 2 * 18);
+        for (let y = top; y < 62; y++) px(x, y, y < top + 2 ? P.hillLight : ramp([P.hill, P.hillShadow], (y - top) / 30, x, y));
+      }
+      // la salita che va dall'arco al portone del castello
+      for (let y = 30; y < 58; y++) { const x = 46 + Math.round(Math.sin(y * 0.35) * 3); for (let k = -1; k <= 1; k++) px(x + k, y, tint("#a89a80")); }
+      block(30, 16, 32, 14, cStone, cShadow);
+      crenels(30, 16, 32, cStone, cShadow);
+      for (const [tx, th] of [[28, 22], [58, 22]]) { block(tx, 30 - th, 6, th, cStone, cShadow); crenels(tx, 30 - th, 6, cStone, cShadow); }
+      block(41, 4, 10, 14, cStone, cShadow); crenels(41, 4, 10, cStone, cShadow);   // il mastio
+      for (let y = 0; y < 5; y++) px(46, -1 + y, stoneDark);
+      for (let y = 0; y < 3; y++) for (let x = 47; x < 51; x++) px(x, y, red);
+      for (const [wx, wy] of [[44, 8], [48, 8], [33, 21], [38, 21], [54, 21], [59, 12], [30, 12], [44, 13], [48, 13]]) { px(wx, wy, cWin); px(wx, wy + 1, cWin); }
+      block(44, 24, 4, 6, tint("#2a1a12"), tint("#2a1a12"));                        // il portone
+      if (night) { torch(30, 15); torch(61, 15); torch(44, 22); torch(49, 22); }
+      // i due palazzi ai lati della salita, alti, coi tetti d'ardesia
+      townHouse(18, 40, 16, 18, 6, { plaster: "#f0dcb0", slate: true, timber: false, lights: 0.2 });
+      townHouse(56, 40, 16, 18, 6, { plaster: "#e8c860", slate: true, timber: false, lights: 0.2 });
+      for (const x of [20, 24, 28, 58, 62, 66]) for (let y = 48; y < 58; y++) if (y % 2 === 0) px(x, y, tint("#c8bca4")); // le colonne
+      // l'arco nelle mura, in fondo alla strada
+      block(30, 50, 34, 14, stone, stoneShadow);
+      crenels(30, 50, 34, stone, stoneShadow);
+      for (let x = 30; x < 64; x++) for (let y = 50; y < 64; y++) if ((x + (y % 4 < 2 ? 0 : 3)) % 6 === 0 && y % 2 === 0) px(x, y, stoneDark);
+      for (let y = 54; y < 64; y++) {
+        const half = y < 57 ? Math.round(Math.sqrt(Math.max(0, 9 - (57 - y) ** 2))) + 2 : 5;
+        for (let x = 47 - half; x < 47 + half; x++) px(x, y, (x + y) % 3 === 0 ? tint("#4a3a2a") : night ? tint("#3a2a1a") : tint("#2a2024"));
+      }
+      for (const bx of [36, 54]) for (let y = 52; y < 60; y++) for (let x = bx; x < bx + 3; x++) px(x, y, y === 55 ? gold : red);  // gli stendardi
+      if (night) { torch(40, 58); torch(54, 58); }
+
+      // la strada in primo piano, che si allarga verso di noi, coi ciottoli
+      const roadL = (y) => Math.round(lerp(16, 41, depth(y))), roadR = (y) => Math.round(lerp(76, 53, depth(y)));
+      const cob = tint("#b0a284"), cobDark = tint("#6a5e4a"), cobLight = tint("#d0c4a4");
+      for (let y = 64; y < PH; y++) for (let x = roadL(y); x <= roadR(y); x++) {
+        const t = 1 - depth(y), step = 2 + Math.round(t * 3);
+        px(x, y, ((x + (Math.floor(y / step) % 2) * 2) % (step + 1) === 0 || y % step === 0) ? cobDark : (x + y) % 7 === 0 ? cobLight : cob);
+      }
+      // le mura a sinistra: il camminamento con i merli verso il mare, e la parete che scende sulla strada
+      for (let y = 56; y < PH; y++) {
+        const t = depth(y), out = Math.round(lerp(0, 28, t)), inn = Math.round(lerp(12, 34, t)), face = Math.round(lerp(roadL(y) - 1, 40, t));
+        for (let x = out; x < inn; x++) px(x, y, x < out + 2 ? ((y + x) % 3 === 0 ? stoneDark : stone) : (x + y * 2) % 7 === 0 ? stoneShadow : walk);
+        for (let x = inn; x < face; x++) px(x, y, (x + (y % 4 < 2 ? 0 : 3)) % 6 === 0 && y % 2 === 0 ? stoneDark : stoneShadow);
+        if (y % Math.max(2, Math.round(lerp(5, 2, t))) === 0) px(out - 1, y, stone);   // i merli
+      }
+      // la nave ormeggiata fuori dalle mura, vista dall'alto
+      const sx = 9, s0 = 54, s1 = 84;
+      for (let y = s0 + 2; y < s1 + 2; y++) for (let x = sx - 4; x <= sx + 6; x++) if (get(x, y) && Math.abs(x - sx - 1) < 5) px(x, y, mix(get(x, y), P.waterDark, 0.6, x, y)); // l'ombra sull'acqua
+      for (let y = s0; y < s1; y++) {
+        const t = (y - s0) / (s1 - s0 - 1), half = t < 0.3 ? 5 * Math.sqrt(t / 0.3) : t > 0.88 ? 5 * (1 - (t - 0.88) * 3) : 5;
+        for (let x = Math.round(sx - half); x <= Math.round(sx + half); x++) px(x, y, Math.abs(x - sx) > half - 1.2 ? tint("#3a1e10") : t > 0.8 ? tint("#8a5a30") : x % 2 ? tint("#c09460") : tint("#9a7040"));
+      }
+      for (let y = s0 - 4; y < s0; y++) px(sx, y, tint("#3a1e10"));   // il bompresso
+      for (const my of [61, 69, 76]) {
+        for (let x = sx - 7; x <= sx + 7; x++) { px(x, my - 1, tint("#f4ecd4")); px(x, my, tint("#f4ecd4")); px(x, my + 1, tint("#c8b88e")); }
+        px(sx, my + 2, tint("#3a1e10"));
+      }
+      for (let k = 0; k < 6; k++) px(sx + 6 + k * 0.6, 82 - k, tint("#5a3a22"));   // la cima d'ormeggio verso le mura
+      if (night) { px(sx, s1 - 3, P.windowLit); px(sx, s0 + 2, P.windowLit); }
+      // la torre di guardia a metà mura, tonda, col tetto a punta
+      const ty = 102, tcx = 10;
+      ellipse(tcx, ty, 8, 6, (x, y) => ((x + y) % 5 === 0 ? stoneDark : x < tcx ? stone : stoneShadow));
+      for (let k = 0; k < 12; k++) for (let x = tcx - 8 + Math.floor(k * 0.7); x <= tcx + 8 - Math.floor(k * 0.7); x++) px(x, ty - 4 - k, (x + k) % 3 === 0 ? tint("#7a2a1a") : tint("#c04a2e"));
+      for (let y = 0; y < 4; y++) px(tcx, ty - 16 - y, stoneDark);
+      for (let y = 0; y < 2; y++) for (let x = 1; x < 4; x++) px(tcx + x, ty - 20 + y, red);
+      if (night) for (const t of [0.15, 0.45, 0.8]) { const y = Math.round(PH - t * (PH - 56)); torch(Math.round(lerp(0, 28, t)) + 3, y); }
+
+      // le case a destra della strada: le lontane piccole, le vicine grandi
+      for (const [base, h] of [[66, 8], [74, 11], [86, 15], [100, 19], [118, 24]]) {
+        const x0 = roadR(base) + 1;
+        townHouse(x0, base - h, PW - x0 + 2, h, Math.round(h / 3), { lights: 0.15 });
+      }
+      // il mercato in primo piano: bancarelle con le tende a righe, chiuse all'alba
+      if (dawn) {
+        for (const [x0, y0, w] of [[24, 100, 14], [50, 104, 14]]) for (let x = x0; x < x0 + w; x++) { px(x, y0, tint("#8a2a24")); px(x, y0 + 1, tint("#5a3a20")); for (let y = y0 + 2; y < y0 + 8; y++) if (x === x0 || x === x0 + w - 1) px(x, y, tint("#5a3a20")); }
+      } else {
+        awning(24, 14, 98, 1, ["#c8302a", "#f4ecd8"]);
+        awning(50, 14, 102, -1, ["#2e7a3a", "#f4ecd8"]);
+        for (const [x0, y0] of [[25, 106], [49, 110]]) for (let x = x0; x < x0 + 13; x++) { px(x, y0, tint("#7a5030")); if (x % 4 === 0) for (let y = y0 + 1; y < y0 + 5; y++) px(x, y, tint("#5a3a20")); }
+      }
+      signboard(roadR(84) + 1, 76, 1, "#f2c230");
+      // la gente: di giorno tanta, al tramonto qualcuno, di notte due con la lanterna, all'alba nessuno
+      const crowd = dawn ? 0 : night ? 2 : 14;
+      for (let i = 0; i < crowd; i++) {
+        const y = 70 + Math.floor(r() * (PH - 72)), t = 1 - depth(y);
+        const x = Math.round(lerp(roadL(y) + 3, roadR(y) - 3, r()));
+        person(x, y, 3 + Math.round(t * 6));
+        if (night) { px(x + 2, y - 3, "#ffd060"); px(x + 2, y - 2, "#ff9a30"); }
+      }
+    };
+
+    // Il porticciolo del fiordo (80 × 120), dalla foto di riferimento: freddo ma accogliente. La banchina
+    // di assi bagnate corre verso il fondo nella foschia; a sinistra, nell'acqua, una sola nave: il
+    // peschereccio del Cinquecento, di legno, con il cassero alto a poppa e la vela serrata sul pennone;
+    // a destra una fila di locande a un piano, di legno
+    // grigio-azzurro, con le cornici bianche, le insegne, le finestre calde e il fumo dai comignoli; le
+    // boe rosse e le gabbie per le aragoste lungo i muri. Di notte tutte le finestre si accendono
+    const drawPorto = () => {
+      const vx = 46, vy = 62;                                            // il punto di fuga della banchina
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const fogHex = "#c8d0cc";
+      // la foschia: il colore sfuma verso il grigio chiaro con la distanza, senza retino
+      const fog = (hex, t) => tint("#" + [1, 3, 5].map((i) => Math.round(lerp(parseInt(hex.slice(i, i + 2), 16), parseInt(fogHex.slice(i, i + 2), 16), Math.max(0, Math.min(0.9, t)))).toString(16).padStart(2, "0")).join(""));
+      const warm = night ? "#ffc860" : "#f0c070";
+      // il cielo chiaro di foschia e gli abeti in fondo
+      for (let y = 0; y < vy + 2; y++) for (let x = 0; x < PW; x++) px(x, y, fog("#98a4a4", Math.floor((y / (vy + 2)) * 8) / 8));
+      for (let x = 24; x < PW; x += 3) { const h = 5 + Math.floor(r() * 9); for (let k = 0; k < h; k++) for (let j = -Math.floor(k / 3); j <= Math.floor(k / 3); j++) px(x + j, vy - h + k + 1, fog("#3e5048", 0.6)); }
+      // l'acqua calma a sinistra
+      for (let y = vy; y < PH; y++) for (let x = 0; x < PW; x++) {
+        const t = (y - vy) / (PH - vy);
+        px(x, y, (y * 5 + Math.floor(x / 7)) % 17 === 0 ? fog("#8a9a9c", 0.3) : fog(t < 0.3 ? "#8a9898" : t < 0.65 ? "#6a7a7c" : "#4e5e62", 0.5 - t * 0.5));
+      }
+      // la banchina: assi che corrono verso il fondo, scure e bagnate, con qualche riflesso
+      const pl = (y) => Math.round(lerp(vx - 2, 20, (y - vy) / (PH - vy))), pr = (y) => Math.round(lerp(vx + 3, 82, (y - vy) / (PH - vy)));
+      for (let y = vy + 1; y < PH; y++) {
+        const t = (y - vy) / (PH - vy), far = (1 - t) * 0.8;
+        for (let x = pl(y); x <= pr(y); x++) {
+          const u = (x - pl(y)) / Math.max(1, pr(y) - pl(y)), board = Math.floor(u * 12);
+          const seam = u * 12 - board < 0.08 + (1 - t) * 0.12;
+          let c = seam ? "#2e2c2a" : ["#6a625a", "#5a544e", "#766e64"][board % 3];
+          if (!seam && (x * 3 + y * 7) % 37 === 0) c = "#a09a90";       // la luce sul legno bagnato
+          if (!seam && (x + y * 5) % 59 === 0) c = "#6a7a3a";           // il muschio tra le assi
+          px(x, y, fog(c, far));
+        }
+        for (let k = 0; k < 2; k++) px(pl(y) - k, y, fog("#3a3430", far));   // il bordo della banchina
+      }
+      // le locande a destra, in fila lungo la banchina: le lontane piccole e velate, la vicina grande
+      const inn = (x0, base, w, h, t, i) => {
+        const siding = ["#6a7c88", "#7a8a8e", "#5e7080"][i % 3];
+        for (let y = base - h; y < base; y++) for (let x = x0; x < x0 + w; x++) px(x, y, fog((x - x0) % 3 === 0 ? shade(siding, 0.78) : siding, t));
+        // il tetto a capanna, il comignolo e il fumo
+        const rh = Math.round(w * 0.42);
+        for (let k = 0; k < rh; k++) for (let x = x0 - 1 + k; x < x0 + w + 1 - k; x++) px(x, base - h - 1 - k, fog(k === 0 ? "#e8e6dc" : "#3a3e44", t));
+        const cx = x0 + Math.round(w * 0.7), cw = Math.max(2, Math.round(w / 8)), ch = Math.max(2, Math.round(h / 8));
+        for (let y = base - h - rh - ch + 2; y < base - h - Math.round(rh * 0.4); y++) for (let x = cx; x < cx + cw; x++) px(x, y, fog("#8a4a3a", t));
+        for (let k = 0; k < 10 + h / 3; k++) px(cx + Math.round(Math.sin(k * 0.6) * 1.5 + k * 0.3), base - h - rh - ch - k, fog("#e8ecec", t + k * 0.04));
+        // le finestre con le cornici bianche: calde anche di giorno, accese di notte
+        const ww = Math.max(1, Math.round(w / 9)), wh = Math.max(2, Math.round(h / 3));
+        const dw = Math.max(1, Math.round(w / 7)), dh = Math.max(2, Math.round(h * 0.6));
+        for (let y = base - h + Math.max(2, Math.round(h / 4)); y === base - h + Math.max(2, Math.round(h / 4)); y++) {
+          for (let x = x0 + dw + 3; x + ww < x0 + w - 1; x += ww + Math.max(2, Math.round(w / 6))) {
+            for (let yy = y - 1; yy <= y + wh; yy++) for (let xx = x - 1; xx <= x + ww; xx++) px(xx, yy, fog("#ecebe2", t));
+            const on = night ? r() < 0.85 : r() < 0.4;
+            for (let yy = y; yy < y + wh; yy++) for (let xx = x; xx < x + ww; xx++) px(xx, yy, on ? (t > 0.5 ? fog(warm, t * 0.6) : warm) : fog("#2a3238", t));
           }
         }
-      }
-    };
-    // Le case di legno del nord: falu rosso, ocra, blu; cornici bianche e neve sul tetto
-    const NORDIC = ["#a8322a", "#d89a30", "#2e4e86", "#ece6d8", "#8a2a24", "#3a6a5a"];
-
-    // Il Forte (80 × 120): si guarda giù per la strada principale, fino alla porta nelle mura; dietro, il mare e le navi
-    const drawForte = () => {
-      const seaY = 28, wallTop = 50;
-      for (let y = seaY; y < wallTop; y++) for (let x = 0; x < PW; x++) {
-        let c = ramp([P.waterLight, P.water, P.waterDark], (y - seaY) / 22, x, y);
-        if ((y * 5 + Math.floor((x + y * 3) / 4)) % 11 === 0) c = P.foam;
-        px(x, y, c);
-      }
-      // il promontorio verde a destra, con il faro
-      for (let x = 46; x < PW; x++) { const top = seaY - Math.round(6 * Math.sin(((x - 46) / 36) * Math.PI)); for (let y = top; y <= seaY; y++) px(x, y, y < top + 2 ? P.hillLight : P.hill); }
-      block(66, seaY - 13, 3, 8, tint("#f4ecd8"), tint("#c8bca4")); px(66, seaY - 14, tint("#c8302a")); px(67, seaY - 14, tint("#c8302a")); px(68, seaY - 14, tint("#c8302a"));
-      px(67, seaY - 15, night ? P.windowLit : tint("#f2c230"));
-      // le navi alla fonda dietro le mura
-      anchored(52, 47, 2); anchored(70, 45, 2);
-      // le mura con i merli, due torri e il torrione della porta
-      const stone = tint("#d0bc98"), stoneShadow = tint("#94805e"), stoneDark = tint("#5a4a36");
-      const slate = tint("#3e4a62"), slateDark = tint("#262e40"), red = tint("#c8302a"), gold = tint("#f2c230");
-      block(0, wallTop, PW, 14, stone, stoneShadow);
-      crenels(0, wallTop, PW, stone, stoneShadow);
-      for (let x = 0; x < PW; x++) for (let y = wallTop; y < wallTop + 14; y++) if ((x + (y % 4 < 2 ? 0 : 3)) % 6 === 0 && y % 2 === 0) px(x, y, stoneDark);
-      for (let x = 0; x < PW; x++) px(x, wallTop + 13, stoneDark);
-      for (const [tx, tw, th, cone, roofCol] of [[2, 12, 26, true, [tint("#c04a2e"), tint("#7a2a1a")]], [62, 12, 32, true, [slate, slateDark]]]) {
-        const top = wallTop + 12 - th;
-        block(tx, top, tw, th, stone, stoneShadow);
-        crenels(tx, top, tw, stone, stoneShadow);
-        if (cone) for (let k = 0; k < 10; k++) for (let x = tx + Math.floor(k * 0.65); x < tx + tw - Math.floor(k * 0.65); x++) px(x, top - 2 - k, (x + k) % 3 === 0 ? roofCol[1] : roofCol[0]);
-        // la bandiera rossa in cima
-        for (let y = 0; y < 5; y++) px(tx + tw / 2, top - 12 - y, stoneDark);
-        for (let y = 0; y < 3; y++) for (let x = 1; x < 5; x++) px(tx + tw / 2 + x, top - 16 + y, (x + y) % 3 === 0 ? gold : red);
-        for (const wy of [top + 6, top + 14]) { px(tx + tw / 2, wy, lit()); px(tx + tw / 2, wy + 1, lit()); }
-      }
-      // il torrione della porta, col tetto d'ardesia a punta, gli stendardi e l'arco
-      const gx = 26, gw = 28, gTop = 42;
-      block(gx, gTop, gw, 26, stone, stoneShadow);
-      for (let x = gx; x < gx + gw; x++) for (let y = gTop; y < gTop + 26; y++) if ((x + (y % 4 < 2 ? 0 : 3)) % 7 === 0 && y % 2 === 0) px(x, y, stoneDark);
-      for (let k = 0; k < 12; k++) for (let x = gx - 2 + k; x < gx + gw + 2 - k; x++) px(x, gTop - 1 - k, (x + k) % 4 === 0 ? slateDark : slate);
-      block(gx + 12, gTop - 8, 4, 4, stone, stoneShadow); px(gx + 13, gTop - 7, lit()); px(gx + 14, gTop - 7, lit());
-      for (const bx of [gx + 3, gx + gw - 7]) for (let y = gTop + 2; y < gTop + 14; y++) for (let x = bx; x < bx + 4; x++) px(x, y, y === gTop + 13 && (x - bx) % 3 !== 0 ? stone : x === bx + 1 || x === bx + 2 ? (y === gTop + 6 ? gold : red) : red);
-      for (let y = gTop + 12; y < gTop + 26; y++) {
-        const half = y < gTop + 15 ? Math.round(Math.sqrt(9 - (gTop + 15 - y) ** 2)) + 2 : 5;
-        for (let x = gx + 14 - half; x < gx + 14 + half; x++) px(x, y, y > gTop + 21 ? tint("#d8cca8") : (x + y) % 3 === 0 && y < gTop + 18 ? tint("#4a3a2a") : tint("#1a1418"));
-      }
-      // la strada di ciottoli che scende verso di noi, allargandosi
-      const roadTop = gTop + 26, cob = tint("#b0a284"), cobDark = tint("#6a5e4a"), cobLight = tint("#d0c4a4");
-      for (let y = roadTop; y < PH; y++) {
-        const t = (y - roadTop) / (PH - roadTop), half = 5 + t * 26;
-        for (let x = Math.round(40 - half); x <= 40 + half; x++) {
-          px(x, y, ((x + (y % 2) * 2) % 4 === 0 || y % 3 === 0) ? cobDark : (x + y) % 7 === 0 ? cobLight : cob);
+        // la porta e l'insegna appesa: un boccale dorato
+        for (let y = base - dh; y < base; y++) for (let x = x0 + 1; x < x0 + 1 + dw; x++) px(x, y, fog(night ? "#a86a30" : "#4a3428", t));
+        if (w > 8) {
+          const sx = x0 - 1, sy = base - dh - 3;
+          for (let k = 0; k < 3; k++) px(sx - k, sy - 2, fog("#2a1a10", t));
+          for (let y = sy - 1; y < sy + 3; y++) for (let x = sx - 3; x < sx; x++) px(x, y, fog(y === sy - 1 ? "#2a1a10" : "#d8a030", t));
+          if (night) { px(x0 + dw + 2, base - dh, "#ffcc60"); px(x0 + dw + 2, base - dh + 1, "#e89040"); }   // la lanterna accanto alla porta
         }
+      };
+      for (let i = 5; i >= 0; i--) {
+        const t = i / 5, base = Math.round(lerp(PH - 18, vy + 1, t)), x0 = pr(base) - Math.round(lerp(10, 1, t));
+        inn(x0, base, Math.round(lerp(34, 5, t)), Math.round(lerp(22, 4, t)), t * 0.85, i);   // a un piano
       }
-      // le case ai lati della strada, alte e strette, colorate
-      townHouse(-2, 44, 16, 76, 10, { plaster: "#e8b47a", timber: true });
-      townHouse(14, 64, 8, 56, 5, { plaster: "#c8d4dc", slate: true });
-      townHouse(66, 46, 16, 74, 10, { plaster: "#f0dcb0", timber: true });
-      townHouse(58, 66, 8, 54, 5, { plaster: "#d8806a" });
-      awning(8, 14, 92, 1, ["#c8302a", "#f4ecd8"]);
-      awning(58, 14, 96, -1, ["#2e7a3a", "#f4ecd8"]);
-      signboard(14, 76, 1, "#f2c230");
-      signboard(66, 80, -1, "#2e5a9a");
-      // le lanterne accese, di notte
-      if (night) for (const [lx, ly] of [[13, 70], [67, 72]]) for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) px(lx + dx, ly + dy, P.windowLit);
-      // la gente per strada
-      for (let i = 0; i < 12; i++) {
-        const y = roadTop + 4 + Math.floor(r() * (PH - roadTop - 4)), t = (y - roadTop) / (PH - roadTop);
-        person(Math.round(40 + (r() - 0.5) * (8 + t * 46)), y, 3 + Math.round(t * 6));
-      }
-    };
-
-    // Il porticciolo del fiordo (80 × 120): le montagne innevate, la banchina di legno, le case colorate e il peschereccio
-    const drawPorto = () => {
-      const vx = 46, vy = 54; // il punto di fuga della banchina
-      // le montagne del fiordo: tre cime, un versante in luce e uno in ombra, la neve in cima
-      peaks(vy, [[8, 22, 0.9], [34, 14, 1.1], [64, 20, 1]]);
-      // l'acqua del fiordo, con i riflessi delle case
-      for (let y = vy; y < PH; y++) for (let x = 0; x < PW; x++) {
-        let c = ramp([P.waterLight, P.water, P.waterDark], (y - vy) / 40, x, y);
-        if ((y * 3 + Math.floor(x / 5)) % 9 === 0) c = P.waterLight;
-        px(x, y, c);
-      }
-      // la riva lontana e i pini scuri
-      for (let x = 0; x < PW; x++) for (let y = vy - 3; y <= vy; y++) px(x, y, P.snow);
-      for (let x = 0; x < PW; x += 3) { const h = 4 + Math.floor(r() * 6); for (let k = 0; k < h; k++) for (let j = -Math.floor(k / 3); j <= Math.floor(k / 3); j++) px(x + j, vy - 2 - h + k, k === 0 ? P.snow : P.treeFar); }
-      // le case di legno a destra, sempre più piccole verso il fondo: ognuna del suo colore, neve sui tetti
-      const trim = tint("#f4f0e4"), roofCol = tint("#2a2a32"), snowRoof = P.snow;
-      for (let i = 4; i >= 0; i--) {
-        const t = i / 4, x0 = Math.round(vx + 3 + (1 - t) * 16), h = Math.round(5 + (1 - t) * 24), w = Math.round(7 + (1 - t) * 20);
-        const base = Math.round(vy + 3 + (1 - t) * 44);
-        const col = NORDIC[(i + Math.floor(r() * 3)) % NORDIC.length], wood = tint(col), woodDark = tint(shade(col, 0.7));
-        for (let y = base - h; y < base; y++) for (let x = x0; x < Math.min(PW, x0 + w); x++) px(x, y, x === x0 ? trim : (x - x0) % 3 === 0 ? woodDark : wood);
-        // il tetto ripido a capanna, con la neve sopra
-        const rh = Math.round((w + 2) / 2);
-        for (let k = 0; k < rh; k++) for (let x = x0 - 1 + k; x < Math.min(PW, x0 + w + 1 - k); x++) px(x, base - h - 1 - k, k >= rh - 3 || x === x0 - 1 + k || (k === 0 && x % 2) ? snowRoof : roofCol);
-        const step = Math.max(4, Math.round(h / 2.2));
-        for (let y = base - h + 2; y < base - 3; y += step) for (let x = x0 + 2; x < Math.min(PW, x0 + w) - 2; x += 5) {
-          for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) px(x + dx, y + dy, night ? P.windowLit : tint("#1e2430"));
-          for (const [dx, dy] of [[-1, -1], [0, -1], [1, -1], [2, -1], [-1, 2], [0, 2], [1, 2], [2, 2]]) px(x + dx, y + dy, trim);
+      // le boe rosse appoggiate ai muri e le gabbie per le aragoste
+      const buoy = (x, y, len, t) => {
+        const w = Math.max(1, Math.round(len / 7));
+        for (let k = 0; k < len; k++) for (let j = -w; j <= w; j++) px(x + j + Math.round(k * 0.12), y - k, fog(k > 0 && k % Math.max(3, Math.round(len / 3)) === 0 ? "#7a2a24" : j < 0 ? "#d0584a" : "#a83a30", t));
+      };
+      const cage = (x0, y0, w, h, t) => {
+        for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) if (x === x0 || x === x0 + w - 1 || y === y0 || y === y0 + h - 1 || (x - x0) % 3 === 0 || (y - y0) % 3 === 0) px(x, y, fog("#8a6a48", t));
+      };
+      buoy(pr(118) - 14, 118, 24, 0); buoy(pr(96) - 10, 96, 12, 0.3); buoy(pr(80) - 6, 80, 7, 0.5);
+      cage(26, 100, 16, 11, 0); cage(pr(104) - 26, 100, 9, 7, 0.15); cage(pr(86) - 12, 84, 5, 4, 0.45);
+      // il pilone di pietra col muschio, in basso a sinistra
+      for (let y = 104; y < PH; y++) for (let x = 0; x < 20 - Math.round((y - 104) * 0.3); x++) px(x, y, y < 107 ? tint("#6a8a3a") : (x + y) % 4 ? tint("#5a5a52") : tint("#46463e"));
+      // la nave: un peschereccio del Cinquecento, di legno incatramato, con la prua verso sinistra, il cassero
+      // alto a poppa verso la banchina, un albero con la vela serrata sul pennone e le reti stese sulla murata
+      const wood = tint("#7a5434"), woodDark = tint("#3e2a1a"), woodLight = tint("#a07448"), tar = tint("#2a2018");
+      const deckY = (x) => Math.round(78 - ((x - 18) / 16) ** 2 * 5);   // la murata: un arco che sale a prua e a poppa
+      const bottom = (x) => Math.round(92 - ((x - 18) / 16) ** 2 * 10);
+      for (let x = 3; x < pl(90) - 1; x++) {
+        for (let y = deckY(x); y < bottom(x); y++) {
+          const plank = Math.floor((y - deckY(x)) / 3);
+          px(x, y, y > bottom(x) - 3 ? tar : (y - deckY(x)) % 3 === 0 ? woodDark : plank % 2 ? wood : woodLight);
         }
-        // il riflesso della casa nell'acqua, a righe
-        for (let y = base; y < Math.min(PH, base + Math.round(h / 3)); y += 2) for (let x = x0; x < Math.min(PW, x0 + w); x += 2) if (get(x, y) !== null && x > vx + 3 + (y - vy) * 0.2) px(x, y, woodDark);
+        px(x, deckY(x), woodDark);
       }
-      // la banchina di assi, in prospettiva, con i pali
-      const plank = tint("#9a7048"), plankDark = tint("#5a3a22"), plankLight = tint("#c09468");
-      for (let y = vy + 1; y < PH; y++) {
-        const t = (y - vy) / (PH - vy);
-        const xl = Math.round(vx - 2 - t * 30), xr = Math.round(vx + 3 + t * 10);
-        for (let x = xl; x <= xr; x++) px(x, y, (Math.floor((x - vx) / (1 + t * 5)) % 2 === 0) ? plank : (y % 5 === 0 ? plankLight : plankDark));
-        px(xl, y, plankDark);
-        if (y % 9 === 0) for (let k = 0; k < 3 + t * 6; k++) px(xl - 1, y + k, plankDark);
-      }
-      // il peschereccio rosso ormeggiato a sinistra, con la cabina bianca e gli alberi
-      const hull = tint("#c83a2a"), hullDark = tint("#7a1e14"), white = tint("#f4f0e4");
-      for (let y = 74; y < 90; y++) for (let x = 0; x < 20 - Math.round((y - 74) * 0.3); x++) px(x, y, y < 77 ? white : y > 86 ? hullDark : y === 80 ? white : hull);
-      for (let y = 66; y < 74; y++) for (let x = 3; x < 15; x++) px(x, y, (x === 6 || x === 11) && y < 70 ? (night ? P.windowLit : tint("#2a3a4a")) : y === 66 ? tint("#3a3a44") : white);
-      for (const [mx, top] of [[4, 16], [13, 28]]) for (let y = top; y < 74; y++) px(mx, y, tint("#5a3a22"));
-      for (let k = 0; k < 40; k++) px(4 + k * 0.35, 18 + k, tint("#3a3a3a"));
-      px(13, 27, tint("#f2c230")); px(14, 27, tint("#f2c230"));
-      // le boe a righe rosse e bianche e le gabbie per le aragoste
-      for (const [bx, by, bh] of [[62, 112, 18], [56, 98, 12], [52, 82, 8], [50, 70, 5]]) {
-        for (let y = by - bh; y < by; y++) for (let x = bx; x < bx + Math.ceil(bh / 3); x++) px(x, y, Math.floor((y - by) / Math.max(2, bh / 5)) % 2 ? white : x === bx ? hullDark : hull);
-      }
-      for (const [cx, cy, cs] of [[18, 116, 12], [38, 92, 7]]) {
-        for (let y = cy - cs; y < cy; y++) for (let x = cx; x < cx + cs * 1.4; x++) if (x % 2 === 0 || y % 2 === 0) px(x, y, tint("#a07040"));
-      }
-      // il lampione in fondo alla banchina
-      for (let y = 100; y < 118; y++) px(30, y, tint("#2a2a2a"));
-      for (const [dx, dy] of [[-1, -1], [0, -1], [1, -1], [-1, 0], [0, 0], [1, 0]]) px(30 + dx, 99 + dy, night ? P.windowLit : tint("#e8d8a0"));
-      if (r() < 0.6) person(vx + 2, vy + 14, 5);
-      person(36, 112, 9);
-      // un velo di foschia solo lontano, sulle montagne
-      for (let y = 18; y < vy - 3; y++) for (let x = 0; x < PW; x++) px(x, y, mix(get(x, y), P.haze, 0.18, x, y));
+      // il cassero di poppa, con la sua ringhiera e la lanterna
+      const sx0 = 22, sx1 = pl(80) - 2, sTop = deckY(sx1) - 5;
+      for (let x = sx0; x < sx1; x++) for (let y = sTop + Math.max(0, sx0 + 3 - x); y < deckY(x) + 1; y++) px(x, y, (y - sTop) % 3 === 0 ? woodDark : wood);
+      for (let x = sx0; x < sx1; x += 2) { px(x, sTop - 1, woodDark); px(x, sTop - 2, woodDark); }
+      for (let x = sx0; x < sx1; x++) px(x, sTop - 3, woodDark);
+      for (const [wx, wy] of [[sx0 + 4, sTop + 4], [sx0 + 8, sTop + 4]]) { px(wx, wy, night ? warm : tar); px(wx + 1, wy, night ? warm : tar); }
+      for (let y = sTop - 8; y < sTop - 3; y++) px(sx1 - 2, y, woodDark);
+      for (const [dx, dy] of [[-1, 0], [0, 0], [1, 0], [0, 1]]) px(sx1 - 2 + dx, sTop - 10 + dy, night || zone.time === "alba" ? "#ffcc60" : tint("#c8b070"));
+      // il bompresso a prua
+      for (let k = 0; k < 12; k++) px(4 - k * 0.6, deckY(4) - 1 - k * 0.45, woodDark);
+      // l'albero, il pennone con la vela serrata, le sartie
+      const mx = 15, mTop = 10;
+      for (let y = mTop; y < deckY(mx); y++) { px(mx, y, woodDark); px(mx + 1, y, wood); }
+      for (let x = mx - 11; x <= mx + 12; x++) { px(x, mTop + 8, woodDark); px(x, mTop + 9, tint("#d8ccb0")); if (Math.abs(x - mx) < 10) px(x, mTop + 10, tint("#b8aa88")); }
+      for (let y = mTop - 3; y < mTop; y++) for (let x = mx - 1; x <= mx + 2; x++) px(x, y, woodDark);   // la coffa
+      for (let k = 0; k < 44; k++) { px(mx - 2 - k * 0.22, mTop + 2 + k * 1.1, tint("#3a3a36")); px(mx + 3 + k * 0.32, mTop + 2 + k * 1.1, tint("#3a3a36")); }
+      // le reti stese sulla murata, coi galleggianti di sughero
+      for (let x = 6; x < 24; x++) for (let k = 0; k < 4 + ((x * 7) % 3); k++) if ((x + k) % 2 === 0) px(x, deckY(x) + 1 + k, tint("#5a5a4a"));
+      for (let x = 7; x < 24; x += 4) px(x, deckY(x) + 1, tint("#d8b060"));
+      // il riflesso scuro della nave sull'acqua
+      for (let x = 2; x < pl(100) - 1; x++) for (let y = bottom(x); y < bottom(x) + 6; y++) if (y < PH && (x + y) % 2 === 0) px(x, y, tint("#2e3a3c"));
+      // la gente, poca: un pescatore di giorno, uno con la lanterna di notte
+      if (zone.time === "pomeriggio") person(44, 78, 5);
+      if (night) { person(40, 86, 6); px(42, 83, "#ffd060"); }
     };
 
     // Una città vista dal mare, col binocolo (120 × 80): le mura del Forte o le case colorate del fiordo
@@ -426,24 +513,23 @@ const Cartolina = (() => {
         for (let x = 0; x < PW; x++) px(x, shoreY, stoneShadow);
         anchored(24, shoreY + 12, 2); anchored(78, shoreY + 18, 3);
       } else {
-        // le montagne innevate, i pini, le case colorate in fila sulla riva, la banchina e i pescherecci
-        peaks(shoreY, [[10, 10, 1.2], [44, 4, 1], [80, 8, 1.3], [112, 12, 1]]);
-        for (let x = 0; x < PW; x += 3) { const h = 4 + Math.floor(r() * 5); for (let k = 0; k < h; k++) for (let j = -Math.floor(k / 3); j <= Math.floor(k / 3); j++) px(x + j, shoreY - 6 - h + k, k === 0 ? P.snow : P.treeFar); }
-        for (let x = 0; x < PW; x++) for (let y = shoreY - 6; y < shoreY; y++) px(x, y, P.snow);
-        for (let x = 18, i = 0; x < 104; i++) {
-          const w = 6 + Math.floor(r() * 4), h = 6 + Math.floor(r() * 4), col = NORDIC[i % NORDIC.length];
-          for (let y = shoreY - h; y < shoreY; y++) for (let xx = x; xx < x + w; xx++) px(xx, y, xx === x ? tint("#f4f0e4") : tint(col));
-          for (let k = 0; k < 4; k++) for (let xx = x - 1 + k; xx <= x + w - k; xx++) px(xx, shoreY - h - 1 - k, k >= 2 ? P.snow : tint("#2a2a32"));
-          px(x + 2, shoreY - h + 2, night ? P.windowLit : tint("#1e2430")); px(x + w - 3, shoreY - h + 2, night ? P.windowLit : tint("#1e2430"));
-          x += w + 1;
+        // la foschia, gli abeti, le locande a un piano di legno grigio-azzurro in fila sulla riva,
+        // la banchina e il peschereccio di legno: come nella cartolina del porticciolo
+        for (let y = 0; y < shoreY; y++) for (let x = 0; x < PW; x++) px(x, y, ramp([tint("#98a4a4"), tint("#c8d0cc")], y / shoreY, x, y));
+        for (let x = 0; x < PW; x += 3) { const h = 5 + Math.floor(r() * 8); for (let k = 0; k < h; k++) for (let j = -Math.floor(k / 3); j <= Math.floor(k / 3); j++) px(x + j, shoreY - 3 - h + k, tint("#7a8a84")); }
+        for (let x = 0; x < PW; x++) for (let y = shoreY - 3; y < shoreY; y++) px(x, y, tint("#5a544e"));
+        for (let x = 24, i = 0; x < 108; i++) {
+          const w = 9 + Math.floor(r() * 3), h = 5, col = ["#6a7c88", "#7a8a8e", "#5e7080"][i % 3];
+          for (let y = shoreY - 3 - h; y < shoreY - 3; y++) for (let xx = x; xx < x + w; xx++) px(xx, y, (xx - x) % 3 === 0 ? tint(shade(col, 0.78)) : tint(col));
+          for (let k = 0; k < 4; k++) for (let xx = x - 1 + k; xx <= x + w - k; xx++) px(xx, shoreY - 4 - h - k, k === 0 ? tint("#e8e6dc") : tint("#3a3e44"));
+          for (const wx of [x + 2, x + w - 3]) px(wx, shoreY - 6, night || r() < 0.4 ? (night ? "#ffc860" : "#f0c070") : tint("#2a3238"));
+          for (let k = 0; k < 6; k++) px(x + w - 3 + Math.round(Math.sin(k) * 0.8), shoreY - 9 - h - k, tint("#e8ecec"));
+          x += w + 2;
         }
-        for (let x = 30; x < 70; x++) { px(x, shoreY + 1, tint("#9a7048")); px(x, shoreY + 2, tint("#5a3a22")); }
-        for (let x = 30; x < 70; x += 5) for (let y = shoreY + 3; y < shoreY + 6; y++) px(x, y, tint("#5a3a22"));
-        for (const bx of [36, 58]) {
-          for (let y = shoreY + 6; y < shoreY + 9; y++) for (let x = bx - 6 + (y - shoreY - 6); x < bx + 6 - (y - shoreY - 6); x++) px(x, y, y === shoreY + 6 ? tint("#f4f0e4") : tint("#c83a2a"));
-          block(bx - 2, shoreY + 3, 4, 3, tint("#f4f0e4"), tint("#c8c4b8"));
-          for (let y = shoreY - 6; y < shoreY + 3; y++) px(bx + 3, y, tint("#5a3a22"));
-        }
+        for (let y = shoreY; y < PH; y++) for (let x = 0; x < PW; x++) px(x, y, (y * 5 + Math.floor(x / 7)) % 17 === 0 ? tint("#a4b0b0") : ramp([tint("#8a9898"), tint("#5a6a6e"), tint("#3e4c50")], (y - shoreY) / (PH - shoreY), x, y));
+        for (let x = 30; x < 80; x++) { px(x, shoreY, tint("#6a625a")); px(x, shoreY + 1, tint("#3e3a34")); }
+        for (let x = 30; x < 80; x += 5) for (let y = shoreY + 2; y < shoreY + 6; y++) px(x, y, tint("#3e3a34"));
+        anchored(56, shoreY + 12, 2);
       }
     };
 
@@ -484,8 +570,8 @@ const Cartolina = (() => {
     }
 
     // Le due città hanno la loro cartolina, dalle foto di riferimento
-    if (zone.city === "forte") { drawForte(); return finish(); }
-    if (zone.city === "porto") { drawPorto(); return finish(); }
+    if (zone.city === "forte") { drawForte(); return buf; }
+    if (zone.city === "porto") { drawPorto(); return buf; }
     if (zone.cityView) { drawCityView(zone.cityView); return buf; }
 
     // Dal ponte della nave: solo mare fino all'orizzonte
@@ -794,26 +880,6 @@ const Cartolina = (() => {
       }
     }
 
-    return buf;
-  }
-
-  // La variante delle cartoline delle città, da provare: i contorni scuri dove cambia la forma
-  const lum = (hex) => { const [r, g, b] = rgb(hex); return 0.3 * r + 0.59 * g + 0.11 * b; };
-  function stylize(buf, w, h, style) {
-    if (style === "contorni") {
-      const out = buf.slice();
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          const l = lum(buf[y * w + x]);
-          const jump = [[1, 0], [0, 1], [-1, 0], [0, -1]].some(([dx, dy]) => {
-            const nx = x + dx, ny = y + dy;
-            return nx >= 0 && ny >= 0 && nx < w && ny < h && lum(buf[ny * w + nx]) - l > 70;
-          });
-          if (jump) out[y * w + x] = "#14100c";
-        }
-      }
-      return out;
-    }
     return buf;
   }
 

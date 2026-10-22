@@ -2,6 +2,12 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.4.1 · 23 ottobre 2026
+
+- **Il Forte**, cartolina nuova: la vista dall'alto di una strada. A sinistra le mura che corrono lungo il mare verso il fondo, con una nave ormeggiata e una torre di guardia; in fondo un arco nelle mura e la salita al castello sulla collina, tra due palazzi; a destra le case; in primo piano la strada col mercato e la gente. Di notte fiaccole sulle mura, poche finestre accese e il castello illuminato; all'alba nessuno in giro.
+- **Il porticciolo**, cartolina nuova, da una foto di riferimento: freddo ma accogliente. La banchina di assi bagnate che sparisce nella foschia, un peschereccio di legno del Cinquecento (cassero a poppa, vela serrata, reti sulla murata), una fila di locande a un piano di legno grigio-azzurro con le insegne, le finestre calde e il fumo dai comignoli, le boe rosse e le gabbie per le aragoste.
+- Col binocolo il porticciolo visto dal mare somiglia alla sua cartolina.
+
 ## 0.4 · 22 ottobre 2026
 
 - **Ricercati**: nella bacheca dei due porti a volte c'è un avviso (al massimo uno ogni 6 giorni). Lo accetti, sul globo compare una **W rossa** e col binocolo si vede il fumo del suo fuoco. Sulla mappa il fuggitivo sta al fuoco finché non ti vede o ti sente, poi scappa e da vicino **ti spara** (gli alberi fermano il colpo, i cespugli ti nascondono). Se arriva al bordo della mappa mentre sei lontano, sparisce. Preso, finisce in stiva: alla **gendarmeria del Forte** la taglia è di 15 m.o. Hai 3 giorni.

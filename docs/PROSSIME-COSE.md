@@ -3,7 +3,7 @@
 Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è nel [documento di design](DESIGN.md).
 
 ## Priorità
-0. **Le cartoline delle città**: rifatte a colori pieni (v0.4); da scegliere insieme se tenerle così o con i contorni scuri, e da ritoccare.
+0. **Le cartoline delle città**: rifatte nella v0.4.1 (Forte dalla strada, porticciolo dalla foto). Ritocchi possibili: insegne delle locande più leggibili, la locanda vicina che esce dal bordo.
 1. **Tarare i ricercati**: il fuggitivo spara mezzo cuore ogni 4 battiti e scappa al tuo passo; correndo lo si prende. Da provare giocando.
 2. **La lista degli oggetti speciali** (quelli del punto esclamativo): ora sono quattro provvisori.
 3. **Le icone degli uccelli**: le 8 specie usano icone provvisorie di game-icons, in attesa dei disegni.
@@ -20,6 +20,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Vignetta notturna**: di notte la mappa più scura lontano dall'esploratore.
 
 ## Fatto di recente
+- [x] **Versione 0.4.1**: cartoline nuove del Forte (vista dalla strada, mura sul mare, arco, castello sulla collina, mercato; fiaccole di notte, nessuno all'alba) e del porticciolo (banchina nella foschia, peschereccio del Cinquecento, locande a un piano); il porticciolo dal mare come la sua cartolina.
 - [x] **Versione 0.4**: ricercati (bacheca nei porti, W rossa, fumo, fuggitivo che spara, gendarmeria al Forte, taglia 15 m.o.); Società ornitologica (8 m.o. per specie completata) e "si trovano" per specie nel taccuino; 6 uccelli singoli in "Altri uccelli"; Finanze con entrate e uscite; esplorazione pura (niente avvisi su uccello e animali) e mai una zona senza animali; città con tutta la loro zona e visibili col binocolo; cartoline delle città ridisegnate; insegne con le icone di game-icons; gente con l'icona *walk*; solo oggetti rituali; tesori che non si spostano più; una sola linguetta del diario; cornice d'oro per i rari; scheda dell'uccello incrociato (nome, habitat e ore); falegname che saluta e ringrazia, senza scrollbar; attestato in PDF; conferma prima di una nuova spedizione; patch note su GitHub e nel gioco.
 - [x] **Versione 0.3.1**: città in pixel art (tetti a falde, castello, chiesa, vicoli sfalsati), insegne sulle botteghe, barili con la nota del grog, il punto esclamativo (rapina o oggetto speciale), il falegname del porticciolo e il roditore; niente più casse davanti alla nave.
 - [x] **Versione 0.3.2**: il falegname lavora sulla banchina (non è più una bottega); davanti alle porte un cartellino in basso dice cos'è e quanto costa; dialoghi della città piccoli e in basso, con le parole che compaiono una alla volta; la mappa non si allarga più quando cambia il tipo di terreno.
