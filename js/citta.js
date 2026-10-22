@@ -235,9 +235,9 @@ const Citta = (() => {
     return { ...m, ship, start: { x: 5, y: ship.y }, people: 16, walkable: ["road", "square", "quay", "court"] };
   }
 
-  // Il porticciolo: tutto sull'acqua. Due passerelle di legno parallele, ognuna con la sua fila di case,
-  // il mare a ovest (con la tua nave) e di nuovo a est (coi pescherecci e un pontile); la taverna sta
-  // sul lato del mare, su palafitte sospese sull'acqua
+  // Il porticciolo: costruito sull'acqua e attaccato alla terraferma in alto (neve e abeti). Due
+  // passerelle di legno parallele, ognuna con la sua fila di case, il mare a ovest (con la tua nave) e di
+  // nuovo a est, con i pontili e i pescherecci ormeggiati; la taverna su palafitte, sul lato del mare
   function buildPorto(r) {
     const m = blank("sea");
     m.doors = {};
@@ -245,24 +245,30 @@ const Citta = (() => {
     m.stilts = [];
     const set = (x, y, t) => { if (inside(x, y)) m.map[y][x] = t; };
     const rect = (x0, y0, x1, y1, t) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) set(x, y, t); };
-    rect(6, 2, 8, H - 3, "quay");                 // la prima passerella, sul mare dove ormeggia la tua nave
-    rect(9, 2, 11, H - 3, "lot");                 // la prima fila di case
-    rect(12, 2, 14, H - 3, "quay");               // la seconda passerella
-    rect(15, 2, 17, H - 3, "lot");                // la seconda fila di case, che dà di nuovo sul mare
-    for (const yy of [8, 15]) rect(9, yy, 11, yy, "quay");   // i passaggi tra le due passerelle
-    rect(15, 12, 17, 12, "quay");                 // un passaggio verso il pontile sul mare a est
-    rect(18, 12, 24, 12, "quay");
+    // la terraferma in alto: la riva innevata, gli abeti; le passerelle partono da lì
+    rect(0, 0, W - 1, 2, "snow");
+    for (let x = 0; x < W; x++) for (let yy = 0; yy < 2; yy++) if (r() < (yy ? 0.35 : 0.6) && (x < 5 || x > 15)) set(x, yy, "pine");
+    rect(6, 3, 8, H - 3, "quay");                 // la prima passerella, sul mare dove ormeggia la tua nave
+    rect(9, 3, 11, H - 3, "lot");                 // la prima fila di case
+    rect(12, 3, 14, H - 3, "quay");               // la seconda passerella
+    rect(15, 3, 17, H - 3, "lot");                // la seconda fila di case, che dà di nuovo sul mare
+    for (const yy of [9, 15]) rect(9, yy, 11, yy, "quay");   // i passaggi tra le due passerelle
+    // i pontili per le barche: tre sul mare a est (passando tra le case), uno a ovest
+    for (const [yy, len] of [[6, 7], [12, 9], [18, 8]]) { rect(15, yy, 17, yy, "quay"); rect(18, yy, 17 + len, yy, "quay"); }
+    rect(2, 20, 5, 20, "quay");
     // la taverna del Pesce Sgozzato, su palafitte nel mare, attaccata alla prima passerella
     const tav = [];
-    for (let y = 2; y <= 5; y++) for (let x = 2; x <= 5; x++) tav.push({ x, y });
+    for (let y = 4; y <= 7; y++) for (let x = 2; x <= 5; x++) tav.push({ x, y });
     m.stilts.push(addBuilding(m, tav, "house", "legno"));
-    m.map[4][5] = "door";
-    m.doors.taverna = { x: 5, y: 4, front: { x: 6, y: 4 }, sign: { x: 4, y: 4 } };
+    m.map[6][5] = "door";
+    m.doors.taverna = { x: 5, y: 6, front: { x: 6, y: 6 }, sign: { x: 4, y: 6 } };
     fillHouses(m, r, "lot", ["legno", "legno", "ardesia", "rosso"], () => "crate");   // sull'acqua niente orti: casse
-    for (const [x, yy] of [[6, 7], [6, 13], [7, 20], [12, 5], [14, 18]]) set(x, yy, "crate");
+    for (const [x, yy] of [[6, 8], [6, 13], [7, 20], [12, 5], [14, 17]]) set(x, yy, "crate");
     for (const [x, yy] of [[8, 8], [6, 16], [14, 10]]) set(x, yy, "barrel");
-    for (const [x, yy] of [[3, 18], [0, 10]]) vessel(m, "fish", x, yy, 2, 4);
-    for (const [x, yy] of [[20, 14], [21, 6], [28, 3], [30, 15], [35, 9]]) vessel(m, "fish", x, yy, 2, 4);
+    // i pescherecci ormeggiati ai pontili, uno o due per parte, e qualcuno alla fonda
+    for (const [x, yy] of [[3, 21], [0, 11]]) vessel(m, "fish", x, yy, 2, 3);
+    for (const [x, yy] of [[19, 7], [23, 7], [20, 13], [24, 13], [19, 19], [23, 19]]) vessel(m, "fish", x, yy, 2, 4);
+    for (const [x, yy] of [[31, 4], [33, 15], [36, 9]]) vessel(m, "fish", x, yy, 2, 4);
     const roads = ["quay"];
     placeShop(m, "medico", { x: 10, y: 4 }, roads);
     placeShop(m, "mercato", { x: 16, y: 6 }, roads);

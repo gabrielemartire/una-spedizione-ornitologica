@@ -2,6 +2,11 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.4.3 · 23 ottobre 2026
+
+- **Il porticciolo** è attaccato alla terraferma: in alto la riva innevata con gli abeti, da cui partono le due passerelle.
+- **Più pontili per le barche**: tre sul mare a est (si raggiungono passando tra le case della seconda fila) e uno a ovest, ognuno con i suoi pescherecci ormeggiati.
+
 ## 0.4.2 · 23 ottobre 2026
 
 - **Il porticciolo** sta tutto sull'acqua: niente più neve bianca a destra. Due passerelle di legno parallele, ognuna con la sua fila di case; il mare a ovest (con la tua nave) e di nuovo a est, con un pontile e i pescherecci.

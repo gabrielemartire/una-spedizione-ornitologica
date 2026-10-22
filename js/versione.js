@@ -1,8 +1,8 @@
 // La versione del gioco, mostrata nel menu e nella barra in alto, e le sue novità: alla prima
 // accensione di una versione nuova compaiono come "Patch note" (le stesse di PATCH-NOTE.md)
-const VERSIONE = "v0.4.2";
+const VERSIONE = "v0.4.3";
 const NOVITA = [
-  "<b>Il porticciolo</b> sta tutto sull'acqua: due passerelle di legno, ognuna con la sua fila di case, il mare da tutti e due i lati, un pontile e i pescherecci.",
-  "La taverna del porticciolo ora è la <b>Taverna Pesce Sgozzato</b>, su palafitte sul mare.",
+  "<b>Il porticciolo</b> è attaccato alla terraferma in alto, sulla riva innevata con gli abeti: le passerelle partono da lì.",
+  "<b>Più pontili per le barche</b>: tre sul mare a est e uno a ovest, coi pescherecci ormeggiati accanto.",
 ];
 document.querySelectorAll("[data-version]").forEach((el) => { el.textContent = VERSIONE; });
