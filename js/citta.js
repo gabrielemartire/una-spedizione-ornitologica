@@ -756,6 +756,8 @@ const Citta = (() => {
     const trip = Gioco.trip, w = trip.wanted;
     if (w && w.state === "caught") {
       trip.wanted = null;
+      const jailed = (trip.captured || []).find((p) => p.name === w.name && !p.delivered);
+      if (jailed) jailed.delivered = true;
       Gioco.earn(`taglia: ${w.name}`, Gioco.BOUNTY);
       Suoni.play("monete");
       Gioco.note(`Consegnato ${w.name} alla gendarmeria: +${Gioco.BOUNTY} m.o.`, "manacles");

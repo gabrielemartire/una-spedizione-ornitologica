@@ -547,6 +547,7 @@ const Gioco = (() => {
       // gli oggetti delle versioni vecchie (spade, piume…) non esistono più: diventano idoli
       trip.hold = trip.hold.map((it) => (OGGETTI[it.kind] ? it : { kind: "idolo" }));
       trip.pack = trip.pack.filter((it) => OGGETTI_SPECIALI[it.kind]);   // la bussola non c'è più
+      if (trip.wanted?.state === "caught" && !trip.captured) trip.captured = [{ name: trip.wanted.name, day: day(), delivered: false }];
       for (const m of Object.values(trip.zones)) if (m.item && !OGGETTI[m.item.kind]) m.item.kind = "idolo";
       s = null;
       initUi();
@@ -1153,6 +1154,7 @@ const Gioco = (() => {
     s.fugitive = null;
     el.ents.fugitive.hidden = true;
     trip.wanted.state = "caught";
+    (trip.captured ||= []).push({ name: trip.wanted.name, day: day(), delivered: false });   // nel taccuino, dietro le sbarre
     Suoni.play("tonfo");
     note(`${s.zone.name}: preso ${trip.wanted.name}! In stiva, da consegnare alla gendarmeria del Forte.`, "manacles");
     toast(`Preso! ${trip.wanted.name} finisce in stiva.`);

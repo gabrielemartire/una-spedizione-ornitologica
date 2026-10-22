@@ -100,6 +100,7 @@ const Diario = (() => {
           <div class="book-spread"><div class="book-flow">${TABS.map(([id, label]) =>
             `<section class="chapter" data-chapter="${id}"><h3>${label}</h3>${PAGES[id]()}</section>`).join("")}<i class="book-end"></i></div></div>
           <span class="book-folio is-left"></span><span class="book-folio is-right"></span>
+          <div class="book-cells"></div>
         </div>
         <p class="book-keys">← → sfoglia · ↑ ↓ capitoli · Esc chiude</p>
       </div>`;
@@ -132,6 +133,12 @@ const Diario = (() => {
     // il capitolo è quello cominciato per ultimo entro questa doppia pagina
     current = TABS.filter(([id]) => starts[id] <= spread).pop()[0];
     box.querySelector(".book-tabs").innerHTML = tabsHtml("is-side");
+    // i ricercati catturati: nella doppia pagina della stiva, in basso a destra, ognuno nella sua cella
+    const caught = trip().captured || [];
+    const cells = box.querySelector(".book-cells");
+    cells.hidden = spread !== starts.stiva || !caught.length;
+    cells.innerHTML = caught.map((p) => `<figure class="jail"><div class="jail-bars"><span>${escapeHtml(p.name)}</span></div>
+      <figcaption>${p.delivered ? "consegnato" : "in stiva"} · G${p.day}</figcaption></figure>`).join("");
     renderStrip();
   }
 
@@ -204,9 +211,7 @@ const Diario = (() => {
     },
 
     stiva() {
-      const w = trip().wanted;
-      const prisoner = w && w.state === "caught" ? `<li>${icon("prisoner")}${w.name}, legato <small>(alla gendarmeria del Forte)</small></li>` : "";
-      return `<ul class="book-items">${prisoner}${trip().hold.map((it) => `<li>${icon(OGGETTI[it.kind].icona)}${OGGETTI[it.kind].nome}</li>`).join("")}</ul>`;
+      return `<ul class="book-items">${trip().hold.map((it) => `<li>${icon(OGGETTI[it.kind].icona)}${OGGETTI[it.kind].nome}</li>`).join("")}</ul>`;
     },
   };
 

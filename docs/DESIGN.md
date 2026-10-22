@@ -347,7 +347,7 @@ Il diario è un diario, non un manuale: niente spiegazioni, se un capitolo è vu
 - **Voci**: le voci sentite.
 - **Finanze**: in alto a destra, a penna e di sbieco, *ciurma: 8 m.o. al giorno*; sotto il registro delle **entrate e uscite** a tre colonne (cosa · giorno · importo), con le uscite in rosso (ciurma, medico, taverna, rapine) e le entrate in verde (mercato, premi della Società, taglie); le righe vuote si riempiono man mano.
 - **Zaino**: la lista degli oggetti (per ora il binocolo).
-- **Stiva**: gli oggetti trovati, e il ricercato legato, se l'hai preso.
+- **Stiva**: gli oggetti trovati. **I ricercati catturati** stanno in basso nella pagina di destra, ognuno in **una cella con le sbarre** col nome dentro e, sotto, *in stiva* o *consegnato* e il giorno della cattura.
 
 **È un solo libro**: le pagine sono numerate di seguito (Note 1–2, Uccelli dalla 3…) e **ogni capitolo comincia su una pagina di sinistra**. Testo in corsivo d'epoca (IM Fell English), carta in pixel art con grana, macchie, bordi bruniti e la piega; linguette di stoffa vecchia.
 
