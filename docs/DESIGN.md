@@ -76,7 +76,7 @@ Tutto sta in **una schermata senza scorrere**, anche su un portatile da 13" (cir
 |---|---|---|
 | **A** Battlemap | La zona in cui sei sbarcato, a griglia, con icone | In mare mostra il globo grande. Sotto: che cosa c'è nella casella indicata ("Erba alta · si passa · ti nasconde") e i tasti |
 | **B** Stato | Giorno e i tre momenti, monete, vita; a terra rumore e animali, in mare rotta, vele e traversata | |
-| **C** Diario | Una pagina di carta con le ultime 3 note utili | Le linguette rosse biforcute aprono il taccuino intero (§ 12) |
+| **C** Diario | Una pagina di carta con le ultime 3 note utili | Una sola linguetta rossa, *Diario*, apre il taccuino intero (§ 12) |
 | **D** Cartolina | Il panorama della zona in pixel art, visto da una persona in piedi | In mare: il mare dal ponte; col binocolo: la costa |
 
 **Niente titoli sui riquadri.** In alto una **barra menu** in stile anni '90: *Spedizione* (tendina: torna al menu principale, nuova spedizione, suoni), *Diario*, *Suoni*; a destra il nome dell'esploratore e la **versione** del gioco. In partita **Esc** apre la tendina invece di uscire, per non perdere il viaggio per sbaglio.
@@ -234,8 +234,12 @@ Ogni creatura mostra il suo stato (`!` ti insegue o carica, `?` ti cerca, `z` si
 | Momento | Animali |
 |---|---|
 | Alba | il **cinghiale** (a volte, vicino al fiume, un orso) |
-| Pomeriggio | l'**orso**: quasi sempre se c'è un fiume, meno spesso altrimenti |
+| Pomeriggio | l'**orso**, sempre |
 | Notte | i **lupi**, in branco da 2 (3 nella taiga e sui ghiacci) |
+
+**Non esiste una zona senza animali**: in ogni momento del giorno almeno uno c'è (prima capitava troppo spesso di trovare la zona vuota).
+
+**Esplorazione pura.** Sbarcando non compare nessun avviso sull'uccello ("canta un uccello", "il canto viene dalle rovine") né sugli animali (impronte, ululati), e il riquadro B non elenca più gli animali: si cerca a occhio. Resta solo, all'ora sbagliata, *«Nessun canto. Forse non è l'ora giusta.»* (virgolettato e in corsivo).
 
 | Creatura | Comportamento | Come la gestisci |
 |---|---|---|
@@ -260,7 +264,7 @@ Il contatto toglie **punti vita** (vita iniziale: 10). Ci si cura **solo in citt
 | Mantella mimetica | Ti rende nascosto anche fuori dai cespugli per 5 turni | consumabile |
 
 ### 9.5 Oggetti
-**Nelle rovine c'è sempre un oggetto, nelle altre zone una volta su tre** (deciso al primo sbarco, poi resta lì finché non lo prendi). Brilla sulla mappa; nelle rovine è sotto il tetto e lo vedi solo entrando. Ci passi sopra e **finisce in stiva**. Sono 14, in `js/oggetti.js`, in quattro categorie: *reliquie* (spada cerimoniale, calice ingemmato, ciondolo, moneta antica), *arte* (maschera rituale, vaso dipinto, idolo, ceramica), *natura* (piume, teschio, pelliccia, erbe) e *cose* (mappa strappata, lanterna). Nelle rovine solo reliquie e arte.
+**Nelle rovine c'è sempre un oggetto, nelle altre zone una volta su tre** (deciso al primo sbarco, poi resta lì finché non lo prendi, **sempre nella stessa casella**: aspettare a bordo non lo sposta). Brilla sulla mappa; nelle rovine è sotto il tetto e lo vedi solo entrando. Ci passi sopra e **finisce in stiva**. **Solo oggetti rituali**, niente armi né armature, e niente piume (si confonderebbero con gli indizi degli uccelli). Sono 7, in `js/oggetti.js`: *reliquie* (venere di pietra, calice ingemmato, ciondolo rituale) e *arte* (maschera rituale, vaso dipinto, ritratto antico, idolo di pietra), con le icone di game-icons.net (venus-of-willendorf, mona-lisa…).
 
 Servono a **vendere al mercato**, ma conviene tenerne qualcuno: **i mercanti** li vogliono.
 
@@ -268,11 +272,26 @@ Servono a **vendere al mercato**, ma conviene tenerne qualcuno: **i mercanti** l
 
 *(Più avanti: peso e limite della stiva.)*
 
+### 9.6 I ricercati
+
+**La bacheca.** In tutti e due i porti, sulla banchina, c'è la **bacheca dei ricercati**. A ogni visita c'è un avviso nuovo il **60%** delle volte, ma **al massimo uno ogni 6 giorni** e mai mentre ne hai uno in corso. L'avviso dice chi è, cosa ha fatto e in quale zona si nasconde.
+
+**La caccia.** Accettato l'avviso, sul globo compare una **W rossa** sulla zona, e col binocolo si vede **una colonna di fumo** che sale dagli alberi (nella cartolina della zona). Hai **3 giorni**, poi il ricercato lascia l'arcipelago. Sbarcando, il fuggitivo (icona *bandit*, rossa) sta al suo fuoco vicino agli alberi, lontano dalla nave:
+- finché non ti vede (8 caselle, 5 di notte, come gli animali: nascosto ti vede solo da vicinissimo) o non ti sente, resta fermo;
+- poi **scappa**: un passo per ogni tuo passo se cammini, due ogni tre se corri; si ferma contro alberi e rocce;
+- se ti vede entro 6 caselle **ti spara** (mezzo cuore, un colpo ogni 4 battiti): alberi e rocce fermano il colpo, cespugli ed erba alta ti nascondono;
+- se arriva al bordo della mappa mentre sei lontano (più di 10 caselle) **sparisce** e l'avviso è perso;
+- lo **prendi** arrivandogli accanto.
+
+Restano gli animali, che inseguono solo te, e l'uccello, che può spaventarsi (anche per il fuggitivo che gli passa vicino). Preso, il ricercato **va in stiva**; alla **gendarmeria del Forte** (non al porticciolo) si riscuote la **taglia: 15 m.o.**
+
 ## 10. Le città
 
-Due città per globo, sempre presenti. **La città è disegnata in pixel art vista dall'alto**: tetti a falde di forme diverse (coppi, ardesia, paglia, mattoni; a L, lunghi, stretti) con comignoli e ombre, ciottoli, banchina di assi, mura coi merli. **Sopra, ben visibili, solo le cose con cui si interagisce**: le porte delle botteghe (→) con **l'insegna sul tetto in pixel art** (la croce rossa del medico, il boccale della taverna, la coscia di pollo del mercato, la bussola dell'emporio; sulla porta l'icona della porta aperta), i **barili** (c'è una nota da leggere: la ricetta del grog), le persone. **Le navi sono in scala**: la tua è grande (tre caselle per nove, tre alberi) e ormeggiata lungo la banchina, dove l'icona della nave segna il punto per salire a bordo; anche le navi del Forte e i pescherecci rossi del porticciolo sono disegnati interi. **La gente si muove poco**: qualche passo ogni tanto vicino a dove sta, mai davanti a porte, nave o falegname, e se le vai addosso si scansa. **Davanti a una porta compare un cartellino in basso** che dice cos'è la bottega, cosa offre e quanto costa, con la freccia da premere per entrare. **I popup della città sono piccoli e stanno in basso**: i dialoghi sono una finestrella sopra la mappa, le parole di chi parla compaiono una alla volta con la vocina (Invio le mostra tutte), poi arrivano le risposte.
+Due città per globo, sempre presenti. **La città è disegnata in pixel art vista dall'alto**: tetti a falde di forme diverse (coppi, ardesia, paglia, mattoni; a L, lunghi, stretti) con comignoli e ombre, ciottoli, banchina di assi, mura coi merli. **Sopra, ben visibili, solo le cose con cui si interagisce**: le porte delle botteghe (→) con **l'insegna sul tetto, un'icona di game-icons.net** (medicine per il medico, il boccale della taverna, la bottega del mercato, la porta chiusa dell'emporio, le manette della gendarmeria, la casetta degli uccelli della Società ornitologica; sulla porta l'icona della porta aperta), i **barili** (c'è una nota da leggere: la ricetta del grog), la **bacheca dei ricercati**, le persone (icona *walk*). **Le navi sono in scala**: la tua è grande (tre caselle per nove, tre alberi) e ormeggiata lungo la banchina, dove l'icona della nave segna il punto per salire a bordo; anche le navi del Forte e i pescherecci rossi del porticciolo sono disegnati interi. **La gente si muove poco**: qualche passo ogni tanto vicino a dove sta, mai davanti a porte, nave o falegname, e se le vai addosso si scansa. **Davanti a una porta compare un cartellino in basso** che dice cos'è la bottega, cosa offre e quanto costa, con la freccia da premere per entrare. **I popup della città sono piccoli e stanno in basso**: i dialoghi sono una finestrella sopra la mappa, le parole di chi parla compaiono una alla volta con la vocina (Invio le mostra tutte), poi arrivano le risposte.
 
-**Il Forte**: mura con le torri, la porta sul mare, la strada principale che fa qualche gomito, vicoli sfalsati, **il quartiere del castello** (mura sue, torri, mastio con la bandiera) e **la piazza con la chiesa** (campanile, pozzo, bancarelle). **Il porticciolo**: la banchina, le case in fila, la neve e gli abeti, e **il falegname**, che non ha bottega: lavora **in fondo alla banchina** accanto alle sue casse (pedina col martello, sta fermo). Ci si parla andandogli addosso; con lui si si fa la conversazione del roditore di *Monkey Island 2*: non si salta, si sceglie l'unica battuta possibile e lui risponde con la vocina, parola per parola.
+**Il Forte**: mura con le torri, la porta sul mare, la strada principale che fa qualche gomito, vicoli sfalsati, **il quartiere del castello** (mura sue, torri, mastio con la bandiera) e **la piazza con la chiesa** (campanile, pozzo, bancarelle); in più **la gendarmeria** (§ 9.6) e **la Società ornitologica** (§ 13). **Il porticciolo**: la banchina, le case in fila, la neve e gli abeti, e **il falegname**, che non ha bottega: lavora **in fondo alla banchina** accanto alle sue casse (pedina col martello, sta fermo). Ci si parla andandogli addosso; con lui si fa la conversazione del roditore di *Monkey Island 2*: lui apre con *«Heilà!»*, poi le tue battute (col tuo nome) si scelgono una alla volta (ce n'è sempre una sola) e lui risponde con la vocina, parola per parola; alla fine ti ringrazia per aver chiarito tutto e resta solo *Esci*. La finestra cresce a ogni battuta, senza barre di scorrimento.
+
+**La città ha tutta la sua zona.** Il Forte e il porticciolo occupano un'intera zona della loro isola: dovunque si attracchi lì, si entra in porto, e **col binocolo si vede la città dal mare** (il Forte con le mura, il castello e la chiesa; il porticciolo con le case colorate sotto le montagne innevate).
 
 **Il punto esclamativo.** A volte in città qualcuno ha un **!** sopra la testa e ti aspetta fermo: ci vai e **o ti rapina** (−2…4 m.o.) **o ti dà un oggetto speciale** che finisce nello zaino (lista provvisoria: bussola che punta a sud, lettera sigillata, chiave arrugginita, uovo maculato).
 
@@ -282,11 +301,14 @@ Le città **sono battlemap cittadine**: la banchina con le altre navi, le strade
 |---|---|---|
 | Dove | sull'isola grande | **sempre su un'isola di ghiaccio** (c'è sempre almeno un'isola di ghiaccio) |
 | Mappa | mura tutt'intorno, porta sul mare, strada principale, vicoli, cortili, piazza col pozzo, bancarelle | una lunga banchina di legno, le case in fila, boe rosse, gabbie, pescherecci; dietro neve e abeti |
-| Cartolina | **verticale**: giù per la strada fino alla porta nelle mura, il mare e le navi dietro | **verticale**: la banchina nella nebbia, le case grigio-azzurre, il peschereccio rosso, le boe |
+| Cartolina | **verticale**, a colori pieni: giù per la strada fino al torrione con gli stendardi, case colorate, tende a righe, il mare con le navi e il faro dietro | **verticale**, a colori pieni: la banchina di legno, le case di legno rosse, ocra e blu con la neve sui tetti, le montagne del fiordo, il peschereccio rosso, le boe a righe |
 | Medico | «Volete curarvi le ferite?» **5 m.o.**, cura completa (5 cuori) | **3 m.o.**, 5 cuori **+ 1 in più**; quel cuore il Forte non lo ripristina |
 | Taverna | «Una notte in locanda?» **11 m.o.**: dormi fino all'alba (la ciurma si paga) e senti una voce, sempre su un uccello raro | **7 m.o.**, ma la voce è su un raro solo l'84% delle volte |
 | Mercato | **2 m.o.** a oggetto, compra tutto | **4 m.o.** a oggetto, ma l'arte no |
 | Emporio | chiuso, per ora | chiuso, per ora |
+| Gendarmeria | la taglia del ricercato: **15 m.o.** | no |
+| Società ornitologica | **8 m.o.** per ogni specie completata | no |
+| Bacheca dei ricercati | sì | sì |
 
 **Le voci.** Una voce lega un uccello a **una zona precisa**, segnata sul globo con una **X dorata**. Dice la specie, non quale uccello: chi va a vedere può trovare un raro, o (al porticciolo) restare deluso da uno qualunque. Massimo **2 voci di taverna** a spedizione, più quelle dei mercanti. Finite le voci, in taverna si dorme e basta.
 
@@ -307,17 +329,17 @@ Obiettivo: i soldi iniziali bastano per **circa 10 giorni**. Devi vendere presto
 
 ## 12. Il diario (C)
 
-Sotto la mappa c'è il **bordo del diario**: carta vecchia, macchiata ai bordi, senza righe, con le **ultime 3 note** e la firma dell'esploratore in corsivo barocco. Dall'alto spuntano le **linguette rosse biforcute** (passandoci sopra si scuriscono).
+Sotto la mappa c'è il **bordo del diario**: carta vecchia, macchiata ai bordi, senza righe, con le **ultime 3 note** e la firma dell'esploratore in corsivo barocco. Dall'alto, sopra la firma, spunta **una sola linguetta rossa biforcuta**, *Diario* (le sei linguette di prima coprivano il testo delle note).
 
-Una linguetta, **Tab** o *Diario* nella barra aprono il **taccuino**: un libro aperto con due pagine e la piega in mezzo, **sempre della stessa misura** (si rimpicciolisce solo su schermi troppo piccoli). Le linguette dei capitoli escono da sotto il libro a sinistra, con la coda biforcuta verso fuori. **← →** sfogliano le pagine (finito un capitolo si passa al successivo), **↑ ↓** cambiano capitolo, **Esc** o Tab chiudono. Col mouse: clic sulla pagina sinistra o destra.
+La linguetta, **Tab** o *Diario* nella barra aprono il **taccuino**: un libro aperto con due pagine e la piega in mezzo, **sempre della stessa misura** (si rimpicciolisce solo su schermi troppo piccoli). Le linguette dei capitoli escono da sotto il libro a sinistra, con la coda biforcuta verso fuori. **← →** sfogliano le pagine (finito un capitolo si passa al successivo), **↑ ↓** cambiano capitolo, **Esc** o Tab chiudono. Col mouse: clic sulla pagina sinistra o destra.
 
 Il diario è un diario, non un manuale: niente spiegazioni, se un capitolo è vuoto è vuoto.
 - **Note**: tutto ciò che è stato annotato, con giorno e momento.
-- **Uccelli**: per specie, ogni uccello è una **scheda**: quattro angoli appena segnati, il riquadro del disegno e righe vuote da riempire. **Sconosciuto**: tutto vuoto. **Traccia**: solo l'indizio. **Osservato**: nome (e latino), habitat e ore, curiosità, dove e quando, e il disegno a colori.
+- **Uccelli**: per specie, con sotto il titolo **dove si trovano** i suoi uccelli comuni (*Si trovano: foresta · taiga · palude · ovunque*), così si può partire a caccia di una specie intera. Ogni uccello è una **scheda**: quattro angoli appena segnati, il riquadro del disegno e righe vuote da riempire. **Sconosciuto**: tutto vuoto. **Incrociato** (traccia: sbarcato all'ora sbagliata, volato via, o tornato a bordo senza osservarlo): nome sulla prima riga, habitat e ore sulla seconda, terza e quarta vuote, niente disegno. **Osservato**: nome (e latino), habitat e ore, curiosità, dove e quando, e il disegno a colori. **I rari osservati hanno una cornice d'oro** (doppio filo dorato, gemme agli angoli, *✦ raro*).
 - **Voci**: le voci sentite.
-- **Ciurma**: in alto a destra, a penna e di sbieco, *8 m.o. al giorno*; sotto il registro **pagamenti** a tre colonne (chi · giorno · −8 m.o.) con le righe vuote che si riempiono man mano.
+- **Finanze**: in alto a destra, a penna e di sbieco, *ciurma: 8 m.o. al giorno*; sotto il registro delle **entrate e uscite** a tre colonne (cosa · giorno · importo), con le uscite in rosso (ciurma, medico, taverna, rapine) e le entrate in verde (mercato, premi della Società, taglie); le righe vuote si riempiono man mano.
 - **Zaino**: la lista degli oggetti (per ora il binocolo).
-- **Stiva**: gli oggetti trovati.
+- **Stiva**: gli oggetti trovati, e il ricercato legato, se l'hai preso.
 
 **È un solo libro**: le pagine sono numerate di seguito (Note 1–2, Uccelli dalla 3…) e **ogni capitolo comincia su una pagina di sinistra**. Testo in corsivo d'epoca (IM Fell English), carta in pixel art con grana, macchie, bordi bruniti e la piega; linguette di stoffa vecchia.
 
@@ -326,6 +348,10 @@ Il diario è un diario, non un manuale: niente spiegazioni, se un capitolo è vu
 ## 13. Gli uccelli
 
 **Specie e varianti.** Ogni specie ha **una sola icona** (provvisoria: arriveranno i disegni); le varianti si distinguono per colore e nome. **8 specie, 51 uccelli**, in `js/uccelli.js`: Pettirosso (*Erithacus ignifer*), Gufo selenicus, Airone di nebbia, Cinciallegra di vetro, Corvo dei campanili, Colibrì d'ambra, Gabbiano di tempesta, Fenice. **Ogni specie ha un uccello raro.**
+
+**Altri uccelli.** Una nona specie raccoglie **6 uccelli singoli**, ognuno con la sua icona e senza raro: kiwi notturno (foresta, notte), corridore delle dune (deserto, alba; icona *ostrich*), gallo del villaggio (villaggio, alba), dodo (isola tropicale, pomeriggio), gru di carta (palude, alba), oca del lago (lago, pomeriggio). In tutto 57 uccelli.
+
+**Perché inseguire una specie: la Società ornitologica.** Al Forte, quando hai osservato **tutti gli uccelli comuni di una specie**, la Società ti paga **8 m.o.** (una volta per specie, entrando nella sua sede). Il taccuino dice dove cercarli: chi ha poche monete può decidere di andare a completare i gabbiani invece di girare a caso.
 
 Ogni uccello ha: bioma (o "ovunque"), a volte una caratteristica (fiume, lago, cascata, rovine, villaggio, montagne, castello, vulcano), **i momenti in cui si fa vedere**, un indizio e una curiosità. Gli ID non cambiano mai: il codice del taccuino si baserà su di essi.
 
@@ -337,9 +363,11 @@ Ogni uccello ha: bioma (o "ovunque"), a volte una caratteristica (fiume, lago, c
 
 **Resoconto** (fatto): una schermata con la causa della fine, giorni di viaggio, sbarchi, zone esplorate, isole toccate, passi, ferite, uccelli osservati, e la griglia del taccuino (a colori gli osservati, sagome le tracce, "?" il resto).
 
-**Attestato** (fatto, come immagine PNG): nome dell'esploratore, causa della fine, resoconto, la griglia degli uccelli per specie, il codice. *(Più avanti: PDF con QR code.)*
+**Attestato** (fatto, **in PDF**, con l'icona PDF sul pulsante): nome dell'esploratore, causa della fine, resoconto, la griglia degli uccelli per specie (i rari con il bordo d'oro). Il PDF è un A4 orizzontale fatto senza librerie, con dentro l'immagine dell'attestato. *(Più avanti: il codice e il QR.)*
 
-**Codice del taccuino**: per ora mostrato come `????-????-????-????` *prossimamente*.
+**Codice del taccuino**: per ora non c'è; *Riprendi un taccuino* resta nel menu, disattivato, per far capire che arriverà.
+
+**Nuova spedizione.** Dal menu principale; se ce n'è una in corso, prima chiede conferma (quella vecchia si perde). Dalla tendina *Spedizione* in partita non c'è più.
 
 **Il taccuino resta salvato.** A fine spedizione il taccuino (nome e uccelli osservati) si salva nel browser: *Riprendi un taccuino* lo userà direttamente, senza reinserire il codice. Il codice serve solo per cambiare browser o dispositivo, o per condividerlo.
 
@@ -404,7 +432,11 @@ Idea: **ogni uccello ha il suo verso**, generato dal suo ID. Lo stesso uccello c
 
 - **Nome del giocatore:** si sceglie all'inizio della partita ("Il registro di bordo").
 - **Tempo in terzi:** attraccare gratis, ripartire due momenti, aspettare a bordo uno, traversate lunghe uno ogni 60° (§ 6).
-- **Animali per momento:** alba cinghiale, pomeriggio orso (più spesso col fiume), notte lupi (§ 9.3).
+- **Animali per momento:** alba cinghiale, pomeriggio orso, notte lupi; mai una zona vuota (§ 9.3).
+- **Esplorazione pura:** niente avvisi su uccello e animali, solo «Nessun canto» (§ 9.3).
+- **Ricercati:** bacheca nei due porti, W rossa, fumo, fuggitivo che spara, taglia di 15 m.o. alla gendarmeria del Forte (§ 9.6).
+- **Società ornitologica:** 8 m.o. per specie completata, per dare un motivo a inseguire una specie (§ 13).
+- **Patch note:** in `PATCH-NOTE.md` e, alla prima accensione di ogni versione, in un riquadro nel gioco (*Patch note n.m*).
 - **Un uccello per zona**, deciso al primo attracco; i rari solo con le voci, al massimo 2 (§ 13).
 - **Un'icona per specie**, le varianti cambiano colore.
 - **Cosa sopravvive al viaggio:** solo il taccuino. Strumenti, soldi e binocolo migliorato si perdono.

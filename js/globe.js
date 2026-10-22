@@ -297,7 +297,7 @@ const Globo = (() => {
 
   const buffers = new Map();
 
-  // view = { lat, lon, heading }; opts = { res, time, wake: [{lat,lon}], highlight: zoneId, markers: true, marks: trip.zones }
+  // view = { lat, lon, heading }; opts = { res, time, wake: [{lat,lon}], highlight: zoneId, markers: true, marks: trip.zones, wanted: zoneId }
   function draw(canvas, world, view, opts) {
     const N = opts.res;
     if (!buffers.has(N)) {
@@ -400,6 +400,18 @@ const Globo = (() => {
           if (!mark.px.some(([x, y]) => x === dx + ox && y === dy + oy)) put(s.x + dx + ox, s.y + dy + oy, halo);
         }
         for (const [dx, dy] of mark.px) put(s.x + dx, s.y + dy, mark.color);
+      }
+    }
+
+    // La W rossa del ricercato, sulla zona dove si nasconde
+    if (opts.wanted != null) {
+      const z = world.zones[opts.wanted], s = project(z.lat, z.lon);
+      const W = [[-4, -3], [-4, -2], [-3, -1], [-3, 0], [-2, 1], [-2, 2], [-1, 1], [-1, 0], [0, -1], [1, 0], [1, 1], [2, 2], [2, 1], [3, 0], [3, -1], [4, -2], [4, -3]];
+      if (s) {
+        for (const [dx, dy] of W) for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          if (!W.some(([x, y]) => x === dx + ox && y === dy + oy)) put(s.x + dx + ox, s.y + dy + oy, [250, 244, 220]);
+        }
+        for (const [dx, dy] of W) put(s.x + dx, s.y + dy, [200, 36, 30]);
       }
     }
 

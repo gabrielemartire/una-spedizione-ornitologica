@@ -23,10 +23,11 @@ Non sei un guerriero. Sei uno studioso. Ti muovi piano, ti nascondi nei cespugli
 - 🗺️ **Zone esplorate a turni.** Ogni sbarco apre una mappa nuova, con alberi, ruscelli, uccelli, mostri e qualche tesoro.
 - 🪤 **Furbizia, non spada.** Gli orsi caricano in linea retta, i lupi ti circondano, i cinghiali non sanno curvare. Usa il terreno, le esche e le trappole.
 - 🖼️ **Cartoline che non mentono.** Ogni zona ha il suo panorama in ASCII: se nella cartolina c'è una cascata, laggiù c'è davvero una cascata, e forse anche chi ci vive.
-- 🏰 **Due città.** Un forte di pietra sul mare e un porticciolo nella nebbia di un fiordo. Vendi, ti curi, compri voci da marinai ("ho visto un uccello strano, a nord...").
-- 📜 **Il taccuino sopravvive.** Quando il viaggio finisce, perché la ciurma ti ha abbandonato o perché un orso ha avuto la meglio, ricevi un attestato da scaricare con un codice. Inseriscilo nel viaggio successivo e riprendi la collezione.
+- 🏰 **Due città.** Un forte di pietra sul mare e un porticciolo tra le montagne di un fiordo. Vendi, ti curi, compri voci da marinai ("ho visto un uccello strano, a nord..."). La Società ornitologica premia chi completa una specie.
+- 🤠 **Ricercati.** Nella bacheca del porto a volte c'è un avviso: segui il fumo, insegui il fuggitivo tra gli alberi (spara!) e portalo alla gendarmeria per la taglia.
+- 📜 **Il taccuino sopravvive.** Quando il viaggio finisce, perché la ciurma ti ha abbandonato o perché un orso ha avuto la meglio, scarichi l'attestato in PDF. Più avanti avrà un codice: inseriscilo nel viaggio successivo e riprendi la collezione.
 
-**60 uccelli** da scoprire: buffi, solenni, leggendari, e qualcuno vero.
+**57 uccelli** da scoprire: buffi, solenni, leggendari, e qualcuno vero.
 
 ## Niente salvataggi
 
@@ -36,7 +37,7 @@ Solo il taccuino, scritto a mano e timbrato con il suo codice, viaggia con te.
 
 ## A che punto siamo
 
-🚧 **In costruzione, ma già giocabile.** Si naviga sul globo in tempo reale, si guarda la costa col binocolo, si sbarca e si cercano 51 uccelli che si fanno vedere solo a certe ore, tra orsi di giorno, lupi di notte e cinghiali all'alba. La giornata è divisa in alba, pomeriggio e notte: ripartire costa tempo, la ciurma va pagata, il diario annota tracce e avvistamenti, e a fine viaggio si scarica l'attestato. Nelle città si cammina tra la gente: medico, taverna con le voci sugli uccelli rari, mercato per vendere quello che trovi a terra. Mancano ancora l'emporio e il codice del taccuino: il progetto completo è descritto nel [documento di design](docs/DESIGN.md).
+🚧 **In costruzione, ma già giocabile** (versione 0.4, le novità sono nelle [patch note](PATCH-NOTE.md)). Si naviga sul globo in tempo reale, si guarda la costa col binocolo, si sbarca e si cercano 57 uccelli che si fanno vedere solo a certe ore, tra orsi di giorno, lupi di notte e cinghiali all'alba. Niente aiuti: l'uccello si cerca a occhio. La giornata è divisa in alba, pomeriggio e notte: ripartire costa tempo, la ciurma va pagata, il diario annota tracce, avvistamenti, entrate e uscite, e a fine viaggio si scarica l'attestato in PDF. Nelle città si cammina tra la gente: medico, taverna con le voci sugli uccelli rari, mercato per vendere gli oggetti rituali trovati a terra, la bacheca dei ricercati, la gendarmeria e la Società ornitologica. Mancano ancora l'emporio e il codice del taccuino: il progetto completo è descritto nel [documento di design](docs/DESIGN.md).
 
 ## Grazie
 

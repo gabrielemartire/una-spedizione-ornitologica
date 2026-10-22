@@ -1,12 +1,12 @@
-// Il diario di viaggio: in basso le ultime cose annotate, con le linguette che aprono il
+// Il diario di viaggio: in basso le ultime cose annotate, con una linguetta che apre il
 // taccuino intero: un solo libro a due pagine, numerate di seguito, con un capitolo per
-// linguetta (note, uccelli, voci, ciurma, zaino, stiva). Qui anche il resoconto di fine
-// spedizione e l'attestato da scaricare.
+// linguetta (note, uccelli, voci, finanze, zaino, stiva). Qui anche il resoconto di fine
+// spedizione e l'attestato da scaricare, in PDF.
 // Espone l'oggetto globale `Diario`.
 const Diario = (() => {
   const TABS = [
     ["note", "Note"], ["uccelli", "Uccelli"], ["voci", "Voci"],
-    ["ciurma", "Ciurma"], ["zaino", "Zaino"], ["stiva", "Stiva"],
+    ["finanze", "Finanze"], ["zaino", "Zaino"], ["stiva", "Stiva"],
   ];
   const STRIP_NOTES = 3;
   const LEDGER_ROWS = 14;   // le righe del registro dei pagamenti, anche vuote
@@ -30,8 +30,9 @@ const Diario = (() => {
     const t = trip();
     if (!box || !t) return;
     const notes = t.notes.slice(0, STRIP_NOTES);
+    // una sola linguetta, sopra la firma: il testo delle note non le finisce mai dietro
     const html = `
-      <div class="ds-tabs">${tabsHtml("")}</div>
+      <div class="ds-tabs"><button class="ribbon${current ? " is-open" : ""}" data-diary-tab="note" tabindex="-1">Diario</button></div>
       <div class="ds-page paper">
         <ul class="ds-notes">${notes.map((n, i) => `<li${i ? "" : ' class="is-new"'}>${when(n)} ${n.msg}</li>`).join("")}</ul>
         <span class="ds-sign signature">${escapeHtml(t.explorer)}</span>
@@ -174,7 +175,11 @@ const Diario = (() => {
       return Object.entries(SPECIE).map(([sp, info]) => {
         const birds = UCCELLI.filter((u) => u.specie === sp);
         const seen = birds.filter((u) => t.birds[u.id]?.level === "visto").length;
+        // dove cercarli: i posti dei comuni, così si può partire a caccia di una specie intera
+        const where = [...new Set(birds.filter((u) => !u.rara).map((u) => habitatUccello(u).toLowerCase()))].join(" · ");
+        const paid = (t.society || []).includes(sp);
         return `<h4>${info.nome} <small>${info.latino} · ${seen}/${birds.length}</small></h4>
+          <p class="sp-where">Si trovano: ${where}.${paid ? " <b>Premio della Società riscosso.</b>" : ""}</p>
           ${birds.map((u) => birdCard(u, t.birds[u.id])).join("")}`;
       }).join("");
     },
@@ -183,12 +188,13 @@ const Diario = (() => {
       return `<ul class="book-notes">${(trip().rumors || []).map((n) => `<li>${when(n)} ${n.msg}</li>`).join("")}</ul>`;
     },
 
-    // Il registro dei pagamenti: si compila riga dopo riga
-    ciurma() {
-      const rows = [...trip().payments].reverse().map((p) => `<tr><td>${p.what}</td><td>giorno ${p.day}</td><td>−${p.amount} m.o.</td></tr>`);
+    // Il registro delle finanze: quello che esce (la ciurma, le botteghe) e quello che entra (vendite, premi, taglie)
+    finanze() {
+      const rows = [...trip().payments].reverse().map((p) =>
+        `<tr><td>${p.what}</td><td>giorno ${p.day}</td><td class="${p.in ? "is-in" : ""}">${p.in ? "+" : "−"}${p.amount} m.o.</td></tr>`);
       while (rows.length < LEDGER_ROWS) rows.push("<tr><td></td><td></td><td></td></tr>");
-      return `<p class="pen-note">${Gioco.CREW_PAY} m.o. al giorno</p>
-        <table class="ledger"><caption>pagamenti</caption>${rows.join("")}</table>`;
+      return `<p class="pen-note">ciurma: ${Gioco.CREW_PAY} m.o. al giorno</p>
+        <table class="ledger"><caption>entrate e uscite</caption>${rows.join("")}</table>`;
     },
 
     zaino() {
@@ -196,25 +202,29 @@ const Diario = (() => {
     },
 
     stiva() {
-      return `<ul class="book-items">${trip().hold.map((it) => `<li>${icon(OGGETTI[it.kind].icona)}${OGGETTI[it.kind].nome}</li>`).join("")}</ul>`;
+      const w = trip().wanted;
+      const prisoner = w && w.state === "caught" ? `<li>${icon("prisoner")}${w.name}, legato <small>(alla gendarmeria del Forte)</small></li>` : "";
+      return `<ul class="book-items">${prisoner}${trip().hold.map((it) => `<li>${icon(OGGETTI[it.kind].icona)}${OGGETTI[it.kind].nome}</li>`).join("")}</ul>`;
     },
   };
 
-  // Le righe della scheda: vuote finché non sai niente; con una traccia o una voce solo qualcosa; visto, tutto
+  // Le righe della scheda: vuote finché non sai niente; incrociato (traccia) il nome e dove e quando
+  // vive, senza il disegno; visto, tutto. I rari, visti, hanno una cornice d'oro
   function birdCard(u, known = {}) {
     const level = known.level;
     const seen = level === "visto";
     const lines = ["", "", "", ""];
     if (seen) {
-      lines[0] = `<b>${u.nome}</b>${u.latino ? ` <i>${u.latino}</i>` : ""}`;
+      lines[0] = `<b>${u.nome}</b>${u.latino ? ` <i>${u.latino}</i>` : ""}${u.rara ? ' <span class="rare-tag">✦ raro</span>' : ""}`;
       lines[1] = `${habitatUccello(u)} · ${u.ore.join(" e ")}`;
       lines[2] = u.curiosita;
       lines[3] = `<span class="where">visto: ${known.zone}, G${known.day} ${known.time}</span>`;
     } else {
-      if (known.voce) { lines[0] = `<b>${u.nome}</b>`; lines[3] = `<span class="where">voce: ${known.voce}</span>`; }
-      if (level === "traccia") lines[1] = u.indizio;
+      if (level === "traccia" || known.voce) lines[0] = `<b>${u.nome}</b>`;
+      if (level === "traccia") lines[1] = `${habitatUccello(u)} · ${u.ore.join(" e ")}`;
+      if (known.voce) lines[3] = `<span class="where">voce: ${known.voce}</span>`;
     }
-    return `<div class="bird-card${seen ? " is-seen" : ""}" style="--bird-color:${u.colore}">
+    return `<div class="bird-card${seen ? " is-seen" : ""}${seen && u.rara ? " is-rare" : ""}" style="--bird-color:${u.colore}">
       <div class="bird-pic">${seen ? icon(iconaUccello(u)) : ""}</div>
       <div class="bird-lines">${lines.map((l) => `<p>${l}</p>`).join("")}</div>
     </div>`;
@@ -242,7 +252,7 @@ const Diario = (() => {
     const grid = Object.keys(SPECIE).map((sp) => `<div class="end-row">${UCCELLI.filter((u) => u.specie === sp).map((u) => {
       const level = t.birds[u.id]?.level;
       const cls = level === "visto" ? "is-seen" : level === "traccia" ? "is-trace" : "is-unknown";
-      return `<div class="end-bird ${cls}" style="--bird-color:${u.colore}" title="${level === "visto" ? u.nome : "???"}">
+      return `<div class="end-bird ${cls}${u.rara && level === "visto" ? " is-rare" : ""}" style="--bird-color:${u.colore}" title="${level === "visto" ? u.nome : "???"}">
         ${level ? icon(iconaUccello(u)) : "?"}</div>`;
     }).join("")}</div>`).join("");
     document.getElementById("end-body").innerHTML = `
@@ -254,11 +264,10 @@ const Diario = (() => {
           <p class="end-name">Il taccuino di <b class="signature">${escapeHtml(t.explorer)}</b></p>
           <div class="end-grid">${grid}</div>
         </div>
-      </div>
-      <p class="end-code">Codice del taccuino: <b>????-????-????-????</b> <span class="tag">prossimamente</span></p>`;
+      </div>`;
   }
 
-  // L'attestato: un'immagine con il nome, il resoconto e gli uccelli del taccuino
+  // L'attestato: un foglio con il nome, il resoconto e gli uccelli del taccuino, scaricato in PDF
   async function downloadCertificate() {
     const t = trip();
     if (!t) return;
@@ -297,7 +306,7 @@ const Diario = (() => {
     });
 
     // Gli uccelli: una riga per specie, a colori quelli visti, in grigio quelli di cui hai una traccia
-    const x0 = 440, y0 = 262, cw = 72, ch = 60;
+    const x0 = 440, y0 = 256, cw = 72, ch = 56;
     Object.entries(SPECIE).forEach(([sp, info], row) => {
       const y = y0 + row * ch;
       text(info.nome, x0, y - 4, 18, dark, "left");
@@ -305,31 +314,56 @@ const Diario = (() => {
         const x = x0 + col * cw;
         const level = t.birds[u.id]?.level;
         g.fillStyle = ink;
-        g.fillRect(x, y, 40, 40);
+        g.fillRect(x, y, 36, 36);
+        if (u.rara && level === "visto") { g.strokeStyle = "#b8862a"; g.lineWidth = 3; g.strokeRect(x - 2, y - 2, 40, 40); }
         if (level) {
           const path = new Path2D(ICONS[iconaUccello(u)]);
           g.save();
           g.translate(x + 4, y + 4);
-          g.scale(32 / 512, 32 / 512);
+          g.scale(28 / 512, 28 / 512);
           g.fillStyle = level === "visto" ? u.colore : "#4e5a4a";
           g.fill(path);
           g.restore();
         } else {
-          text("?", x + 20, y + 30, 28, "#7aa35a");
+          text("?", x + 18, y + 27, 26, "#7aa35a");
         }
       });
     });
 
-    text("Codice del taccuino: ????-????-????-????  (prossimamente)", W / 2, H - 70, 24, dark);
-    text(`${VERSIONE} · occhi al cielo`, W / 2, H - 42, 20, dark);
+    text(`${VERSIONE} · occhi al cielo`, W / 2, H - 34, 20, dark);
 
-    c.toBlob((blob) => {
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `attestato-${t.explorer.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "esploratore"}.png`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-    });
+    const blob = pdfFromCanvas(c);
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `attestato-${t.explorer.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "esploratore"}.pdf`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+
+  // Un PDF di una pagina (A4 orizzontale) con dentro l'immagine del canvas in JPEG: niente librerie,
+  // il formato regge un'immagine con cinque oggetti
+  function pdfFromCanvas(canvas) {
+    const jpeg = Uint8Array.from(atob(canvas.toDataURL("image/jpeg", 0.92).split(",")[1]), (ch) => ch.charCodeAt(0));
+    const pw = 842, ph = 595;
+    const k = Math.min(pw / canvas.width, ph / canvas.height);
+    const iw = canvas.width * k, ih = canvas.height * k;
+    const draw = `q ${iw.toFixed(2)} 0 0 ${ih.toFixed(2)} ${((pw - iw) / 2).toFixed(2)} ${((ph - ih) / 2).toFixed(2)} cm /Im0 Do Q`;
+    const enc = new TextEncoder();
+    const parts = [];
+    const offsets = [];
+    let size = 0;
+    const add = (chunk) => { const b = typeof chunk === "string" ? enc.encode(chunk) : chunk; parts.push(b); size += b.length; };
+    const obj = (n, body) => { offsets[n] = size; add(`${n} 0 obj\n`); body.forEach(add); add("\nendobj\n"); };
+    add("%PDF-1.4\n");
+    obj(1, ["<< /Type /Catalog /Pages 2 0 R >>"]);
+    obj(2, ["<< /Type /Pages /Kids [3 0 R] /Count 1 >>"]);
+    obj(3, [`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>`]);
+    obj(4, [`<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`, jpeg, "\nendstream"]);
+    obj(5, [`<< /Length ${draw.length} >>\nstream\n${draw}\nendstream`]);
+    const xref = size;
+    add(`xref\n0 6\n0000000000 65535 f \n${offsets.slice(1).map((o) => `${String(o).padStart(10, "0")} 00000 n \n`).join("")}`);
+    add(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+    return new Blob(parts, { type: "application/pdf" });
   }
 
   function escapeHtml(str) {

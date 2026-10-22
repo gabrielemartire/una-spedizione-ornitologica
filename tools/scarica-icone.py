@@ -64,7 +64,7 @@ ICONS = {
     "phoenix": "delapouite/egyptian-bird",
     # Le città: porte delle botteghe, gente, navi, banchina
     "enter": "delapouite/entry-door",
-    "person": "delapouite/person",
+    "person": "delapouite/walk",
     "merchant": "lorc/cowled",
     "sailboat": "delapouite/sailboat",
     "fishboat": "delapouite/fishing-boat",
@@ -81,21 +81,28 @@ ICONS = {
     "compass": "lorc/compass",
     "key": "delapouite/house-keys",
     "egg": "delapouite/raw-egg",
-    # Gli oggetti da trovare e vendere
-    "sword": "lorc/broadsword",
+    # Gli oggetti da trovare e vendere: solo oggetti rituali
     "chalice": "lorc/jeweled-chalice",
     "mask": "delapouite/ceremonial-mask",
     "pendant": "lorc/gem-pendant",
     "vase": "delapouite/porcelain-vase",
-    "coin": "lorc/crown-coin",
-    "map": "lorc/treasure-map",
-    "feathers": "lorc/two-feathers",
-    "skull": "lorc/animal-skull",
-    "lantern": "delapouite/old-lantern",
     "pottery": "delapouite/painted-pottery",
     "statue": "delapouite/colombian-statue",
-    "furs": "delapouite/fur-shirt",
-    "herbs": "delapouite/fern",
+    "venus": "delapouite/venus-of-willendorf",
+    "painting": "delapouite/mona-lisa",
+    # Gli uccelli della specie "altro": uno per icona
+    "kiwi": "delapouite/kiwi-bird",
+    "ostrich": "delapouite/ostrich",
+    "rooster": "delapouite/rooster",
+    "dodo": "caro-asercion/dodo",
+    "crane": "caro-asercion/paper-crane",
+    "goose": "delapouite/goose",
+    # I ricercati: la bacheca, il fuggitivo, la gendarmeria; la Società ornitologica
+    "wanted": "delapouite/wanted-reward",
+    "bandit": "delapouite/bandit",
+    "manacles": "lorc/manacles",
+    "prisoner": "delapouite/prisoner",
+    "birdhouse": "delapouite/bird-house",
 }
 
 BASE = "https://raw.githubusercontent.com/game-icons/icons/master/{}.svg"

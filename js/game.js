@@ -19,9 +19,22 @@ const Gioco = (() => {
   const MERCHANTS = 2;        // mercanti per globo
   const MAX_RUMORS = 2;       // voci di taverna per spedizione (più quelle dei mercanti)
   const RARE_RUMOR = { forte: 1, porto: 0.84, mercante: 1 }; // al porticciolo a volte la voce è su un uccello qualunque
-  const ITEM_CHANCE = 1 / 3;  // un oggetto nella zona; nelle rovine c'è sempre     // momenti persi ricaricando la pagina a terra: un giorno
+  const ITEM_CHANCE = 1 / 3;  // un oggetto nella zona; nelle rovine c'è sempre
+  // I ricercati: un avviso in bacheca al massimo ogni WANTED_EVERY giorni, da prendere entro WANTED_DAYS
+  const WANTED_EVERY = 6;
+  const WANTED_DAYS = 3;
+  const BOUNTY = 15;
+  // Il fuggitivo: ti vede come un animale, spara da vicino ogni `reload` battiti, scappa dal bordo
+  // della mappa solo se sei lontano; damage = mezzi cuori
+  const OUTLAW = { sight: 8, nightSight: 5, hearing: 2, range: 6, reload: 4, damage: 1, escape: 10,
+    death: "Impallinato", deathText: "Il ricercato aveva la mira migliore" };
+  const OUTLAWS = [
+    ["Bartolo il Guercio", "ha svuotato la cassa del dazio"], ["Gegia Tre Dita", "ha venduto la stessa nave a tre capitani"],
+    ["Mastro Ruggine", "ha rubato la campana del Forte"], ["Nando Senzapane", "ha incendiato il granaio"],
+    ["La Vedova Sale", "ha avvelenato il grog della taverna"], ["Zeno lo Storto", "ha falsificato le mappe del porto"],
+  ];
   let lastSave = 0;
-  let mapObserver = null;      // ripartire costa due momenti: si arriva sempre col momento precedente
+  let mapObserver = null;
   const TIME_ICONS = { alba: "sunrise", pomeriggio: "sun", notte: "moon" };
   const SLIDE_MS = 110;       // durata dello scivolamento di una pedina
   const ACT_INTERVAL = 110;   // ms minimi tra due azioni, anche tenendo premuto
@@ -65,7 +78,6 @@ const Gioco = (() => {
     boar: { name: "Cinghiale", icon: "boar", charge: 8, chargeSpeed: 2, sight: 8, nightSight: 6, hearing: 2, damage: 3, rest: 2, sound: "orso", step: "passoOrso",
       verb: "Il cinghiale ti travolge!", death: "Travolto", deathText: "Il cinghiale non ha curvato, tu nemmeno" },
   };
-  const STATES = { wander: "gira", search: "ti cerca", hunt: "ti insegue!", charge: "carica!" };
 
   const TIMES = ["alba", "pomeriggio", "notte"];
 
@@ -383,7 +395,8 @@ const Gioco = (() => {
     return null;
   }
 
-  // Chi c'è in questo momento: di giorno l'orso (più spesso vicino al fiume), di notte i lupi, all'alba il cinghiale
+  // Chi c'è in questo momento: di giorno l'orso, di notte i lupi, all'alba il cinghiale (o l'orso, vicino al
+  // fiume). Una zona senza animali non c'è mai
   function spawnBeasts(gen, zone, time) {
     const r = rng(zone.seed ^ Math.imul(trip.third + 1, 0x9e3779b1));
     const river = zone.tags.has("fiume");
@@ -393,8 +406,8 @@ const Gioco = (() => {
       const at = spots.shift();
       if (at) out.push({ kind, ...at, mode: "wander", last: null, searchLeft: 0, rest: 0, energy: 0, next: null, dir: null, run: 0 });
     };
-    if (time === "pomeriggio" && r() < (river ? 0.85 : 0.4)) add("bear");
-    if (time === "notte" && r() < 0.75) {
+    if (time === "pomeriggio") add("bear");
+    if (time === "notte") {
       const pack = ["taiga", "ghiaccio"].includes(zone.biome) ? 3 : 2;
       // il branco sta unito: gli altri lupi accanto al primo
       const first = spots[0];
@@ -403,7 +416,7 @@ const Gioco = (() => {
     }
     if (time === "alba") {
       if (river && r() < 0.3) add("bear");
-      else if (r() < 0.65) add("boar");
+      else add("boar");
     }
     return out;
   }
@@ -495,6 +508,9 @@ const Gioco = (() => {
       const world = makeWorld(data.seed);
       explorer = data.explorer;
       trip = { hold: [], pack: [], rumors: [], heard: { taverna: 0, mercante: 0 }, ...data, world, stats: { ...data.stats, islands: new Set(data.stats.islands) } };
+      // gli oggetti delle versioni vecchie (spade, piume…) non esistono più: diventano idoli
+      trip.hold = trip.hold.map((it) => (OGGETTI[it.kind] ? it : { kind: "idolo" }));
+      for (const m of Object.values(trip.zones)) if (m.item && !OGGETTI[m.item.kind]) m.item.kind = "idolo";
       s = null;
       initUi();
       const zone = world.zones.find((z) => z.id === trip.landZone);
@@ -523,6 +539,7 @@ const Gioco = (() => {
     for (let i = 0; i < thirds; i++) {
       trip.third++;
       if (trip.third % 3 === 0 && !passDay()) return false;
+      wantedExpired();
     }
     return true;
   }
@@ -556,13 +573,14 @@ const Gioco = (() => {
     // L'oggetto della zona si decide al primo sbarco, e resta lì finché non lo prendi
     const ri = rng(zone.seed ^ 0x17e3);
     if (memory.item === undefined) memory.item = gen.ruin || ri() < ITEM_CHANCE ? { kind: oggettoACaso(ri, !!gen.ruin), taken: false } : null;
-    else ri();
+    // il posto ha un suo generatore: aspettare a bordo non sposta l'oggetto né il mercante
+    const rp = rng(zone.seed ^ 0x2b51);
     const itemSpots = gen.ruin ? [...gen.ruin.interior].map(unkey).filter((c) => gen.map[c.y][c.x] === "floor")
       : gen.free.filter((c) => dist(c, gen.start) >= 8 && DIRS.some(([dx, dy]) => inside(c.x + dx, c.y + dy) && gen.map[c.y + dy][c.x + dx] === "tree"));
-    const itemAt = itemSpots.length ? itemSpots[Math.floor(ri() * itemSpots.length)] : null;
+    const itemAt = itemSpots.length ? itemSpots[Math.floor(rp() * itemSpots.length)] : null;
     const merchant = trip.world.merchants.find((m) => m.zone === zone.id && !memory.traded);
     const merchantSpots = gen.free.filter((c) => dist(c, gen.start) >= 4 && dist(c, gen.start) <= 9 && (!itemAt || !same(c, itemAt)));
-    const merchantAt = merchant && merchantSpots.length ? merchantSpots[Math.floor(ri() * merchantSpots.length)] : null;
+    const merchantAt = merchant && merchantSpots.length ? merchantSpots[Math.floor(rp() * merchantSpots.length)] : null;
     s = {
       zone,
       seed: zone.seed,
@@ -577,6 +595,7 @@ const Gioco = (() => {
       beasts: spawnBeasts(gen, zone, time),
       item: memory.item && !memory.item.taken && itemAt ? { ...itemAt, kind: memory.item.kind } : null,
       merchant: merchantAt ? { ...merchantAt, wants: merchant.wants } : null,
+      fugitive: hideout(gen, zone, itemAt, merchantAt, rp),
       run: 0,
       ticks: 0,
       noise: 0,
@@ -597,24 +616,54 @@ const Gioco = (() => {
     // All'ora sbagliata l'uccello non c'è, ma a volte lascia tracce (i rari no: di quelli si sa solo dalle voci)
     if (bird && !present && !memory.done && !memory.gone) {
       if (!bird.rara && learn(bird, "traccia")) note(`${zone.name}, ${time}: tracce di un uccello. «${bird.indizio}» Forse non è la sua ora.`, "bird");
-      toast("Nessun canto. Forse non è l'ora giusta.");
-    } else if (present) {
-      toast(birdInRuin() ? "Il canto sembra venire da dentro le rovine…" : "Da qualche parte, qui intorno, canta un uccello.");
+      toast("<em>«Nessun canto. Forse non è l'ora giusta.»</em>", true);
     } else if (memory.done) {
       toast("L'uccello di questa zona è già nel taccuino.");
     }
     if (s.merchant) setTimeout(() => s && s.zone === zone && toast("Qualcuno col cappuccio aspetta vicino alla riva."), 3200);
-    const beasts = describeBeasts();
-    if (beasts) setTimeout(() => s && s.zone === zone && toast(beasts), 1600);
+    if (s.fugitive) setTimeout(() => s && s.zone === zone && toast("Odore di fumo: qualcuno ha acceso un fuoco, più in là."), 1600);
     render();
   }
 
-  function describeBeasts() {
-    const kinds = new Set(s.beasts.map((b) => b.kind));
-    if (kinds.has("wolf")) return "Ululati, non lontano.";
-    if (kinds.has("bear")) return "Impronte d'orso nel fango.";
-    if (kinds.has("boar")) return "Terra smossa: un cinghiale.";
-    return null;
+  // Il nascondiglio del ricercato: lontano dalla nave, vicino agli alberi, dove l'avviso lo dà
+  function hideout(gen, zone, itemAt, merchantAt, r) {
+    const w = trip.wanted;
+    if (!w || w.state !== "free" || w.zone !== zone.id) return null;
+    const ok = (c) => dist(c, gen.start) >= 14 && dist(c, gen.bird) >= 4 && (!itemAt || !same(c, itemAt)) && (!merchantAt || !same(c, merchantAt))
+      && c.x < W - 2 && c.y > 1 && c.y < H - 2;
+    const woods = gen.free.filter((c) => ok(c) && DIRS.some(([dx, dy]) => inside(c.x + dx, c.y + dy) && gen.map[c.y + dy][c.x + dx] === "tree"));
+    const spots = woods.length ? woods : gen.free.filter(ok);
+    if (!spots.length) return null;
+    return { ...spots[Math.floor(r() * spots.length)], mode: "camp", reload: 0, energy: 0 };
+  }
+
+  // --- I ricercati: l'avviso in bacheca, la cattura, la taglia ---
+
+  // L'avviso che si troverebbe ora in bacheca, se non ce n'è già uno in corso o appena preso
+  function wantedPoster() {
+    if (trip.wanted || (trip.wantedDay != null && day() - trip.wantedDay < WANTED_EVERY)) return null;
+    const cities = new Set(trip.world.cities.map((c) => c.zone));
+    const zones = trip.world.zones.filter((z) => !cities.has(z.id));
+    if (!zones.length) return null;
+    const zone = zones[Math.floor(Math.random() * zones.length)];
+    const [name, crime] = OUTLAWS[Math.floor(Math.random() * OUTLAWS.length)];
+    return { zone: zone.id, name, crime };
+  }
+
+  function acceptWanted(poster) {
+    const zone = trip.world.zones[poster.zone];
+    trip.wanted = { ...poster, until: trip.third + WANTED_DAYS * 3, state: "free" };
+    trip.wantedDay = day();
+    note(`Ricercato: ${poster.name}, nascosto a ${zone.name}. Segnato sul globo con una W. Hai ${WANTED_DAYS} giorni.`, "wanted");
+  }
+
+  // Passato il tempo, il ricercato ancora libero lascia l'arcipelago
+  function wantedExpired() {
+    const w = trip.wanted;
+    if (!w || w.state !== "free" || trip.third < w.until) return;
+    trip.wanted = null;
+    note(`${w.name} ha lasciato l'arcipelago. L'avviso è scaduto.`, "wanted");
+    if (s && s.fugitive) { s.fugitive = null; el.ents.fugitive.hidden = true; }
   }
 
   // Le città sono battlemap a parte (js/citta.js), con le botteghe lungo la strada
@@ -662,7 +711,7 @@ const Gioco = (() => {
   function drawPostcard() {
     if (!s) return;
     el.postcard.classList.remove("is-scope");
-    Cartolina.render({ seed: s.seed, tags: s.tags, time: s.time, bird: s.bird.present && !s.bird.gone && !s.bird.observed }, el.postcard);
+    Cartolina.render({ seed: s.seed, tags: s.tags, time: s.time, bird: s.bird.present && !s.bird.gone && !s.bird.observed, smoke: !!s.fugitive }, el.postcard);
   }
 
   // Il diario annota solo le cose utili; il resto è un avviso che sparisce
@@ -671,9 +720,10 @@ const Gioco = (() => {
     Diario.renderStrip();
   }
 
-  function toast(msg) {
+  function toast(msg, html = false) {
     if (!el) return;
-    el.toast.textContent = msg;
+    if (html) el.toast.innerHTML = msg;
+    else el.toast.textContent = msg;
     el.toast.hidden = false;
     el.toast.classList.remove("is-in");
     void el.toast.offsetWidth;
@@ -682,8 +732,14 @@ const Gioco = (() => {
     el.toastTimer = setTimeout(() => { el.toast.hidden = true; }, 2600);
   }
 
+  // Le finanze: ogni moneta che esce (ciurma, botteghe, rapine) e ogni moneta che entra (vendite, premi, taglie)
   function pay(what, amount) {
     trip.payments.unshift({ day: day(), time: now(), what, amount });
+  }
+
+  function earn(what, amount) {
+    trip.money += amount;
+    trip.payments.unshift({ day: day(), time: now(), what, amount, in: true });
   }
 
   // Quanto sai di un uccello: niente, una traccia, oppure l'hai visto. Torna true se è una novità.
@@ -693,10 +749,6 @@ const Gioco = (() => {
     if (before && order[before.level] >= order[level]) return false;
     trip.birds[bird.id] = { level, zone: s.zone.name, day: day(), time: now() };
     return true;
-  }
-
-  function birdInRuin() {
-    return !!s && !!s.ruin && s.bird.present && !s.bird.gone && s.ruin.interior.has(key(s.bird));
   }
 
   function insideRuin() {
@@ -730,7 +782,7 @@ const Gioco = (() => {
   }
 
   function occupied(c) {
-    return s.beasts.some((o) => same(o, c)) || (birdActive() && same(s.bird, c)) || (!!s.merchant && same(s.merchant, c));
+    return s.beasts.some((o) => same(o, c)) || (birdActive() && same(s.bird, c)) || (!!s.merchant && same(s.merchant, c)) || (!!s.fugitive && same(s.fugitive, c));
   }
 
   // Tenere premuto è correre: ogni tre passi di fila il rumore sale di uno, fino a tre
@@ -744,6 +796,7 @@ const Gioco = (() => {
     const t = tile(s.map, n.x, n.y);
     if (t.gate) { toast("Il ponte levatoio è alzato. Entrare nel castello? Un'altra volta."); return false; }
     if (s.merchant && same(s.merchant, n)) { meetMerchant(); return false; }
+    if (s.fugitive && same(s.fugitive, n)) { capture(); return true; }
     if (!t.walk || occupied(n)) return false;
     s.run = held ? s.run + 1 : 0;
     if (s.run === RUN_STEP && !trip.ranOnce) { trip.ranOnce = true; toast("Stai correndo: fai più rumore."); }
@@ -758,6 +811,7 @@ const Gioco = (() => {
     s.noise = t.noise ? t.noise + (s.time === "notte" ? 1 : 0) + runNoise() : 0;
     if (s.item && same(s.item, n)) pickUp();
     s.heard.push({ ...n, r: s.noise });
+    if (s.fugitive && Math.abs(s.fugitive.x - n.x) + Math.abs(s.fugitive.y - n.y) <= 1) { capture(); return true; }
 
     // L'uccello reagisce subito: troppo vicino o troppo rumore
     const b = s.bird;
@@ -829,10 +883,12 @@ const Gioco = (() => {
     }
   }
 
-  // Il mondo avanza di un battito: l'uccello, gli animali
+  // Il mondo avanza di un battito: l'uccello, il ricercato, gli animali
   function tick() {
     s.ticks++;
     birdTick();
+    fugitiveTick();
+    if (s.over) return;
     for (const o of s.beasts) {
       if (s.over) return;
       if (o.kind === "boar") boarTick(o);
@@ -897,6 +953,75 @@ const Gioco = (() => {
     }
     Object.assign(b, pickRandom(spots));
     toast(`${reason}: l'uccello vola in un altro punto.`);
+  }
+
+  // --- Il ricercato: sta al suo fuoco finché non ti vede o ti sente, poi scappa e ti spara ---
+
+  function fugitiveSees(f) {
+    const p = s.player, d = dist(f, p);
+    if (hidden()) return d < 1.5;
+    return d <= (s.time === "notte" ? OUTLAW.nightSight : OUTLAW.sight) && los(s.map, f, p);
+  }
+
+  function fugitiveTick() {
+    const f = s.fugitive;
+    if (!f) return;
+    const p = s.player;
+    const seen = fugitiveSees(f);
+    if (f.mode === "camp") {
+      if (!seen && !s.heard.some((n) => n.r > 0 && dist(f, n) <= n.r + OUTLAW.hearing)) return;
+      f.mode = "flee";
+      f.reload = 1;
+      toast("Il ricercato ti ha visto: scappa!");
+    }
+    if (f.reload) f.reload--;
+    // da vicino, se ti vede, spara invece di correre: alberi e rocce fermano il colpo, i cespugli ti nascondono
+    if (seen && !f.reload && dist(f, p) <= OUTLAW.range) {
+      f.reload = OUTLAW.reload;
+      p.hp = Math.max(0, p.hp - OUTLAW.damage);
+      trip.stats.hits++;
+      Suoni.play("petardo");
+      el.map.classList.remove("is-hit");
+      void el.map.offsetWidth;
+      el.map.classList.add("is-hit");
+      toast(`Il ricercato ti spara! −${OUTLAW.damage} vita.`);
+      if (!p.hp) die("fugitive");
+      return;
+    }
+    // scappa un passo per battito; se corri tu, due ogni tre
+    f.energy += s.run >= RUN_STEP ? 2 / 3 : 1;
+    const steps = [];
+    while (f.energy >= 1) {
+      f.energy -= 1;
+      const around = DIRS.map(([dx, dy]) => ({ x: f.x + dx, y: f.y + dy }))
+        .filter((c) => inside(c.x, c.y) && beastCost(c) === 1 && !s.beasts.some((o) => same(o, c)) && !same(c, p));
+      const best = around.sort((a, b) => dist(b, p) - dist(a, p))[0];
+      if (!best || dist(best, p) < dist(f, p)) break;
+      Object.assign(f, best);
+      steps.push(best);
+      if (birdActive() && dist(f, s.bird) <= 2) scare("Il ricercato è passato troppo vicino");
+    }
+    f.energy = Math.min(f.energy, 1);
+    slide(f, steps);
+    // sul bordo della mappa, se sei lontano, sparisce tra gli alberi
+    const edge = f.x === W - 1 || f.y === 0 || f.y === H - 1;
+    if (edge && dist(f, p) > OUTLAW.escape) {
+      s.fugitive = null;
+      el.ents.fugitive.hidden = true;
+      trip.wanted = null;
+      note(`${s.zone.name}: il ricercato è scappato. L'avviso è perso.`, "wanted");
+      toast("Il ricercato è sparito oltre il bosco. Addio taglia.");
+    }
+  }
+
+  // Preso: legato e portato in stiva, da consegnare alla gendarmeria del Forte
+  function capture() {
+    s.fugitive = null;
+    el.ents.fugitive.hidden = true;
+    trip.wanted.state = "caught";
+    Suoni.play("tonfo");
+    note(`${s.zone.name}: preso ${trip.wanted.name}! In stiva, da consegnare alla gendarmeria del Forte.`, "manacles");
+    toast(`Preso! ${trip.wanted.name} finisce in stiva.`);
   }
 
   // --- Animali che inseguono: orso e lupi ---
@@ -981,7 +1106,7 @@ const Gioco = (() => {
         if (o.mode === "hunt" && o.energy >= 1) { slide(o, steps); return attack(o); }
         break;
       }
-      if (o.energy < beastCost(c) || s.beasts.some((other) => other !== o && same(other, c))) break;
+      if (o.energy < beastCost(c) || s.beasts.some((other) => other !== o && same(other, c)) || (s.fugitive && same(s.fugitive, c))) break;
       o.energy -= beastCost(c);
       o.x = c.x;
       o.y = c.y;
@@ -1085,6 +1210,8 @@ const Gioco = (() => {
     s.over = true;
     trip.hp = s.player.hp;
     const b = s.bird;
+    // l'hai incrociato senza osservarlo: nel taccuino il nome e dove vive, ma non il disegno
+    if (birdActive() && !b.info.rara) learn(b.info, "traccia");
     const esito = b.observed ? `Il <strong>${b.info.nome}</strong> è nel taccuino.`
       : b.gone ? "L'uccello è volato via. Andrà meglio altrove."
       : trip.zones[s.zone.id].done ? "Questa zona non ha altro da mostrarti."
@@ -1120,7 +1247,7 @@ const Gioco = (() => {
   }
 
   function die(kind) {
-    const k = KINDS[kind];
+    const k = KINDS[kind] || OUTLAW;
     endTrip({ kind: "death", title: k.death, text: `${k.deathText}, al giorno ${day()}, ${now()}.` });
   }
 
@@ -1234,6 +1361,9 @@ const Gioco = (() => {
     el.ents.merchant = pawn("e-merchant", "merchant");
     el.ents.merchant.hidden = !s.merchant;
     if (s.merchant) place(el.ents.merchant, s.merchant);
+    el.ents.fugitive = pawn("e-fugitive", "bandit");
+    el.ents.fugitive.hidden = !s.fugitive;
+    if (s.fugitive) { place(el.ents.fugitive, s.fugitive); s.fugitive.el = el.ents.fugitive; s.fugitive.slideEnd = 0; }
     for (const o of s.beasts) {
       o.el = pawn(`e-beast e-${o.kind}`, KINDS[o.kind].icon);
       o.slideEnd = 0;
@@ -1327,6 +1457,11 @@ const Gioco = (() => {
       if (intent) o.el.dataset.intent = intent;
       else delete o.el.dataset.intent;
     }
+    const f = s.fugitive;
+    if (f) {
+      if (performance.now() >= f.slideEnd) place(f.el, f);
+      if (f.mode === "flee") f.el.dataset.intent = "!";
+    }
     el.ents.bird.hidden = !b.present || b.gone || roofed.has(key(b));
     el.ents.bird.classList.toggle("is-observed", b.observed);
     place(el.ents.bird, b);
@@ -1335,7 +1470,7 @@ const Gioco = (() => {
     Diario.renderStrip();
   }
 
-  // Il riquadro B: il momento del giorno, soldi, vita e, a terra, rumore e animali
+  // Il riquadro B: il momento del giorno, soldi, vita e, a terra, rumore e se sei nascosto
   function renderStatus() {
     // ogni tanto si salva, così anche un refresh improvviso perde al massimo un paio di secondi
     if (performance.now() - lastSave > 2000) { lastSave = performance.now(); save(); }
@@ -1356,11 +1491,6 @@ const Gioco = (() => {
       html += `
       <div><span>Rumore</span><b>${noise}</b></div>
       <div><span>Nascosto</span><b>${hidden() ? "sì" : s.run >= RUN_STEP ? "no, corri" : "no"}</b></div>`;
-      for (const o of s.beasts) {
-        const state = o.rest ? (o.kind === "boar" ? "stordito" : "si riposa") : STATES[o.mode] || "gira";
-        html += `<div>${iconHtml(KINDS[o.kind].icon)}<span>${KINDS[o.kind].name}</span><b>${state}</b></div>`;
-      }
-      if (!s.beasts.length) html += "<div><span>Animali</span><b>nessuno in vista</b></div>";
     } else {
       html += trip.mode === "city" ? Citta.statusRows() : Mare.statusRows();
     }
@@ -1416,10 +1546,11 @@ const Gioco = (() => {
 
   // Quello che serve alla navigazione (js/sea.js) e al diario (js/diario.js)
   return {
-    start, resume, save, hasSave: () => !!loadSave(), clearSave, loadNotebook, depart, landAt, rumor, pay, visitCity, advance, renderStatus, note, toast, timeOf, now, day, showView, iconHtml, fitMap,
+    start, resume, save, hasSave: () => !!loadSave(), clearSave, loadNotebook, depart, landAt, rumor, pay, earn, visitCity,
+    wantedPoster, acceptWanted, advance, renderStatus, note, toast, timeOf, now, day, showView, iconHtml, fitMap,
     get trip() { return trip; },
     get el() { return el; },
     get explorer() { return explorer; },
-    MAX_HP, CREW_PAY, TIME_ICONS, TIMES,
+    MAX_HP, CREW_PAY, TIME_ICONS, TIMES, BOUNTY, WANTED_DAYS,
   };
 })();

@@ -1,4 +1,5 @@
-// Gli uccelli del taccuino: 8 specie (con la loro icona) e 51 varianti (con i loro colori).
+// Gli uccelli del taccuino: 8 specie (con la loro icona) e 51 varianti (con i loro colori),
+// più 6 uccelli singoli nella specie "altro", ognuno con la sua icona.
 // Ogni variante vive in un bioma (o ovunque), a volte vuole una caratteristica della zona,
 // e si fa vedere solo in certi momenti del giorno. Ogni specie ha un uccello raro, che si trova
 // solo seguendo una voce. Gli id non cambiano mai: il codice del taccuino si baserà su di essi.
@@ -12,6 +13,8 @@ const SPECIE = {
   colibri: { nome: "Colibrì d'ambra", latino: "Trochilus ambrinus", icona: "bird" },
   gabbiano: { nome: "Gabbiano di tempesta", latino: "Larus procellae", icona: "seagull" },
   fenice: { nome: "Fenice", latino: "Phoenix minor", icona: "phoenix" },
+  // uccelli singoli, ognuno con la sua icona e senza un raro
+  altro: { nome: "Altri uccelli", latino: "Aves variae", icona: "bird" },
 };
 
 // colore: il piumaggio; rara: si trova solo con una voce, non lascia tracce a terra
@@ -128,9 +131,22 @@ const UCCELLI = [
     "Due punti rossi nel buio delle rovine.", "Gli occhi valgono più di una nave, dicono."),
   u(50, "fenice", "Fenice eterna", "#f4702a", ["notte"], null, "vulcano",
     "Una piuma ancora calda, vicino alla lava.", "Nessuno l'ha mai vista spegnersi.", { latino: "Phoenix minor aeterna", rara: true }),
+
+  u(51, "altro", "Kiwi notturno", "#8a6a44", ["notte"], "foresta", null,
+    "Buchetti nel terriccio, come di un becco lungo.", "Non vola, e non sembra dispiacersene.", { latino: "Apteryx nocturna", icona: "kiwi" }),
+  u(52, "altro", "Corridore delle dune", "#b89a6a", ["alba"], "deserto", null,
+    "Impronte lunghissime, a passo di corsa.", "Corre più veloce della sua ombra.", { latino: "Struthio cursor", icona: "ostrich" }),
+  u(53, "altro", "Gallo del villaggio", "#c8502a", ["alba"], null, "villaggio",
+    "Un chicchirichì dietro le case.", "Canta all'alba, e anche quando non serve.", { latino: "Gallus vicanus", icona: "rooster" }),
+  u(54, "altro", "Dodo", "#8a8a9a", ["pomeriggio"], "tropicale", null,
+    "Gusci di frutta beccati, sotto le palme.", "Si fida di tutti. Troppo.", { latino: "Raphus fiducialis", icona: "dodo" }),
+  u(55, "altro", "Gru di carta", "#e8e0d0", ["alba"], "palude", null,
+    "Una piega bianca tra le canne.", "Leggera come un foglio, e piegata con cura.", { latino: "Grus chartacea", icona: "crane" }),
+  u(56, "altro", "Oca del lago", "#d8d8c8", ["pomeriggio"], null, "lago",
+    "Starnazzi sulla riva del lago.", "Fa la guardia meglio di un cane.", { latino: "Anser lacustris", icona: "goose" }),
 ];
 
-const iconaUccello = (u) => SPECIE[u.specie].icona;
+const iconaUccello = (u) => u.icona || SPECIE[u.specie].icona;
 
 // Dove vive, a parole: il bioma e la caratteristica che cerca
 const habitatUccello = (u) => [u.bioma ? BIOMI[u.bioma].nome : null, u.tratto].filter(Boolean).join(", ") || "ovunque";

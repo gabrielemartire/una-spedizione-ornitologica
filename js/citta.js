@@ -1,9 +1,10 @@
 // Le città sono battlemap senza animali: la banchina con le navi, le strade, le case e la gente
 // che va e viene. La città è disegnata in pixel art vista dall'alto (tetti a falde, ciottoli,
 // mura); sopra restano solo le cose con cui si interagisce, ben visibili: le porte delle botteghe
-// (→) con la loro insegna, i barili, le persone. Davanti a una porta, in basso, un cartellino dice
-// cos'è. Il Forte è grande e murato, con il castello e la chiesa; il porticciolo del fiordo, su
-// un'isola di ghiaccio, è più piccolo e ha il falegname, che lavora sulla banchina.
+// (→) con la loro insegna, i barili, la bacheca dei ricercati, le persone. Davanti a una porta, in
+// basso, un cartellino dice cos'è. Il Forte è grande e murato, con il castello, la chiesa, la
+// gendarmeria e la Società ornitologica; il porticciolo del fiordo, su un'isola di ghiaccio, è più
+// piccolo e ha il falegname, che lavora sulla banchina.
 // In città il tempo non passa, tranne dormendo in taverna.
 // Espone l'oggetto globale `Citta`.
 const Citta = (() => {
@@ -15,6 +16,8 @@ const Citta = (() => {
   const NPC_RANGE = 2;        // quanto si allontana da dove sta
   const TYPE_MS = 32;         // la velocità con cui compaiono le parole di chi parla
   const EVENT_CHANCE = 0.6;   // a ogni visita, qualcuno col punto esclamativo
+  const WANTED_CHANCE = 0.6;  // a ogni visita, un avviso nuovo in bacheca (se non ce n'è uno in corso)
+  const SOCIETY_PRIZE = 8;    // il premio della Società per ogni specie completata (tutti i comuni)
   const ROB = [2, 4];         // quanto ti può rubare
 
   // walk: ci si cammina; i nomi servono a dire cosa c'è nella casella
@@ -28,6 +31,7 @@ const Citta = (() => {
     church: { name: "La chiesa" }, bell: { name: "Il campanile" }, well: { name: "Pozzo" }, stall: { name: "Bancarella" },
     crate: { name: "Casse" },
     barrel: { name: "Barile", icon: "barrel", talk: true },
+    board: { name: "Bacheca dei ricercati", icon: "wanted", talk: true },
     door: { name: "Porta", walk: true, icon: "enter" },
   };
 
@@ -38,6 +42,8 @@ const Citta = (() => {
       taverna: { cost: 11 },
       mercato: { price: 2, refuse: [] },
       emporio: {},
+      gendarmeria: {},
+      societa: {},
     },
     porto: {
       medico: { cost: 3, cap: Gioco.MAX_HP + 2 }, // cinque cuori e uno in più, che il Forte non ripristina
@@ -46,20 +52,23 @@ const Citta = (() => {
       emporio: {},
     },
   };
+  // il nome e l'icona dell'insegna sul tetto (game-icons.net)
   const SHOP_INFO = {
     medico: ["Medico", "medicine"], taverna: ["Taverna", "tankard"], mercato: ["Mercato", "shop"],
-    emporio: ["Emporio", "locked"],
+    emporio: ["Emporio", "locked"], gendarmeria: ["Gendarmeria", "manacles"], societa: ["Società ornitologica", "birdhouse"],
   };
 
   const GROG = "«Il grog è un miscuglio segreto che contiene una o più di queste sostanze: cherosene, glicol propilene, dolcificanti artificiali, acido solforico, rum, acetone, colorante rosso n.2, detriti, grasso per motore, acido per la batteria e/o peperone. Come puoi ben immaginare è una delle sostanze più caustiche e volatili conosciute dall'uomo.»";
 
   // Il falegname e il roditore: la conversazione non si salta, si sceglie solo la battuta (che è una)
   const RODITORE = [
+    ["lui", "Heilà!"],
     ["io", "Quanto legno potrebbe rodere un roditore, se un roditore potesse rodere il legno?"],
     ["lui", "Un roditore non potrebbe rodere nessun legno, visto che un roditore non può rodere il legno."],
     ["io", "Ma se un roditore potesse rodere e rodesse un po' di legno, quanto legno roderebbe un roditore?"],
     ["lui", "Anche se un roditore potesse rodere il legno, e anche se un roditore rodesse il legno, dovrebbe un roditore rodere il legno?"],
     ["io", "Un roditore dovrebbe rodere se un roditore potesse rodere il legno, e se un roditore volesse rodere."],
+    ["lui", "Ah, ecco. Grazie, ora è tutto chiaro. Torna quando vuoi!"],
   ];
 
   let c = null;   // la città in cui sei: mappa, edifici, gente, botteghe
@@ -207,6 +216,9 @@ const Citta = (() => {
     placeShop(m, "taverna", { x: 16, y: 15 }, roads);
     placeShop(m, "mercato", { x: 22, y: 10 }, roads);
     placeShop(m, "emporio", { x: 31, y: 16 }, roads);
+    placeShop(m, "gendarmeria", { x: 26, y: 20 }, roads);
+    placeShop(m, "societa", { x: 24, y: 8 }, roads);
+    set(6, 6, "board"); // la bacheca dei ricercati, sulla banchina
     if (m.doors.taverna) {
       const f = m.doors.taverna.front;
       for (const [dx, dy] of DIRS) if (m.map[f.y + dy]?.[f.x + dx] === "road" && r() < 0.5) { set(f.x + dx, f.y + dy, "barrel"); break; }
@@ -251,6 +263,7 @@ const Citta = (() => {
     placeShop(m, "taverna", { x: 10, y: 9 }, roads);
     placeShop(m, "mercato", { x: 10, y: 13 }, roads);
     placeShop(m, "emporio", { x: 10, y: 19 }, roads);
+    set(8, 10, "board"); // la bacheca dei ricercati, sulla banchina
     const ship = { x: 6, y: 12 };
     vessel(m, "hull", 3, ship.y - 4, 3, 9);
     set(ship.x, ship.y, "ship");
@@ -374,8 +387,6 @@ const Citta = (() => {
         for (let y = 0; y < 3; y++) for (let x = 1; x < 6; x++) put(Math.round(midX) + x, by0 + 4 + y, "#c8302a");
       }
     }
-    // le insegne sui tetti, in pixel art
-    for (const [kind, d] of Object.entries(c.doors)) drawSprite(SIGNS[kind], d.sign.x * PX, d.sign.y * PX, put);
     g.putImageData(img, 0, 0);
     return cv;
   }
@@ -437,22 +448,6 @@ const Citta = (() => {
     put(x0 + Math.round(cx), y0 + h - 3, "#f2c230");
   }
 
-  // Le insegne, 8×8: la croce rossa del medico, il boccale della taverna, la coscia di pollo del
-  // mercato, la bussola dell'emporio
-  const SIGN_COL = { K: "#2a1a10", b: "#7a5430", W: "#f2ece0", R: "#c8302a", F: "#fbf6e6", Y: "#e0a030", y: "#f2c860", H: "#b07820",
-    M: "#b0602a", m: "#d88a4a", G: "#d8b040", d: "#1e2a34" };
-  const SIGNS = {
-    medico: ["KKKKKKKK", "KWWRRWWK", "KWWRRWWK", "KRRRRRRK", "KRRRRRRK", "KWWRRWWK", "KWWRRWWK", "KKKKKKKK"],
-    taverna: ["KKKKKKKK", "KbFFFFbK", "KbYyYYHK", "KbYyYbHK", "KbYyYYHK", "KbYyYYbK", "KbYYYYbK", "KKKKKKKK"],
-    mercato: ["KKKKKKKK", "KbbbMMbK", "KbbMmMMK", "KbbMmMMK", "KbbMMMbK", "KbWMbbbK", "KWbWbbbK", "KKKKKKKK"],
-    emporio: ["KKKKKKKK", "KbGGGGbK", "KGddRdGK", "KGddRdGK", "KGdWddGK", "KGdWddGK", "KbGGGGbK", "KKKKKKKK"],
-  };
-
-  function drawSprite(rows, x0, y0, put) {
-    if (!rows) return;
-    rows.forEach((row, y) => [...row].forEach((ch, x) => { if (SIGN_COL[ch]) put(x0 + x, y0 + y, SIGN_COL[ch]); }));
-  }
-
   // --- Entrare e uscire ---
 
   function enter(city) {
@@ -470,6 +465,8 @@ const Citta = (() => {
     }
     // a volte qualcuno col punto esclamativo: ti aspetta fermo, e non si sa mai cosa vuole
     if (ra() < EVENT_CHANCE && c.npcs.length) c.npcs[0].event = true;
+    // la bacheca: un avviso nuovo a volte, mai più di uno ogni qualche giorno
+    c.poster = ra() < WANTED_CHANCE ? Gioco.wantedPoster() : null;
     // il falegname non si muove dal suo posto
     if (plan.carpenter) c.npcs.push({ ...plan.carpenter, carpenter: true });
     Gioco.showView("city");
@@ -511,8 +508,10 @@ const Citta = (() => {
         d.dataset.x = x;
         d.dataset.y = y;
         const t = tileAt(x, y);
-        d.className = `cell cc ${t.walk ? "walk" : "block"}${t.icon ? ` cc-${c.map[y][x]}` : ""}`;
-        if (t.icon) d.innerHTML = Gioco.iconHtml(t.icon);
+        // l'insegna della bottega sta sul tetto, sopra la porta: l'icona del mestiere
+        const sign = Object.entries(c.doors).find(([, dd]) => same(dd.sign, { x, y }))?.[0];
+        d.className = `cell cc ${t.walk ? "walk" : "block"}${t.icon ? ` cc-${c.map[y][x]}` : ""}${sign ? " cc-sign" : ""}`;
+        if (t.icon || sign) d.innerHTML = Gioco.iconHtml(sign ? SHOP_INFO[sign][1] : t.icon);
         el.map.appendChild(d);
         el.cells[y].push(d);
       }
@@ -569,6 +568,7 @@ const Citta = (() => {
     const t = tileAt(p.x, p.y);
     Gioco.el.tileInfo.textContent = shop ? `${SHOP_INFO[shop][0]} · entra dalla porta` : t === TILES.ship ? "La tua nave · riparti"
       : c.carpenter && same(c.carpenter, p) ? "Il falegname · parlaci"
+      : t === TILES.board ? `${t.name} · leggi gli avvisi`
       : t.talk ? `${t.name} · c'è una nota` : `${t.name} · ${t.walk ? "si passa" : "non si passa"}`;
   }
 
@@ -587,7 +587,7 @@ const Citta = (() => {
       if (!c.walkable.includes(c.map[p.y][p.x])) return;
       Object.assign(npc, p);
     }
-    if (t.talk) { readBarrel(); return; }
+    if (t.talk) { if (t === TILES.board) readBoard(); else readBarrel(); return; }
     if (!t.walk) return;
     c.prev = { ...p };
     Object.assign(p, to);
@@ -610,6 +610,8 @@ const Citta = (() => {
     if (kind === "medico") return `cura le ferite${shop.cap > Gioco.MAX_HP ? " e dà un cuore in più" : ""} · ${shop.cost} m.o.`;
     if (kind === "taverna") return `si dorme fino all'alba e si sentono storie · ${shop.cost} m.o.`;
     if (kind === "mercato") return `compra la merce della stiva · ${shop.price} m.o. al pezzo`;
+    if (kind === "gendarmeria") return `paga le taglie dei ricercati · ${Gioco.BOUNTY} m.o.`;
+    if (kind === "societa") return `premia chi completa una specie · ${SOCIETY_PRIZE} m.o.`;
     return "chiuso";
   }
 
@@ -617,6 +619,8 @@ const Citta = (() => {
     const p = c.player;
     const front = Object.entries(c.doors).find(([, d]) => same(d.front, p));
     if (front) { const [kind, d] = front; hint(`<b>${SHOP_INFO[kind][0]}</b> · ${shopLine(kind)} <kbd>${way(p, d)}</kbd> entra`); return; }
+    const board = DIRS.map(([dx, dy]) => ({ x: p.x + dx, y: p.y + dy })).find((q) => inside(q.x, q.y) && c.map[q.y][q.x] === "board");
+    if (board) { hint(`<b>Bacheca dei ricercati</b> · ${c.poster && !Gioco.trip.wanted ? "c'è un avviso nuovo" : "avvisi vecchi"} <kbd>${way(p, board)}</kbd> leggi`); return; }
     const k = c.carpenter && Math.abs(c.carpenter.x - p.x) + Math.abs(c.carpenter.y - p.y) === 1;
     hint(k ? `<b>Falegname</b> · ripara le barche, ha l'aria di uno che parla volentieri <kbd>${way(p, c.carpenter)}</kbd> parla` : null);
   }
@@ -633,6 +637,7 @@ const Citta = (() => {
     c.open = null;
     c.typing = null;
     Gioco.el.overlay.hidden = true;
+    Gioco.el.overlay.classList.remove("is-talk");
     if (c.prev && doorAt(c.player)) Object.assign(c.player, c.prev);
     render();
     nearby();
@@ -645,6 +650,7 @@ const Citta = (() => {
   function dialog(title, text, buttons, { voice = true } = {}) {
     c.open = "dialog";
     const ov = Gioco.el.overlay;
+    ov.classList.remove("is-talk");
     ov.innerHTML = `<h3>${title}</h3><p class="talk-text"></p>
       <nav class="menu" hidden>${buttons.filter(Boolean).map(([action, label]) => `<button class="menu-item" data-city-action="${action}">${label}</button>`).join("")}</nav>`;
     ov.hidden = false;
@@ -669,6 +675,70 @@ const Citta = (() => {
     };
     c.typing = { finish: end, skippable: c.open !== "falegname" };
     tick();
+  }
+
+  // La bacheca dei ricercati: l'avviso in corso, oppure uno nuovo da accettare
+  function readBoard() {
+    const trip = Gioco.trip, w = trip.wanted;
+    const zoneName = (id) => trip.world.zones[id].name;
+    if (w && w.state === "caught") {
+      dialog("La bacheca", `Il tuo avviso è ancora appeso: ${w.name}. Ce l'hai in stiva: portalo alla gendarmeria del Forte.`, [["back", "Va bene"]], { voice: false });
+    } else if (w) {
+      const left = Math.max(1, Math.ceil((w.until - trip.third) / 3));
+      dialog("La bacheca", `Il tuo avviso: ${w.name}, che ${w.crime}. Si nasconde a ${zoneName(w.zone)} (la W sul globo). Ancora ${left} giorn${left === 1 ? "o" : "i"}.`, [["back", "Va bene"]], { voice: false });
+    } else if (c.poster) {
+      const pz = c.poster;
+      dialog("La bacheca", `RICERCATO: ${pz.name}, che ${pz.crime}. Lo hanno visto a ${zoneName(pz.zone)}: dove sale il fumo del suo fuoco. Taglia di ${Gioco.BOUNTY} m.o., da riscuotere alla gendarmeria del Forte. Avete ${Gioco.WANTED_DAYS} giorni.`, [
+        ["wanted", "Stacca l'avviso e accetta"],
+        ["back", "Lascia stare"],
+      ], { voice: false });
+    } else {
+      dialog("La bacheca", "Avvisi vecchi e strappati. Niente di nuovo: torna fra qualche giorno.", [["back", "Lascia stare"]], { voice: false });
+    }
+  }
+
+  function acceptWanted() {
+    Gioco.acceptWanted(c.poster);
+    c.poster = null;
+    Suoni.play("pagina");
+    Gioco.toast("L'avviso è nel diario. Sul globo, una W rossa.");
+    back();
+  }
+
+  // La gendarmeria: chi ha preso il ricercato riscuote la taglia
+  function gendarmeria() {
+    const trip = Gioco.trip, w = trip.wanted;
+    if (w && w.state === "caught") {
+      trip.wanted = null;
+      Gioco.earn(`taglia: ${w.name}`, Gioco.BOUNTY);
+      Suoni.play("monete");
+      Gioco.note(`Consegnato ${w.name} alla gendarmeria: +${Gioco.BOUNTY} m.o.`, "manacles");
+      Gioco.renderStatus();
+      dialog("Gendarmeria", `«Ah, ${w.name}! Finalmente. Ecco la taglia: ${Gioco.BOUNTY} m.o.»`, [["back", "Esci"]]);
+    } else if (w) {
+      dialog("Gendarmeria", `«${w.name} è ancora libero. Si nasconde a ${trip.world.zones[w.zone].name}: sbrigatevi.»`, [["back", "Esci"]]);
+    } else {
+      dialog("Gendarmeria", "«Nessuno da consegnare? Guardate la bacheca sulla banchina: c'è sempre qualcuno da prendere.»", [["back", "Esci"]]);
+    }
+  }
+
+  // La Società ornitologica: un premio per ogni specie di cui hai visto tutti gli uccelli comuni
+  function societa() {
+    const trip = Gioco.trip;
+    trip.society ||= [];
+    const done = Object.keys(SPECIE).filter((sp) => !trip.society.includes(sp)
+      && UCCELLI.filter((u) => u.specie === sp && !u.rara).every((u) => trip.birds[u.id]?.level === "visto"));
+    if (done.length) {
+      trip.society.push(...done);
+      const names = done.map((sp) => SPECIE[sp].nome).join(", ");
+      Gioco.earn(`premio Società: ${names}`, done.length * SOCIETY_PRIZE);
+      Suoni.play("monete");
+      Gioco.note(`La Società ornitologica premia ${names}: +${done.length * SOCIETY_PRIZE} m.o.`, "birdhouse");
+      Gioco.renderStatus();
+      dialog("Società ornitologica", `«Magnifico! ${names}: tutti nel vostro taccuino. La Società vi riconosce ${done.length * SOCIETY_PRIZE} m.o.»`, [["back", "Esci"]]);
+    } else {
+      dialog("Società ornitologica", `«Completate una specie, cioè tutti i suoi uccelli comuni, e la Società vi darà ${SOCIETY_PRIZE} m.o. Il taccuino dice dove cercarli.»`, [["back", "Esci"]]);
+    }
   }
 
   function readBarrel() {
@@ -725,6 +795,10 @@ const Citta = (() => {
         ...items,
         ["back", "Esci"],
       ]);
+    } else if (kind === "gendarmeria") {
+      gendarmeria();
+    } else if (kind === "societa") {
+      societa();
     } else {
       dialog("Emporio", "La porta è chiusa. Un cartello: «Torno presto».", [["back", "Esci"]], { voice: false });
     }
@@ -737,6 +811,7 @@ const Citta = (() => {
     c.talk = { step: 0, typing: false };
     const ov = Gioco.el.overlay;
     ov.innerHTML = `<h3>Falegname</h3><div class="talk-log"></div><nav class="menu talk-choice"></nav>`;
+    ov.classList.add("is-talk");
     document.activeElement?.blur();
     ov.hidden = false;
     nextLine();
@@ -805,7 +880,7 @@ const Citta = (() => {
   function sell(indexes) {
     const trip = Gioco.trip, shop = SHOPS[c.city.id].mercato;
     const sold = indexes.sort((a, b) => b - a).map((i) => trip.hold.splice(i, 1)[0]);
-    trip.money += sold.length * shop.price;
+    Gioco.earn(`mercato: ${sold.length} oggett${sold.length === 1 ? "o" : "i"}`, sold.length * shop.price);
     Suoni.play("monete");
     Gioco.toast(`Venduto: ${sold.map((it) => OGGETTI[it.kind].nome).join(", ")}. +${sold.length * shop.price} m.o.`);
     Gioco.renderStatus();
@@ -854,6 +929,7 @@ const Citta = (() => {
     if (action === "back") back();
     else if (action === "heal") heal();
     else if (action === "sleep") sleep();
+    else if (action === "wanted") acceptWanted();
     else if (action === "grog") dialog("La nota sul barile", GROG, [["back", "Rimetti a posto la nota"]], { voice: false });
     else if (action === "say" && !c.talk.typing) say(Gioco.trip.explorer, RODITORE[c.talk.step][1], false);
     else if (action === "sellall") {
@@ -869,7 +945,7 @@ const Citta = (() => {
   });
 
   function statusRows() {
-    const hold = Gioco.trip.hold.length;
+    const hold = Gioco.trip.hold.length + (Gioco.trip.wanted?.state === "caught" ? 1 : 0);
     return `<div>${Gioco.iconHtml("anchor")}<span>In porto</span><b>${c ? c.city.name : ""}</b></div>
       <div>${Gioco.iconHtml("crate")}<span>Stiva</span><b>${hold ? `${hold} oggett${hold === 1 ? "o" : "i"}` : "vuota"}</b></div>`;
   }

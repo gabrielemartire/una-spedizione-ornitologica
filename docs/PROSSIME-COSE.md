@@ -3,11 +3,13 @@
 Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è nel [documento di design](DESIGN.md).
 
 ## Priorità
-0. **La lista degli oggetti speciali** (quelli del punto esclamativo): ora sono quattro provvisori.
-1. **Le icone degli uccelli**: le 8 specie usano icone provvisorie di game-icons, in attesa dei disegni.
-2. **Tarare l'economia**: oggetti a 2–4 m.o. bastano a pagare la ciurma? Giocare qualche spedizione.
-3. **Codice del taccuino** e "Riprendi un taccuino" (oggi disattivato nel menu).
-4. **Emporio**: strumenti e trappole.
+0. **Le cartoline delle città**: rifatte a colori pieni (v0.4); da scegliere insieme se tenerle così o con i contorni scuri, e da ritoccare.
+1. **Tarare i ricercati**: il fuggitivo spara mezzo cuore ogni 4 battiti e scappa al tuo passo; correndo lo si prende. Da provare giocando.
+2. **La lista degli oggetti speciali** (quelli del punto esclamativo): ora sono quattro provvisori.
+3. **Le icone degli uccelli**: le 8 specie usano icone provvisorie di game-icons, in attesa dei disegni.
+4. **Tarare l'economia**: oggetti a 2–4 m.o., premi della Società (8) e taglie (15) bastano a pagare la ciurma? Giocare qualche spedizione.
+5. **Codice del taccuino** e "Riprendi un taccuino" (oggi disattivato nel menu, apposta).
+6. **Emporio**: strumenti e trappole.
 
 ## Versione 2
 - [ ] **Eventi marini**: cose che attirano l'attenzione mentre si naviga (luccichii, relitti) e si possono visitare.
@@ -18,6 +20,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Vignetta notturna**: di notte la mappa più scura lontano dall'esploratore.
 
 ## Fatto di recente
+- [x] **Versione 0.4**: ricercati (bacheca nei porti, W rossa, fumo, fuggitivo che spara, gendarmeria al Forte, taglia 15 m.o.); Società ornitologica (8 m.o. per specie completata) e "si trovano" per specie nel taccuino; 6 uccelli singoli in "Altri uccelli"; Finanze con entrate e uscite; esplorazione pura (niente avvisi su uccello e animali) e mai una zona senza animali; città con tutta la loro zona e visibili col binocolo; cartoline delle città ridisegnate; insegne con le icone di game-icons; gente con l'icona *walk*; solo oggetti rituali; tesori che non si spostano più; una sola linguetta del diario; cornice d'oro per i rari; scheda dell'uccello incrociato (nome, habitat e ore); falegname che saluta e ringrazia, senza scrollbar; attestato in PDF; conferma prima di una nuova spedizione; patch note su GitHub e nel gioco.
 - [x] **Versione 0.3.1**: città in pixel art (tetti a falde, castello, chiesa, vicoli sfalsati), insegne sulle botteghe, barili con la nota del grog, il punto esclamativo (rapina o oggetto speciale), il falegname del porticciolo e il roditore; niente più casse davanti alla nave.
 - [x] **Versione 0.3.2**: il falegname lavora sulla banchina (non è più una bottega); davanti alle porte un cartellino in basso dice cos'è e quanto costa; dialoghi della città piccoli e in basso, con le parole che compaiono una alla volta; la mappa non si allarga più quando cambia il tipo di terreno.
 - [x] **Versione 0.3.3**: navi in scala in pixel art (la tua, quelle del Forte, i pescherecci), l'icona della nave sulla banchina, insegne in pixel art sui tetti, niente boe sulla banchina, gente che si muove poco e si scansa.
@@ -47,7 +50,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Verso di ogni uccello** generato dal suo ID.
 
 ## Fine spedizione
-- [ ] **Attestato PDF** con QR (oggi è un'immagine PNG).
+- [ ] **QR sull'attestato** (il PDF c'è dalla v0.4).
 - [ ] **Codice del taccuino** (Crockford base32, 16 caratteri) e **Riprendi un taccuino** dal menu. Il taccuino di fine partita è già salvato nel browser (`spedizione-ornitologica:taccuino`): Riprendi lo usa senza chiedere il codice, il codice serve per un altro dispositivo.
 
 ## Mondo e navigazione

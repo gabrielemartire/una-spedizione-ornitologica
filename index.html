@@ -17,11 +17,10 @@
     <section id="screen-menu" class="screen is-active">
       <img class="logo" src="assets/logo.svg" alt="" width="312" height="204">
       <h1 class="title">Una spedizione ornitologica</h1>
-      <p class="subtitle">isole, nebbie e piume · a turni</p>
 
       <nav class="menu">
         <button class="menu-item" data-action="continue" hidden>Continua la spedizione</button>
-        <button class="menu-item" data-goto="screen-name">Nuova spedizione <span class="tag">prototipo</span></button>
+        <button class="menu-item" data-action="new">Nuova spedizione <span class="tag">prototipo</span></button>
         <button class="menu-item" disabled>Riprendi un taccuino <span class="tag">presto</span></button>
         <button class="menu-item" data-action="toggle-sound">Suoni: <span data-label="sound">ON</span></button>
         <button class="menu-item" data-action="volume" aria-label="Volume">Volume <span class="volume" data-label="volume"></span></button>
@@ -31,6 +30,16 @@
 
       <p class="hint">↑ ↓ per scegliere · ← → volume · Invio per confermare</p>
       <p class="version" data-version></p>
+    </section>
+
+    <!-- Una spedizione nuova cancella quella in corso: prima si chiede -->
+    <section id="screen-confirm" class="screen">
+      <h2 class="heading">~ Una nuova spedizione? ~</h2>
+      <p class="subtitle">C'è una spedizione in corso. Se ne cominci una nuova, quella va perduta per sempre.</p>
+      <nav class="menu">
+        <button class="menu-item" data-goto="screen-menu">No, torna al menu</button>
+        <button class="menu-item" data-goto="screen-name">Sì, ricomincia da capo</button>
+      </nav>
     </section>
 
     <!-- Scelta del nome -->
@@ -53,7 +62,6 @@
           <button class="mb-item" data-game-action="menubar">Spedizione</button>
           <div class="mb-drop" id="mb-drop" hidden>
             <button class="mb-item" data-game-action="to-menu">Torna al menu principale <small>(la spedizione resta salvata)</small></button>
-            <button class="mb-item" data-game-action="restart">Nuova spedizione</button>
             <button class="mb-item" data-action="toggle-sound">Suoni: <span data-label="sound">ON</span></button>
           </div>
         </div>
@@ -99,7 +107,7 @@
     <section id="screen-end" class="screen end">
       <div id="end-body"></div>
       <nav class="menu">
-        <button class="menu-item" data-end-action="download">Scarica l'attestato</button>
+        <button class="menu-item" data-end-action="download"><svg class="pdf-icon" viewBox="0 0 24 28" aria-hidden="true"><path d="M2 1h14l6 6v20H2z" fill="#e8e4c9" stroke="#0f1a12" stroke-width="1.5"/><path d="M16 1v6h6" fill="#c8c4a9" stroke="#0f1a12" stroke-width="1.5"/><rect x="0" y="13" width="20" height="9" fill="#b8302a"/><text x="10" y="20.4" font-size="7.5" font-family="monospace" font-weight="bold" fill="#fff" text-anchor="middle">PDF</text></svg> Scarica l'attestato</button>
         <button class="menu-item" data-goto="screen-name">Nuova spedizione</button>
         <button class="menu-item" data-goto="screen-menu">Menu principale</button>
       </nav>
@@ -197,6 +205,8 @@
     </section>
 
   </main>
+  <!-- Le patch note: alla prima accensione dopo un aggiornamento -->
+  <div id="patch" class="patch" hidden></div>
   <script src="js/versione.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/icons.js"></script>

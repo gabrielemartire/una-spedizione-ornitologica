@@ -111,7 +111,9 @@ const Mare = (() => {
     }
 
     near = Globo.nearestCoast(trip.world, ship.lat, ship.lon, SCOPE_RANGE);
-    city = Globo.nearestCity(trip.world, ship.lat, ship.lon, CITY_RANGE);
+    // la città ha tutta la sua zona: dovunque si attracchi lì, si entra in porto
+    city = Globo.nearestCity(trip.world, ship.lat, ship.lon, CITY_RANGE)
+      || (near && near.distance <= LAND_RANGE ? cityOf(near.zone) : null);
     // Il binocolo segue la costa: girando attorno all'isola mostra la zona successiva
     if (scoping) {
       if (!near) closeScope();
@@ -122,6 +124,7 @@ const Mare = (() => {
     const canLand = near && near.distance <= LAND_RANGE;
     Globo.draw(el.canvas, trip.world, ship, {
       res: BIG_RES, time, wake, ship: true, markers: true, marks: trip.zones,
+      wanted: trip.wanted && trip.wanted.state === "free" ? trip.wanted.zone : null,
       highlight: scope ? scope.id : canLand ? near.zone.id : null,
     });
     if (!scoping && seaTime !== time) drawSeaPostcard(time);
@@ -138,7 +141,7 @@ const Mare = (() => {
     let msg = "Mare aperto. Cerca una costa.";
     if (city) msg = `<b>${city.name}</b> · Invio per attraccare in città`;
     else if (canLand) msg = `<b>${near.zone.name}</b> · Invio sbarca`;
-    else if (near) msg = scoping ? `Col binocolo: <b>${near.zone.name}</b>` : "Una costa all'orizzonte";
+    else if (near) msg = scoping ? `Col binocolo: <b>${cityOf(near.zone)?.name || near.zone.name}</b>` : "Una costa all'orizzonte";
     el.prompt.innerHTML = msg;
     // Il binocolo in alto a sinistra: si accende quando c'è una costa da guardare
     const state = scoping ? "is-on" : near ? "is-ready" : "";
@@ -168,14 +171,24 @@ const Mare = (() => {
     Cartolina.render({ seed: trip.seed + trip.departures * 977 + trip.third * 31, sea: true, time, tags: new Set() }, el.postcard);
   }
 
+  const cityOf = (zone) => Gioco.trip.world.cities.find((c) => c.zone === zone.id) || null;
+
   function showScope(zone) {
     scope = zone;
     const trip = Gioco.trip;
+    el.postcard.classList.add("is-scope");
+    // la zona della città: col binocolo si vede la città dal mare
+    const town = cityOf(zone);
+    if (town) {
+      Cartolina.render({ seed: trip.seed, tags: new Set(), time: Gioco.now(), cityView: town.id }, el.postcard);
+      Suoni.play("pagina");
+      return;
+    }
     const memory = trip.zones[zone.id];
     const bird = memory && memory.bird != null ? UCCELLI[memory.bird] : null;
     const flying = !!bird && !memory.done && !memory.gone && bird.ore.includes(Gioco.now());
-    el.postcard.classList.add("is-scope");
-    Cartolina.render({ seed: zone.seed, tags: zone.tags, time: Gioco.now(), bird: flying }, el.postcard);
+    const smoke = !!trip.wanted && trip.wanted.state === "free" && trip.wanted.zone === zone.id;
+    Cartolina.render({ seed: zone.seed, tags: zone.tags, time: Gioco.now(), bird: flying, smoke }, el.postcard);
     Suoni.play("pagina");
   }
 

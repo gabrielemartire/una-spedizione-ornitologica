@@ -72,12 +72,15 @@ document.addEventListener("click", (e) => {
   }
   if (!e.target.closest(".mb-group")) closeMenubar();
   if (action === "to-menu") { Gioco.save(); show("screen-menu"); return; }
-  if (action === "restart") { show("screen-name"); return; }
 
   const el = e.target.closest("button");
   if (!el) return;
 
-  if (el.dataset.action === "continue") {
+  if (el.dataset.action === "new") {
+    // c'è una spedizione salvata: prima di perderla si chiede
+    Suoni.play("conferma");
+    show(Gioco.hasSave() ? "screen-confirm" : "screen-name");
+  } else if (el.dataset.action === "continue") {
     Suoni.play("conferma");
     show("screen-game", { resume: true });
   } else if (el.dataset.goto) {
@@ -141,7 +144,47 @@ function renderContinue() {
   document.querySelector('[data-action="continue"]').hidden = !Gioco.hasSave();
 }
 
+// --- Le patch note: chi accende una versione nuova per la prima volta vede le novità ---
+
+const PATCH_KEY = "spedizione-ornitologica:patch";
+
+function showPatchNotes() {
+  let seen = null;
+  try { seen = localStorage.getItem(PATCH_KEY); } catch (e) { /* senza memoria si mostrano ogni volta */ }
+  if (seen === VERSIONE) return;
+  const box = document.getElementById("patch");
+  box.innerHTML = `<div class="patch-card" role="dialog" aria-label="Patch note">
+      <h2>Patch note ${VERSIONE.slice(1)}</h2>
+      <ul>${NOVITA.map((n) => `<li>${n}</li>`).join("")}</ul>
+      <p class="patch-foot"><a href="https://github.com/gabrielemartire/una-spedizione-ornitologica/blob/main/PATCH-NOTE.md" target="_blank" rel="noopener">tutte le patch note</a> · Invio per chiudere</p>
+      <button class="menu-item" data-action="close-patch">Si parte!</button>
+    </div>`;
+  box.hidden = false;
+  box.querySelector("button").focus();
+}
+
+function closePatchNotes() {
+  const box = document.getElementById("patch");
+  box.hidden = true;
+  try { localStorage.setItem(PATCH_KEY, VERSIONE); } catch (e) { /* pazienza */ }
+  if (document.body.classList.contains("in-game")) document.querySelector("#map-overlay:not([hidden]) .menu-item")?.focus();
+  else focusFirst();
+}
+
+// A patch note aperte la tastiera è loro: Invio, spazio o Esc le chiudono
+window.addEventListener("keydown", (e) => {
+  if (document.getElementById("patch").hidden) return;
+  if (["Enter", " ", "Escape"].includes(e.key)) closePatchNotes();
+  e.preventDefault();
+  e.stopImmediatePropagation();
+}, true);
+
+document.addEventListener("click", (e) => {
+  if (e.target.closest('[data-action="close-patch"]') || e.target.id === "patch") closePatchNotes();
+});
+
 renderSoundLabels();
 // Un refresh durante la partita riporta dritto alla spedizione salvata
 if (Gioco.hasSave()) show("screen-game", { resume: true });
 else { renderContinue(); focusFirst(); }
+showPatchNotes();
