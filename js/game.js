@@ -29,6 +29,17 @@ const Gioco = (() => {
   const CHEST_EVERY = 8;
   const CHEST_COINS = [5, 10];
   const PULCINO = 57;         // l'uccello che nasce dall'uovo
+  // Il cibo: il pesce in scatola cura due cuori; il marshmallow tutta la vita e dà un cuore viola in più
+  const FISH_HEAL = 4;
+  const VIOLET = 2;
+  // La tagliola: il lupo ci muore (a volte la schiva), orso e cinghiale restano fermi per 15 tuoi passi
+  const TRAP_HOLD = 15;
+  const TRAP_DODGE = 0.3;
+  // La bottiglia col messaggio: in una zona caraibica sul mare su tre; il tesoro sepolto
+  const BOTTLE_CHANCE = 1 / 3;
+  const BURIED_COINS = 9;
+  // I timbri del taccuino, in ordine: il bit nel codice è la posizione
+  const STAMPS = ["campfire", "hanged", "death", "tarotsun", "tarotmoon", "kraken"];
   // Il fuggitivo: ti vede come un animale, spara da vicino ogni `reload` battiti, scappa dal bordo
   // della mappa solo se sei lontano; damage = mezzi cuori
   const OUTLAW = { sight: 8, nightSight: 5, hearing: 2, range: 6, reload: 4, damage: 2, escape: 10,
@@ -75,6 +86,10 @@ const Gioco = (() => {
     pass:   { name: "Passaggio",        icon: "bridge",     cls: "t-pass",   walk: true,  sight: true, noise: 1, sound: "macerie", pass: true },
     // La torre della donna che aspetta una lettera
     tower:  { name: "Torre",            icon: "tower",      cls: "t-castle", walk: false, sight: false, tower: true },
+    // La sabbia delle coste caraibiche
+    sand:   { name: "Sabbia",           ch: "·",            cls: "t-sand",   walk: true,  sight: true, noise: 1, sound: "passoErba" },
+    // Il falò della radura: ci si cuoce il marshmallow
+    fire:   { name: "Falò",             icon: "campfire",   cls: "t-fire",   walk: false, sight: true, fire: true },
   };
 
   // Gli animali: l'orso di giorno, i lupi di notte, il cinghiale all'alba. L'orso colpisce forte (quattro
@@ -195,6 +210,7 @@ const Gioco = (() => {
     if (tags.has("vulcano")) return `${place} sotto il vulcano`;
     if (tags.has("castello")) return `${place} del castello`;
     if (tags.has("torre")) return `${place} della torre`;
+    if (tags.has("falo")) return `${place} del falò`;
     if (tags.has("cascata")) return `${place} della cascata`;
     if (tags.has("lago")) return `${place} sul lago`;
     if (tags.has("rovine")) return `${place} con le rovine`;
@@ -298,6 +314,8 @@ const Gioco = (() => {
         feature.push({ x: lx, y });
       }
     }
+    // La radura del falò: un cerchio d'alberi con due varchi, il fuoco nel mezzo, il marshmallow accanto
+    const camp = tags.has("falo") ? placeCampfire(map, r) : null;
     const ruin = tags.has("rovine") ? placeRuin(map, r) : null;
     if (tags.has("villaggio")) placeHamlet(map, r);
     const castle = tags.has("castello") ? placeCastle(map, r) : null;
@@ -311,10 +329,23 @@ const Gioco = (() => {
     if (look.tall) blob("tall", look.talls, 2, 0.7);
     blob("bush", look.bushes, 0, 1);
     blob(hot ? "basalt" : "rock", look.rocks, 0, 1);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (map[y][x] === "glade") map[y][x] = "grass";
+    // Le coste caraibiche: sabbia per tre file dal mare, poi sabbia ed erba, poi erba con chiazze di sabbia
+    const beach = shape.coastal && biomeOf(tags) === "tropicale";
+    if (beach) {
+      for (let y = 0; y < H; y++) {
+        const x0 = map[y].findIndex((t) => t !== "sea" && t !== "ship");
+        for (let x = x0; x < x0 + 6 && x < W; x++) {
+          if (["water", "deep", "rock", "pass"].includes(map[y][x])) continue;
+          if (x < x0 + 3 || (x < x0 + 5 && r() < 0.55)) map[y][x] = "sand";
+        }
+      }
+      blob("sand", 7, 1, 0.6);
+    }
 
     // Spazio libero allo sbarco
     if (shape.coastal) for (let y = shipY - 1; y <= shipY + 1; y++) {
-      for (let x = 1; x <= 3; x++) if (inside(x, y) && map[y][x] !== "sea") map[y][x] = "grass";
+      for (let x = 1; x <= 3; x++) if (inside(x, y) && map[y][x] !== "sea") map[y][x] = beach ? "sand" : "grass";
     }
     // I passaggi verso le zone vicine, sul bordo, con un po' di spazio libero davanti
     for (const ps of shape.passes) {
@@ -338,7 +369,8 @@ const Gioco = (() => {
     if (ruin && ![...ruin.interior].some((k) => reach.has(k))) return null;
     if (tower && !tower.some((c) => DIRS.some(([dx, dy]) => reach.has(key({ x: c.x + dx, y: c.y + dy }))))) return null;
     if (shape.passes.some((ps) => !reach.has(key(ps)))) return null;
-    const free = [...reach.keys()].map(unkey).filter((c) => map[c.y][c.x] === "grass" || map[c.y][c.x] === "tall");
+    if (camp && !DIRS.some(([dx, dy]) => reach.has(key({ x: camp.fire.x + dx, y: camp.fire.y + dy })))) return null;
+    const free = [...reach.keys()].map(unkey).filter((c) => ["grass", "tall", "sand"].includes(map[c.y][c.x]) && !(camp && same(c, camp.marsh)));
 
     // L'uccello ama stare vicino all'acqua o agli alberi; chi cerca una caratteristica le sta vicino
     const wet = ["water", "ice", "tree", "deep", "lava"];
@@ -361,7 +393,28 @@ const Gioco = (() => {
     if (!lair.length) return null;
     lair.sort(() => r() - 0.5);
 
-    return { map, start, bird, lair, free, ruin, tower, ship: shape.coastal ? { x: 0, y: shipY } : null };
+    return { map, start, bird, lair, free, ruin, tower, camp, ship: shape.coastal ? { x: 0, y: shipY } : null };
+  }
+
+  // La radura del falò: dentro tutto libero (glade, che la vegetazione non tocca), intorno un anello d'alberi
+  // con due varchi, il fuoco nel mezzo e il marshmallow appoggiato lì accanto
+  function placeCampfire(map, r) {
+    const cx = 16 + Math.floor(r() * (W - 26)), cy = 7 + Math.floor(r() * (H - 14));
+    const gaps = [r() * Math.PI * 2];
+    gaps.push(gaps[0] + Math.PI * (0.7 + r() * 0.6));
+    const inGap = (a) => gaps.some((g) => Math.abs(((a - g + Math.PI * 3) % (Math.PI * 2)) - Math.PI) < 0.26);
+    // fuori dall'anello una fascia libera, così il cerchio si legge e non si confonde col bosco
+    for (let y = cy - 7; y <= cy + 7; y++) {
+      for (let x = cx - 9; x <= cx + 9; x++) {
+        if (!inside(x, y)) continue;
+        const d = Math.hypot((x - cx) / 1.25, y - cy);
+        if (d > 6.6) continue;
+        if (d <= 4.2 || (d > 5.4 && map[y][x] === "grass") || (d <= 5.4 && inGap(Math.atan2(y - cy, (x - cx) / 1.25)))) map[y][x] = "glade";
+        else if (d <= 5.4) map[y][x] = "tree";
+      }
+    }
+    map[cy][cx] = "fire";
+    return { fire: { x: cx, y: cy }, marsh: { x: cx + 2, y: cy } };
   }
 
   // La casella appena dentro la mappa, davanti a un passaggio sul bordo
@@ -501,6 +554,9 @@ const Gioco = (() => {
     if (r() < 0.6) pickZone((z) => !z.tags.has("castello"))?.tags.add("vulcano");
     // la torre della donna: sempre una, in una zona qualunque senza castello né vulcano
     pickZone((z) => !z.tags.has("castello") && !z.tags.has("vulcano"))?.tags.add("torre");
+    // la radura del falò: una, in una zona interna (se non ce ne sono, in una qualunque)
+    const inner = (z) => !world.coastal[z.id] && !["castello", "vulcano", "torre"].some((t) => z.tags.has(t));
+    (pickZone(inner) || pickZone((z) => !["castello", "vulcano", "torre"].some((t) => z.tags.has(t))))?.tags.add("falo");
     // i forzieri chiusi: uno ogni CHEST_EVERY zone, almeno uno
     const rc = rng(seed ^ 0x7c4e57);
     world.chests = wild.slice().sort(() => rc() - 0.5).slice(0, Math.max(1, Math.round(wild.length / CHEST_EVERY))).map((z) => z.id);
@@ -768,6 +824,11 @@ const Gioco = (() => {
       chest: chestSpot(gen, zone, memory, itemAt, merchantAt, rp),
       tower: gen.tower,
       towerMet: false,
+      fire: gen.camp ? gen.camp.fire : null,
+      marsh: gen.camp && !trip.marshTaken ? gen.camp.marsh : null,
+      traps: new Set(memory.traps || []),
+      bottle: bottleOf(zone, gen, memory),
+      holes: new Set(),
       run: 0,
       ticks: 0,
       noise: 0,
@@ -789,6 +850,53 @@ const Gioco = (() => {
     if (bird && !present && !memory.done && !memory.gone && !bird.rara) learn(bird, "traccia");
     if (s.merchant) log("Qualcuno col cappuccio aspetta vicino alla riva.");
     render();
+  }
+
+  // La bottiglia col messaggio: in una zona caraibica sul mare su tre, sulla prima fila di terra. Il messaggio
+  // porta a una casella dove scavare: si sceglie prima l'arrivo (calpestabile, non acqua), poi da due a quattro
+  // tratti dritti dalla bottiglia fin lì. Conta dove arrivi, non da dove passi: l'indovinello è sempre giusto
+  function bottleOf(zone, gen, memory) {
+    if (memory.bottle === undefined) {
+      memory.bottle = null;
+      const r = rng(zone.seed ^ 0xb0771e);
+      if (zone.biome === "tropicale" && trip.world.coastal[zone.id] && r() < BOTTLE_CHANCE) {
+        const firstRow = [];
+        for (let y = 1; y < H - 1; y++) {
+          const x = gen.map[y].findIndex((t) => t !== "sea" && t !== "ship");
+          if (x > 0 && tile(gen.map, x, y).walk && Math.abs(y - gen.start.y) > 1) firstRow.push({ x, y });
+        }
+        const ok = (c) => tile(gen.map, c.x, c.y).walk && !["water", "deep", "ice", "pass", "ship"].includes(gen.map[c.y][c.x]);
+        const at = firstRow.length ? firstRow[Math.floor(r() * firstRow.length)] : null;
+        const dests = at ? gen.free.filter((c) => ok(c) && Math.abs(c.x - at.x) >= 2 && Math.abs(c.y - at.y) >= 2 && dist(c, at) >= 7 && dist(c, at) <= 18) : [];
+        if (dests.length) {
+          const dest = dests[Math.floor(r() * dests.length)];
+          memory.bottle = { x: at.x, y: at.y, dest, text: treasureSteps(at, dest, r), taken: false, dug: false };
+        }
+      }
+    }
+    return memory.bottle && !memory.bottle.taken ? memory.bottle : null;
+  }
+
+  const NUMBERS = ["zero", "un", "due", "tre", "quattro", "cinque", "sei", "sette", "otto", "nove", "dieci", "undici", "dodici", "tredici",
+    "quattordici", "quindici", "sedici", "diciassette", "diciotto", "diciannove", "venti", "ventuno", "ventidue", "ventitré", "ventiquattro",
+    "venticinque", "ventisei", "ventisette", "ventotto", "ventinove", "trenta", "trentuno", "trentadue", "trentatré", "trentaquattro",
+    "trentacinque", "trentasei", "trentasette", "trentotto", "trentanove"];
+
+  // I tratti dalla bottiglia al tesoro: in verticale e in orizzontale, alternati; un asse può dividersi in due
+  function treasureSteps(from, to, r) {
+    const dy = to.y - from.y, dx = to.x - from.x;
+    const split = (n) => { const a = 1 + Math.floor(r() * (Math.abs(n) - 1)); return [Math.sign(n) * a, n - Math.sign(n) * a]; };
+    const parts = 2 + Math.floor(r() * 3);   // 2, 3 o 4 tratti
+    const vs = parts >= 3 && Math.abs(dy) >= 2 ? split(dy) : [dy];
+    const hs = (parts === 4 || (parts === 3 && vs.length === 1)) && Math.abs(dx) >= 2 ? split(dx) : [dx];
+    const legs = [];
+    const order = vs.length >= hs.length ? ["y", "x"] : ["x", "y"];
+    for (let i = 0; vs.length || hs.length; i++) {
+      const axis = order[i % 2], list = axis === "y" ? vs : hs;
+      if (list.length) legs.push({ n: list.shift(), axis });
+    }
+    const word = ({ n, axis }) => `${NUMBERS[Math.abs(n)]} pass${Math.abs(n) === 1 ? "o" : "i"} verso ${axis === "y" ? (n < 0 ? "nord" : "sud") : n > 0 ? "est" : "ovest"}`;
+    return `Dalla bottiglia, ${legs.map(word).join(", ")}. Scava.`;
   }
 
   // Il forziere chiuso, nelle zone che ne hanno uno e finché non lo apri: vicino agli alberi, lontano dalla nave
@@ -968,6 +1076,8 @@ const Gioco = (() => {
     s.heard = [];
     if (kind === "move" && !move(dx, dy, held)) return;
     if (kind === "observe") observe();
+    if (kind === "trap" && !setTrap()) return;
+    if (kind === "dig") dig();
     s.lastAct = t;
     if (!s.over) tick();
   }
@@ -990,6 +1100,7 @@ const Gioco = (() => {
     if (s.fugitive && same(s.fugitive, n)) { capture(); return true; }
     if (s.chest && same(s.chest, n)) { openChest(); return false; }
     if (t.tower) { meetLady(); return false; }
+    if (t.fire) { campfire(); return false; }
     if (!t.walk || occupied(n)) return false;
     s.run = held ? s.run + 1 : 0;
     if (s.run === RUN_STEP && !trip.ranOnce) { trip.ranOnce = true; toast("Stai correndo: fai più rumore."); }
@@ -1004,6 +1115,8 @@ const Gioco = (() => {
     // Di notte ogni passo fa un po' più rumore: l'uccello scappa prima
     s.noise = t.noise ? t.noise + (s.time === "notte" ? 1 : 0) + runNoise() : 0;
     if (s.item && same(s.item, n)) pickUp();
+    if (s.marsh && same(s.marsh, n)) takeMarshmallow();
+    if (s.bottle && same(s.bottle, n)) takeBottle();
     s.heard.push({ ...n, r: s.noise });
     // accanto alla torre, la donna si affaccia
     if (s.tower && !s.towerMet && s.tower.some((c) => Math.abs(c.x - n.x) + Math.abs(c.y - n.y) === 1)) { s.towerMet = true; meetLady(); }
@@ -1050,6 +1163,154 @@ const Gioco = (() => {
   }
 
   const hasPack = (kind) => trip.pack.some((it) => it.kind === kind);
+
+  // --- La radura del falò: il marshmallow si prende, si cuoce (bianco, ancora bianco, dorato, bruciato), si mangia ---
+
+  const MARSH_LOOK = ["bianco", "ancora bianco", "dorato", "bruciato"];
+  const marshOf = () => trip.pack.find((it) => it.kind === "marshmallow");
+
+  function takeMarshmallow() {
+    trip.marshTaken = true;
+    trip.pack.push({ kind: "marshmallow", cook: 0 });
+    s.marsh = null;
+    Suoni.play("cespuglio");
+    log("Un marshmallow, bianco bianco, accanto al fuoco. Nello zaino.");
+  }
+
+  function campfire() {
+    const m = marshOf();
+    s.over = true;
+    showOverlay("Il falò", m ? `Il fuoco scoppietta. Il tuo marshmallow è ${MARSH_LOOK[m.cook]}.` : "Il fuoco scoppietta. Qualcuno l'ha acceso e se n'è andato.", [
+      m && m.cook < 3 && ["cook", "Infilzalo e cuocilo"],
+      m && ["eat-marsh", "Mangialo"],
+      ["leave-merchant", "Scaldati e vai"],
+    ]);
+  }
+
+  function cook() {
+    const m = marshOf();
+    m.cook = Math.min(3, m.cook + 1);
+    Suoni.play("legno");
+    if (m.cook === 3) { log("Il marshmallow prende fuoco: bruciato."); earnStamp("campfire"); }
+    campfire();
+  }
+
+  // Mangiare: il marshmallow (come che sia cotto) rimette tutta la vita e dà un cuore viola in più, finché non
+  // ti colpiscono; il pesce in scatola cura due cuori
+  function eat(kind) {
+    const i = trip.pack.findIndex((it) => it.kind === kind);
+    if (i < 0) return;
+    const m = trip.pack[i];
+    trip.pack.splice(i, 1);
+    const p = s.player;
+    if (kind === "marshmallow") {
+      p.hp = Math.max(p.hp, maxHp());
+      trip.violet = VIOLET;
+      log(`Mangi il marshmallow ${MARSH_LOOK[m.cook]}. Ti senti benissimo: un cuore viola in più.`);
+    } else {
+      p.hp = Math.min(Math.max(p.hp, maxHp()), p.hp + FISH_HEAL);
+      log("Apri la scatola e mangi il pesce. Due cuori.");
+    }
+    Suoni.play("osservato");
+    leaveMerchant();
+  }
+
+  // M: si mangia quello che c'è nello zaino; se c'è più di una cosa, si sceglie
+  function food() {
+    const foods = ["cibo", "marshmallow"].filter(hasPack);
+    if (!foods.length) return;
+    if (foods.length === 1) { eat(foods[0]); return; }
+    s.over = true;
+    showOverlay("Mangiare", "Hai fame. Cosa mangi?", [
+      ["eat-fish", "Il pesce in scatola <small>(due cuori)</small>"],
+      ["eat-marsh", `Il marshmallow ${MARSH_LOOK[marshOf().cook]} <small>(tutta la vita e un cuore viola)</small>`],
+      ["leave-merchant", "Niente, per ora"],
+    ]);
+  }
+
+  // --- Le tagliole: T la posa dove sei; restano nella zona finché non scattano ---
+
+  function setTrap() {
+    const i = trip.pack.findIndex((it) => it.kind === "tagliola");
+    const t = tile(s.map, s.player.x, s.player.y);
+    if (i < 0 || t.pass || t === TILES.ship || s.traps.has(key(s.player))) return false;
+    trip.pack.splice(i, 1);
+    s.traps.add(key(s.player));
+    trip.zones[s.zone.id].traps = [...s.traps];
+    Suoni.play("tagliola");
+    log("Posi una tagliola, ben nascosta.");
+    return true;
+  }
+
+  // Un animale che entra in una casella con la tagliola: il lupo ci muore (se non la schiva), orso e cinghiale restano presi
+  function springTrap(o) {
+    const k = key(o);
+    if (!s.traps.has(k)) return false;
+    s.traps.delete(k);
+    trip.zones[s.zone.id].traps = [...s.traps];
+    Suoni.play("tagliola");
+    if (o.kind === "wolf") {
+      if (Math.random() < TRAP_DODGE) { log("La tagliola scatta a vuoto: il lupo l'ha schivata."); return false; }
+      o.dead = true;
+      o.el.remove();
+      log("Un guaito: un lupo è finito nella tagliola.");
+      return true;
+    }
+    o.rest = TRAP_HOLD;
+    o.mode = o.kind === "boar" ? "stunned" : "wander";
+    o.next = null;
+    log(`${o.kind === "bear" ? "L'orso" : "Il cinghiale"} è preso nella tagliola: per un po' non si muove.`);
+    return true;
+  }
+
+  // --- La bottiglia col messaggio e la pala: X scava ---
+
+  function takeBottle() {
+    const b = s.bottle;
+    b.taken = true;
+    s.bottle = null;
+    Suoni.play("pagina");
+    trip.rumors.unshift({ msg: `Il messaggio nella bottiglia, a ${s.zone.name}: «${b.text}»`, day: day(), time: now() });
+    log(`Una bottiglia sulla riva, con un messaggio: «${b.text}» È nelle voci.`);
+  }
+
+  function dig() {
+    const memory = trip.zones[s.zone.id];
+    const b = memory.bottle;
+    const k = key(s.player);
+    const t = tile(s.map, s.player.x, s.player.y);
+    if (!t.walk || t.pass || t === TILES.ship || ["water", "deep", "ice"].includes(s.map[s.player.y][s.player.x])) return;
+    Suoni.play("macerie");
+    if (b && b.taken && !b.dug && same(b.dest, s.player)) {
+      b.dug = true;
+      const coins = Math.floor(Math.random() * (BURIED_COINS + 1));
+      if (coins) earn("tesoro sepolto", coins);
+      const kind = coins < 4 ? oggettoACaso(Math.random, false) : null;
+      if (kind) trip.hold.push({ kind });
+      Suoni.play("monete");
+      log(`La pala batte su qualcosa: un tesoro sepolto! ${coins ? `${coins} ${coins === 1 ? "moneta" : "monete"}` : "Niente monete"}${kind ? ` e ${OGGETTI[kind].nome.toLowerCase()}, in stiva` : ""}.`);
+    } else if (!s.holes.has(k)) {
+      note("Una buca vuota.");
+    }
+    s.holes.add(k);
+  }
+
+  // --- I timbri del taccuino ---
+
+  function earnStamp(id) {
+    const n = STAMPS.indexOf(id);
+    if (n < 0 || trip.stamps.includes(n)) return;
+    trip.stamps.push(n);
+    log("Un timbro nuovo nel taccuino.");
+  }
+
+  // --- La lettera della Società: arriva quando il taccuino è completo, tutti gli uccelli ---
+
+  function checkComplete() {
+    if (trip.letter || !UCCELLI.every((u) => trip.birds[u.id]?.level === "visto")) return;
+    trip.letter = "new";
+    Suoni.play("campana");
+  }
 
   // Il forziere: con la chiave si apre (la chiave resta), dentro un oggetto rituale e qualche moneta
   function openChest() {
@@ -1108,6 +1369,7 @@ const Gioco = (() => {
     if (i < 0) return;
     trip.pack.splice(i, 1);
     trip.birds[PULCINO] = { level: "visto", zone: "nato dall'uovo", day: day(), time: now() };
+    checkComplete();
     log("Crac! L'uovo si è schiuso: un Pulcino nel taccuino.");
   }
 
@@ -1150,6 +1412,7 @@ const Gioco = (() => {
       b.observed = true;
       learn(b.info, "visto");
       trip.zones[s.zone.id].done = true;
+      checkComplete();
       Suoni.play("osservato");
       log(`${b.info.nome} annotato nel taccuino! Torna alla nave.`);
       drawPostcard();
@@ -1171,6 +1434,7 @@ const Gioco = (() => {
       if (o.kind === "boar") boarTick(o);
       else beastTick(o);
     }
+    s.beasts = s.beasts.filter((o) => !o.dead);
     if (s.over) return;
     render();
   }
@@ -1255,7 +1519,7 @@ const Gioco = (() => {
     // da vicino, se ti vede, spara invece di correre: alberi e rocce fermano il colpo, i cespugli ti nascondono
     if (seen && !f.reload && dist(f, p) <= OUTLAW.range) {
       f.reload = OUTLAW.reload;
-      p.hp = Math.max(0, p.hp - OUTLAW.damage);
+      hurt(OUTLAW.damage);
       trip.stats.hits++;
       Suoni.play("petardo");
       el.map.classList.remove("is-hit");
@@ -1394,6 +1658,7 @@ const Gioco = (() => {
       o.x = c.x;
       o.y = c.y;
       steps.push(c);
+      if (springTrap(o)) { slide(o, steps); return; }
       if (birdActive() && dist(o, s.bird) <= 2) scare(`${k.name === "Orso" ? "L'orso" : "Un lupo"} è passato troppo vicino`);
     }
     if (!steps.length) o.energy = Math.min(o.energy, 1); // fermo non accumula slancio
@@ -1465,6 +1730,7 @@ const Gioco = (() => {
         o.x = c.x;
         o.y = c.y;
         steps.push(c);
+        if (springTrap(o)) break;
         if (birdActive() && dist(o, s.bird) <= 2) scare("Il cinghiale è passato troppo vicino");
         if (++o.run >= k.charge) { o.mode = "wander"; break; }
       }
@@ -1478,10 +1744,19 @@ const Gioco = (() => {
         o.x = c.x;
         o.y = c.y;
         steps.push(c);
+        springTrap(o);
       }
     }
     slide(o, steps);
     if (steps.length && dist(o, p) < 10) Suoni.play(k.step);
+  }
+
+  // Un colpo: il cuore viola, se c'è, se ne va per primo
+  function hurt(d) {
+    const p = s.player;
+    const absorbed = Math.min(trip.violet || 0, d);
+    trip.violet = (trip.violet || 0) - absorbed;
+    p.hp = Math.max(0, p.hp - (d - absorbed));
   }
 
   // il danno detto in cuori: ogni cuore vale due punti di vita
@@ -1499,7 +1774,7 @@ const Gioco = (() => {
     if (o.kind === "boar") o.mode = "stunned";
     // l'orso, dopo il colpo, è sazio: finito il fermo se ne va per conto suo
     if (k.sated) { o.sated = true; o.mode = "wander"; o.last = null; }
-    p.hp = Math.max(0, p.hp - k.damage);
+    hurt(k.damage);
     trip.stats.hits++;
     Suoni.play("tonfo");
     el.map.classList.remove("is-hit");
@@ -1555,6 +1830,13 @@ const Gioco = (() => {
   function die(kind) {
     const k = KINDS[kind] || OUTLAW;
     endTrip({ kind: "death", title: k.death, text: `${k.deathText}, al giorno ${day()}, ${now()}.` });
+  }
+
+  // La Società consegna l'attestato di Ornitologo esperto: il gioco è finito, e vinto
+  function victory() {
+    trip.expert = true;
+    Suoni.play("osservato");
+    endTrip({ kind: "victory", title: "Ornitologo esperto", text: `Giorno ${day()}: la Società ornitologica ti consegna l'attestato di Ornitologo esperto. Il taccuino è completo.` });
   }
 
   function bankrupt() {
@@ -1620,7 +1902,7 @@ const Gioco = (() => {
   }
 
   const KEYS_HELP = {
-    land: "frecce/WASD muovi (tieni premuto: corri) · spazio osserva · Invio aspetta · E semi · ⚓ torna a bordo · Tab diario · Esc menu",
+    land: "frecce/WASD muovi (tieni premuto: corri) · spazio osserva · Invio aspetta · X scava · T tagliola · M mangia · E semi · Tab diario · Esc menu",
     city: "frecce/WASD muovi · → entra nelle botteghe · torna alla nave per ripartire · Tab diario · Esc menu",
     sea: "← → rotta · ↑ ↓ vele · T binocolo · Invio sbarca o attracca · Tab diario · Esc menu",
   };
@@ -1749,6 +2031,10 @@ const Gioco = (() => {
         if (reach.has(k)) cls += danger.has(k) ? " danger" : " reach";
         if (s.item && s.item.x === x && s.item.y === y && !roofed.has(k)) { icon = OGGETTI[s.item.kind].icona; cls += " item"; }
         if (s.chest && s.chest.x === x && s.chest.y === y) { icon = "chest"; cls += " chest"; }
+        if (s.marsh && s.marsh.x === x && s.marsh.y === y) { icon = "marshmallow"; cls += " marsh"; }
+        if (s.bottle && s.bottle.x === x && s.bottle.y === y) { icon = "bottle"; cls += " item"; }
+        if (s.holes.has(k) && t.walk) { icon = "hole"; cls += " hole"; }
+        if (s.traps.has(k)) { icon = "trap"; cls += " trap"; }
         if (t.tower && s.tower && x === s.tower[0].x + 1 && y === s.tower[0].y) { icon = "woman"; cls += " lady"; }   // alla finestra, lei
         if (next.has(k)) cls += " bear-next";
 
@@ -1793,7 +2079,7 @@ const Gioco = (() => {
     const hearts = Array.from({ length: slots }, (_, i) => {
       const pink = trip.pink && i === MAX_HP / 2;
       return `<span${pink ? ' class="pink"' : ""}>${i < Math.ceil(hp / 2) ? "♥" : "♡"}</span>`;
-    }).join("");
+    }).join("") + (trip.violet ? '<span class="violet">♥</span>' : "");
     const thirds = TIMES.map((t) => `<i class="${t === time ? "is-now" : ""}" title="${t}">${iconHtml(TIME_ICONS[t])}</i>`).join("");
     let html = `
       <div class="status-day"><b>Giorno ${day()}</b><span class="thirds">${thirds}</span></div>
@@ -1823,12 +2109,15 @@ const Gioco = (() => {
   document.addEventListener("keydown", (e) => {
     if (!document.body.classList.contains("in-game") || !trip || trip.mode !== "land" || !s || s.over || Diario.isOpen()) return;
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
-    if (!MOVES[k] && k !== " " && k !== "o" && k !== "Enter" && k !== "." && k !== "e") return;
+    if (!MOVES[k] && ![" ", "o", "Enter", ".", "e", "x", "t", "m"].includes(k)) return;
     e.preventDefault();
     e.stopImmediatePropagation(); // le frecce muovono l'esploratore, non il menu
     if (MOVES[k]) act("move", ...MOVES[k], e.repeat);
     else if (k === "Enter" || k === ".") act("wait");
     else if (k === "e") sowSeeds();
+    else if (k === "x") act("dig");
+    else if (k === "t") act("trap");
+    else if (k === "m") food();
     else act("observe");
   });
 
@@ -1842,6 +2131,9 @@ const Gioco = (() => {
     if (action === "give-letter") giveLetter();
     if (action === "go-pass") goPass();
     if (action === "leave-lady") leaveMerchant();
+    if (action === "cook") cook();
+    if (action === "eat-marsh") eat("marshmallow");
+    if (action === "eat-fish") eat("cibo");
 
     const cell = e.target.closest("#map > div");
     if (cell && canAct()) {
@@ -1867,7 +2159,7 @@ const Gioco = (() => {
   // Quello che serve alla navigazione (js/sea.js) e al diario (js/diario.js)
   return {
     start, resume, save, setNotebook: (data) => { notebook = data; }, code, hasSave: () => !!loadSave(), clearSave, loadNotebook, depart, landAt, rumor, pay, earn, visitCity, maxHp, EGG_DAYS,
-    wantedPoster, acceptWanted, bountyState, advance, renderStatus, note, log, toast, timeOf, now, day, showView, iconHtml, fitMap,
+    wantedPoster, acceptWanted, bountyState, earnStamp, victory, STAMPS, advance, renderStatus, note, log, toast, timeOf, now, day, showView, iconHtml, fitMap,
     get trip() { return trip; },
     get el() { return el; },
     get explorer() { return explorer; },

@@ -19,7 +19,7 @@ function oggettoACaso(r, rovine) {
   return ids[Math.floor(r() * ids.length)];
 }
 
-// Gli oggetti magici, che ti dà lo sconosciuto col punto esclamativo (uno per tipo a partita), e i semi
+// Gli oggetti magici, che ti dà lo sconosciuto col punto esclamativo (uno per tipo a partita), e la merce
 // dell'emporio: vanno nello zaino. La lettera va consegnata alla donna della torre, la chiave apre i
 // forzieri, l'uovo dopo tredici giorni si schiude, i semi fanno tornare un uccello volato via
 const OGGETTI_SPECIALI = {
@@ -27,5 +27,10 @@ const OGGETTI_SPECIALI = {
   chiave: { nome: "Chiave arrugginita", icona: "key" },
   uovo: { nome: "Uovo maculato", icona: "egg" },
   semi: { nome: "Sacchetto di semi", icona: "seeds" },
+  // l'emporio: il cibo in scatola (uno solo nello zaino) e le tagliole da mettere a terra
+  cibo: { nome: "Pesce in scatola", icona: "cannedfish" },
+  tagliola: { nome: "Tagliola", icona: "trap" },
+  // il marshmallow della radura del falò: si cuoce, si mangia
+  marshmallow: { nome: "Marshmallow", icona: "marshmallow" },
 };
 const OGGETTI_SPECIALI_IDS = ["lettera", "chiave", "uovo"];   // quelli che regala lo sconosciuto

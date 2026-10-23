@@ -17,12 +17,13 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Vignetta notturna**: di notte la mappa più scura lontano dall'esploratore.
 
 ## In arrivo (chiesto il 23 ottobre)
-- [ ] **0.9**: lettera della Società a taccuino completo (tutti gli uccelli) e attestato dell'ornitologo esperto, fine del gioco; capitolo dei timbri (6, il marshmallow bruciato e cinque tarocchi/kraken per ora vuoti); radura col falò e il marshmallow (cuore viola); cibo in scatola all'emporio (2 m.o., due cuori, uno solo); tagliole (3 m.o.); voce del marinaio coi quattro occhi; bottiglia col messaggio, pala (X scava) e sabbia sulle coste caraibiche.
+- [ ] **I timbri dei tarocchi e del Kraken**: l'Appeso, la Morte, il Sole, la Luna, il Kraken sono nel taccuino ma non si prendono ancora.
 - [ ] **0.10**: il ricercato di notte accende un fuoco (puntino rosso, solo col binocolo; W al centro dell'isola); campo dei bucanieri.
 - [ ] **0.11**: la nebbia di notte col pesce gatto cieco; il Kraken in mare aperto.
 - [ ] **Il castello abbandonato** (v2, già sotto: entrare nel castello).
 
 ## Fatto di recente
+- [x] **Versione 0.9**: la lettera della Società e l'Ornitologo esperto; i timbri; la radura del falò col marshmallow e il cuore viola; pesce in scatola e tagliole; bottiglia col messaggio e pala; spiagge caraibiche; il marinaio coi quattro occhi.
 - [x] **Versione 0.8**: la nave non si incaglia nel lago; niente avvisi sopra la battlemap; capitolo Taglie col WANTED e il timbro CATTURATO; voci barrate; la lettera segna la torre; codice col numero dei viaggi; si riparte col taccuino collegato; benvenuto; orso più giusto; ricercato a un cuore; taverna più economica; fiume serpeggiante nella cartolina.
 - [x] **Versione 0.7**: zone interne raggiungibili a piedi dai passaggi (un momento ciascuno), la nave resta ormeggiata; isole più grandi e un'isola col grande lago.
 - [x] **Versione 0.6.9**: cornice verde barocca fuori dalla battlemap; il taccuino si reimpagina quando arrivano i caratteri.

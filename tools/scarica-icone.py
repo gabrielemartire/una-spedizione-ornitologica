@@ -110,6 +110,32 @@ ICONS = {
     "chestopen": "skoll/open-treasure-chest",
     "seeds": "delapouite/plant-seed",
     "chick": "delapouite/chicken",
+    # La Società ornitologica scrive: la busta col sigillo
+    "envelope": "lorc/envelope",
+    "seal": "lorc/wax-seal",
+    # I timbri del taccuino: il marshmallow bruciato, i tarocchi, il kraken
+    "campfire": "lorc/campfire",
+    "marshmallow": "delapouite/marshmallows",
+    "hanged": "caro-asercion/tarot-12-the-hanged-man",
+    "death": "caro-asercion/tarot-13-death",
+    "tarotsun": "caro-asercion/tarot-19-the-sun",
+    "tarotmoon": "caro-asercion/tarot-18-the-moon",
+    "kraken": "delapouite/kraken-tentacle",
+    # L'emporio e gli strumenti: il cibo in scatola, la tagliola, la pala, la bottiglia col messaggio
+    "cannedfish": "delapouite/canned-fish",
+    "trap": "lorc/wolf-trap",
+    "shovel": "lorc/spade",
+    "bottle": "delapouite/water-bottle",
+    "hole": "delapouite/hole",
+    # I bucanieri: chi ha la spada e chi il fucile, la carne affumicata, l'immondizia rumorosa
+    "buccaneer": "delapouite/pirate-captain",
+    "gunner": "lorc/pirate-skull",
+    "boucan": "lorc/meat",
+    "glass": "lorc/broken-bottle",
+    "pot": "delapouite/cooking-pot",
+    "shards": "delapouite/broken-pottery",
+    # Il pesce gatto della nebbia
+    "anglerfish": "lorc/angler-fish",
 }
 
 BASE = "https://raw.githubusercontent.com/game-icons/icons/master/{}.svg"

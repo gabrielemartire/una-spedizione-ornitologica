@@ -6,7 +6,7 @@
 const Diario = (() => {
   const TABS = [
     ["note", "Note"], ["uccelli", "Uccelli"], ["voci", "Voci"],
-    ["finanze", "Finanze"], ["zaino", "Zaino"], ["stiva", "Stiva"], ["taglie", "Taglie"],
+    ["finanze", "Finanze"], ["zaino", "Zaino"], ["stiva", "Stiva"], ["timbri", "Timbri"], ["taglie", "Taglie"],
   ];
   const STRIP_NOTES = 3;
   const LEDGER_ROWS = 14;   // le righe del registro dei pagamenti, anche vuote
@@ -228,12 +228,19 @@ const Diario = (() => {
 
     zaino() {
       // l'uovo dice quanto manca; la chiave resta per tutta la spedizione
-      const extra = (it) => it.kind === "uovo" ? " <small>(potrebbe schiudersi)</small>" : "";
-      return `<ul class="book-items"><li>${icon("binoculars")}Binocolo</li>${trip().pack.map((it) => `<li>${icon(OGGETTI_SPECIALI[it.kind].icona)}${OGGETTI_SPECIALI[it.kind].nome}${extra(it)}</li>`).join("")}</ul>`;
+      const extra = (it) => it.kind === "uovo" ? " <small>(potrebbe schiudersi)</small>"
+        : it.kind === "marshmallow" ? ` <small>(${["bianco", "ancora bianco", "dorato", "bruciato"][it.cook || 0]})</small>` : "";
+      return `<ul class="book-items"><li>${icon("binoculars")}Binocolo</li><li>${icon("shovel")}Pala</li>${trip().pack.map((it) => `<li>${icon(OGGETTI_SPECIALI[it.kind].icona)}${OGGETTI_SPECIALI[it.kind].nome}${extra(it)}</li>`).join("")}</ul>`;
     },
 
     stiva() {
       return `<ul class="book-items">${trip().hold.map((it) => `<li>${icon(OGGETTI[it.kind].icona)}${OGGETTI[it.kind].nome}</li>`).join("")}</ul>`;
+    },
+
+    // Sei timbri, velati finché non li hai: nessuna spiegazione, si scoprono giocando
+    timbri() {
+      const have = trip().stamps || [];
+      return `<div class="stamps">${Gioco.STAMPS.map((id, n) => `<div class="stamp${have.includes(n) ? " is-got" : ""}">${icon(id)}</div>`).join("")}</div>`;
     },
 
     // Una pagina per ogni avviso accettato, con l'insegna WANTED; consegnato il ricercato, il timbro CATTURATO
@@ -381,6 +388,7 @@ const Diario = (() => {
     g.beginPath(); g.arc(cx, oy + 400, 142, 0, Math.PI * 2); g.stroke();
     drawIcon(g, "birdhouse", cx - 104, oy + 296, 208, "#2f4a2a");
     write(g, "Taccuino di viaggio di", cx, oy + 660, { size: 32, color: SEPIA, align: "center", italic: true });
+    if (t.expert) write(g, "Ornitologo esperto", cx, oy + 610, { size: 40, color: GOLD, align: "center" });
     penLine(g, t.explorer, ox + 110, oy + 760, PW - 220, { size: 88, font: BAROQUE, align: "center" });
     const days = Gioco.day();
     write(g, "giorni di viaggio", ox + 110, oy + 880, { size: 26, color: SEPIA, italic: true });

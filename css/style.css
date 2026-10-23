@@ -814,3 +814,59 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .poster-stamp.is-gone { color: rgba(80, 70, 60, 0.7); border-color: rgba(80, 70, 60, 0.7); }
 
 .welcome-lead { margin: 4px 0 10px; font-size: 19px; line-height: 1.2; color: var(--paper); }
+
+/* La sabbia delle coste caraibiche e il falò della radura */
+.t-sand { color: #b8a070; background: #d8c48a; }
+.t-fire { color: #ff9a40; background: color-mix(in srgb, var(--f-ground) 60%, #5a2a10); }
+.cell.t-fire .ic { opacity: 1; filter: drop-shadow(0 0 4px #ff8a30); animation: flicker 0.9s steps(3) infinite; }
+@keyframes flicker { 50% { filter: drop-shadow(0 0 7px #ffb050); } }
+.cell.marsh .ic { opacity: 1; color: #fffaf0; filter: drop-shadow(0 0 2px #000); }
+.cell.trap .ic { opacity: 0.85; color: #b8b0a0; }
+.cell.hole .ic { opacity: 0.6; color: #3a2a18; }
+.status .hearts .violet { color: #a06ae0; }
+
+/* I timbri del taccuino: sei riquadri, velati finché non li hai */
+.stamps { display: grid; grid-template-columns: repeat(2, 150px); gap: 26px 40px; justify-content: center; margin-top: 20px; }
+.stamp { height: 110px; display: grid; place-items: center; border: 3px dashed rgba(106, 74, 44, 0.35); border-radius: 10px; }
+.stamp .ic { width: 78px; height: 78px; fill: #6a4a2c; opacity: 0.13; }
+.stamp.is-got { border: 4px double rgba(150, 30, 40, 0.8); transform: rotate(-5deg); }
+.stamp.is-got .ic { opacity: 0.85; fill: #8a1e28; }
+
+/* La lettera della Società, in alto a destra sul globo (dall'altra parte del binocolo) */
+.sea-letter {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 5;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font: inherit;
+  font-size: 22px;
+  color: var(--paper);
+  background: rgba(15, 26, 18, 0.7);
+  border: 1px solid var(--paper);
+  padding: 4px 12px 4px 8px;
+  cursor: pointer;
+}
+.sea-letter[hidden] { display: none; }
+.sea-letter .ic { width: 40px; height: 40px; fill: #e8dcb8; }
+.sea-letter.is-new { color: #f2c230; border-color: #f2c230; animation: scope-call 1s ease-in-out infinite alternate; }
+
+/* La busta: chiusa col sigillo di ceralacca; aperta, la lettera esce e si legge */
+.letter { position: absolute; inset: 0; z-index: 30; display: grid; place-items: center; align-content: start; padding-top: 150px; gap: 10px; background: rgba(8, 12, 9, 0.78); cursor: pointer; }
+.letter[hidden] { display: none; }
+.envelope { position: relative; width: 460px; height: 290px; background: #d8c8a0; box-shadow: inset 0 0 0 3px #a88a5a, 6px 6px 0 rgba(0, 0, 0, 0.5); }
+.envelope::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top right, transparent 49.5%, #c8b48a 50%) left bottom / 50% 60% no-repeat, linear-gradient(to top left, transparent 49.5%, #c8b48a 50%) right bottom / 50% 60% no-repeat; z-index: 3; }
+.env-flap { position: absolute; left: 0; right: 0; top: 0; height: 58%; background: #cbb68a; clip-path: polygon(0 0, 100% 0, 50% 100%); transform-origin: top; transition: transform 0.5s; z-index: 4; box-shadow: inset 0 3px 0 #a88a5a; }
+.env-seal { position: absolute; left: 50%; top: 58%; transform: translate(-50%, -50%); width: 64px; height: 64px; border-radius: 50%; background: #9a1e24; display: grid; place-items: center; z-index: 5; transition: opacity 0.3s; box-shadow: 0 0 0 4px #7a1418; }
+.env-seal .ic { width: 44px; height: 44px; fill: #e8a0a0; }
+.env-paper { position: absolute; left: 24px; right: 24px; top: 20px; bottom: 14px; padding: 12px 18px; background: #f2ead2; color: #2a2014; font-family: "IM Fell English", Georgia, serif; font-style: italic; font-size: 16px; line-height: 1.25; text-align: left; z-index: 1; transition: transform 0.6s 0.3s; }
+.env-paper p { margin: 0 0 6px; }
+.env-paper b { font-weight: normal; color: #8a5a10; }
+.env-from { text-align: center; color: #6a4a2c; border-bottom: 1px solid #a88a5a; padding-bottom: 4px; }
+.env-sign { text-align: right; font-family: "Pinyon Script", cursive; font-size: 22px; color: #23305a; }
+.letter.is-open .env-flap { transform: rotateX(180deg); z-index: 0; }
+.letter.is-open .env-seal { opacity: 0; }
+.letter.is-open .env-paper { transform: translateY(-46%) scale(1.08); z-index: 6; }
+.env-keys { margin: 0; color: var(--mid); font-size: 18px; }

@@ -409,6 +409,21 @@ Codifica **Crockford base32**, che non ha lettere ambigue come I, L, O e U. Form
 
 Il controllo è un CRC-16: intercetta gli errori di battitura. Nel leggere si perdonano minuscole, spazi e trattini, e I, L, O valgono 1, 1, 0. Il codice è falsificabile da chi ci si mette: è un gioco, va bene così.
 
+### 14.1 La fine del gioco e i timbri (0.9)
+
+**Il taccuino completo** è *tutti* gli uccelli, rari e Pulcino compresi: ci vogliono più viaggi col taccuino ripreso. Appena completo, sul globo in alto a destra (dall'altra parte del binocolo) compare la **busta della Società**; prima non c'è niente, nemmeno un riquadro vuoto. Si apre con L o col clic: la busta col sigillo di ceralacca, Invio rompe il sigillo e la lettera esce. Alla **Società ornitologica** del Forte, con la lettera, si riceve l'attestato di **Ornitologo esperto** e il gioco finisce (resoconto *Ornitologo esperto*, in oro sulla copertina del libretto).
+
+**I timbri**: un capitolo del taccuino, prima delle Taglie, con sei riquadri. Velati finché non li hai, nessuna descrizione. Nel codice, un bit ciascuno, in quest'ordine: marshmallow bruciato (falò), l'Appeso, la Morte, il Sole, la Luna, il Kraken. Per ora si prende solo il primo.
+
+### 14.2 La radura del falò, il cibo, le tagliole, la bottiglia (0.9)
+
+- **La radura del falò**: una per globo, in una zona interna (*… del falò*). Un cerchio d'alberi con due varchi e una fascia libera intorno, il falò nel mezzo (non si attraversa), il marshmallow accanto: uno per viaggio. Contro il fuoco: cuocerlo (bianco → ancora bianco → dorato → bruciato, e il timbro), mangiarlo, andare.
+- **Mangiare (M)**: il marshmallow rimette tutta la vita e dà un **cuore viola** che assorbe il primo colpo; il **pesce in scatola** (emporio, 2 m.o., uno alla volta) cura due cuori: costa meno del medico ma cura meno, però si porta dietro.
+- **Tagliole (T, emporio, 3 m.o.)**: si posano dove sei; restano nella zona finché non scattano. Lupo: muore, ma la schiva 3 volte su 10 (la tagliola scatta comunque). Orso e cinghiale: fermi 15 tuoi passi.
+- **La bottiglia col messaggio**: una zona caraibica sul mare su tre, sulla prima fila di terra. Si sceglie prima l'arrivo (calpestabile, non acqua), poi da 2 a 4 tratti dritti, alternando verticale e orizzontale; conta dove arrivi, non da dove passi. **X scava** con la pala (sempre nello zaino: il tasto S era già il passo in giù): un passo; nel posto giusto 0–9 m.o. e un oggetto se sono meno di 4, altrove *una buca vuota*.
+- **La spiaggia caraibica**: tre file di sabbia dal mare, due di sabbia ed erba, poi erba con chiazze di sabbia.
+- **La voce dei quattro occhi**: in taverna, una volta per viaggio.
+
 ## 15. Stile visivo
 
 - **Font:** monospazio retro (VT323).

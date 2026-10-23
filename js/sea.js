@@ -36,6 +36,8 @@ const Mare = (() => {
       hud: document.getElementById("sea-hud"),
       prompt: document.getElementById("sea-prompt"),
       scopeBadge: document.getElementById("sea-scope"),
+      letterBadge: document.getElementById("sea-letter"),
+      letter: document.getElementById("letter"),
       postcard: g.postcard,
     };
     const trip = Gioco.trip;
@@ -61,6 +63,7 @@ const Mare = (() => {
 
   function stop() {
     running = false;
+    if (letterOpen) closeLetter();
   }
 
   // Il globo grande riempie il riquadro A, lasciando posto alla rotta e al messaggio
@@ -152,6 +155,14 @@ const Mare = (() => {
       el.scopeBadge.className = `sea-scope ${state}`;
       el.scopeBadge.innerHTML = `${Gioco.iconHtml("binoculars")}<span>${scoping ? "binocolo in mano" : "usa binocolo (T)"}</span>`;
     }
+    // La lettera della Società, a destra del globo: c'è solo quando è arrivata
+    const letter = Gioco.trip.letter;
+    el.letterBadge.hidden = !letter;
+    if (letter && el.letterBadge.dataset.state !== letter) {
+      el.letterBadge.dataset.state = letter;
+      el.letterBadge.className = `sea-letter${letter === "new" ? " is-new" : ""}`;
+      el.letterBadge.innerHTML = `${Gioco.iconHtml("envelope")}<span>${letter === "new" ? "una lettera! (L)" : "rileggi (L)"}</span>`;
+    }
   }
 
   // Righe del riquadro B in navigazione
@@ -218,6 +229,51 @@ const Mare = (() => {
     seaTime = null;
   }
 
+  // --- La lettera della Società: una busta col sigillo; la si apre e dentro c'è l'invito ---
+
+  let letterOpen = false;
+
+  function openLetter() {
+    const trip = Gioco.trip;
+    if (!trip.letter || letterOpen) return;
+    letterOpen = true;
+    turning = 0;
+    el.letter.innerHTML = `<div class="envelope">
+        <div class="env-flap"></div>
+        <div class="env-seal">${Gioco.iconHtml("seal")}</div>
+        <div class="env-paper">
+          <p class="env-from">Società Ornitologica · il Forte</p>
+          <p>Egregio ${escape(trip.explorer)},</p>
+          <p>ci giunge voce che il vostro taccuino sia completo: ogni uccello dell'arcipelago, disegnato e annotato. Nessuno, prima di voi.</p>
+          <p>Vi preghiamo di passare dalla nostra sede, al Forte, per ricevere l'attestato di <b>Ornitologo esperto</b>.</p>
+          <p class="env-sign">Il presidente della Società</p>
+        </div>
+      </div>
+      <p class="env-keys">Invio apre la busta, e la richiude · Esc chiude</p>`;
+    el.letter.hidden = false;
+    Suoni.play("pagina");
+  }
+
+  function closeLetter() {
+    letterOpen = false;
+    el.letter.hidden = true;
+    el.letter.classList.remove("is-open");
+    if (Gioco.trip.letter === "new") Gioco.trip.letter = "read";
+  }
+
+  const escape = (str) => String(str).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
+
+  // A lettera aperta la tastiera è sua: Invio apre la busta (o la chiude, se è già aperta), Esc la chiude
+  window.addEventListener("keydown", (e) => {
+    if (!letterOpen) return;
+    if (e.key === "Enter" || e.key === " ") {
+      if (el.letter.classList.contains("is-open")) closeLetter();
+      else { el.letter.classList.add("is-open"); Suoni.play("pagina"); }
+    } else if (e.key === "Escape" || e.key === "l" || e.key === "L") closeLetter();
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  }, true);
+
   // --- Comandi ---
 
   document.addEventListener("keydown", (e) => {
@@ -230,6 +286,7 @@ const Mare = (() => {
     else if ((k === "ArrowUp" || k === "w") && !e.repeat) { ship.sails = Math.min(MAX_SAILS, ship.sails + 1); Suoni.play("legno"); }
     else if ((k === "ArrowDown" || k === "s") && !e.repeat) { ship.sails = Math.max(0, ship.sails - 1); Suoni.play("legno"); }
     else if (k === "t" && !e.repeat) openScope();
+    else if (k === "l" && !e.repeat) openLetter();
     else if (k === "Enter") {
       if (city) { stop(); Gioco.visitCity(city); }
       else if (near && near.distance <= LAND_RANGE) { stop(); Gioco.landAt(near.zone); }
@@ -247,6 +304,11 @@ const Mare = (() => {
 
   document.addEventListener("click", (e) => {
     if (running && e.target.closest("#sea-scope")) openScope();
+    if (running && e.target.closest("#sea-letter")) openLetter();
+    else if (letterOpen && e.target.closest("#letter")) {
+      if (el.letter.classList.contains("is-open")) closeLetter();
+      else { el.letter.classList.add("is-open"); Suoni.play("pagina"); }
+    }
   });
 
   return { enter, stop, statusRows };

@@ -41,7 +41,7 @@ const Citta = (() => {
       medico: { cost: 5, extra: 0 },
       taverna: { cost: 5 },
       mercato: { price: 2, refuse: [] },
-      emporio: { semi: 5 },
+      emporio: { semi: 5, cibo: 2, tagliola: 3 },
       gendarmeria: {},
       societa: {},
     },
@@ -49,7 +49,7 @@ const Citta = (() => {
       medico: { cost: 3, extra: 2 }, // tutti i cuori e uno in più, che il Forte non ripristina
       taverna: { cost: 4, name: "Taverna Pesce Sgozzato" },
       mercato: { price: 4, refuse: ["arte"] },
-      emporio: { semi: 5 },
+      emporio: { semi: 5, cibo: 2, tagliola: 3 },
     },
   };
   // il nome e l'icona dell'insegna sul tetto (game-icons.net)
@@ -626,7 +626,7 @@ const Citta = (() => {
   function shopLine(kind) {
     const shop = SHOPS[c.city.id][kind];
     if (kind === "medico") return `cura le ferite${shop.extra ? " e dà un cuore in più" : ""} · ${shop.cost} m.o.`;
-    if (kind === "emporio") return `semi per far tornare un uccello volato via · ${shop.semi} m.o.`;
+    if (kind === "emporio") return `semi ${shop.semi} m.o. · pesce in scatola ${shop.cibo} m.o. · tagliole ${shop.tagliola} m.o.`;
     if (kind === "taverna") return `si dorme fino all'alba e si sentono storie · ${shop.cost} m.o.`;
     if (kind === "mercato") return `compra la merce della stiva · ${shop.price} m.o. al pezzo`;
     if (kind === "gendarmeria") return `paga le taglie dei ricercati · ${Gioco.BOUNTY} m.o.`;
@@ -696,13 +696,15 @@ const Citta = (() => {
     tick();
   }
 
-  // L'emporio: un tavolo con la merce sopra (per ora solo i semi); si sceglie con le frecce
+  // L'emporio: un tavolo con la merce sopra (semi, pesce in scatola, tagliole); si sceglie con le frecce.
+  // Il pesce in scatola uno alla volta: si porta dietro, ma non deve valere più del medico
   function emporio() {
-    const shop = SHOPS[c.city.id].emporio, money = Gioco.trip.money;
-    const goods = [["semi", shop.semi]];
+    const shop = SHOPS[c.city.id].emporio, trip = Gioco.trip, money = trip.money;
+    const goods = [["semi", shop.semi], ["cibo", shop.cibo], ["tagliola", shop.tagliola]];
+    const full = (kind) => kind === "cibo" && trip.pack.some((it) => it.kind === "cibo");
     dialog("Emporio", "«Guardate pure, è tutto sul tavolo.»", [
-      ...goods.map(([kind, price]) => [money >= price ? `buy:${kind}` : "none",
-        `${Gioco.iconHtml(OGGETTI_SPECIALI[kind].icona)} ${OGGETTI_SPECIALI[kind].nome} <small>(${price} m.o.${money < price ? ", non ti bastano" : ""})</small>`]),
+      ...goods.map(([kind, price]) => [money >= price && !full(kind) ? `buy:${kind}` : "none",
+        `${Gioco.iconHtml(OGGETTI_SPECIALI[kind].icona)} ${OGGETTI_SPECIALI[kind].nome} <small>(${price} m.o.${full(kind) ? ", ne hai già una" : money < price ? ", non ti bastano" : ""})</small>`]),
       ["back", "Esci"],
     ]);
     Gioco.el.overlay.querySelector(".menu").classList.add("shop-table");
@@ -715,7 +717,8 @@ const Citta = (() => {
     trip.pack.push({ kind });
     Suoni.play("monete");
     Gioco.renderStatus();
-    Gioco.toast(`${OGGETTI_SPECIALI[kind].nome}: nello zaino. A terra si spargono con E dove un uccello è volato via.`);
+    const use = { semi: "A terra si spargono con E dove un uccello è volato via.", cibo: "A terra si mangia con M: due cuori.", tagliola: "A terra si posa con T." }[kind];
+    Gioco.toast(`${OGGETTI_SPECIALI[kind].nome}: nello zaino. ${use}`);
     emporio();
   }
 
@@ -769,6 +772,11 @@ const Citta = (() => {
   // La Società ornitologica: un premio per ogni specie di cui hai visto tutti gli uccelli comuni
   function societa() {
     const trip = Gioco.trip;
+    // la lettera: il taccuino è completo, la Società consegna l'attestato e il viaggio finisce
+    if (trip.letter) {
+      dialog("Società ornitologica", `«${trip.explorer}! Vi aspettavamo. Il vostro taccuino è completo: ogni uccello dell'arcipelago, disegnato e annotato. La Società vi nomina Ornitologo esperto.» Il presidente ti consegna l'attestato, con il sigillo di ceralacca.`, [["expert", "Ricevi l'attestato"]]);
+      return;
+    }
     trip.society ||= [];
     const done = Object.keys(SPECIE).filter((sp) => !trip.society.includes(sp)
       && UCCELLI.filter((u) => u.specie === sp && !u.rara && !u.uovo).every((u) => trip.birds[u.id]?.level === "visto"));
@@ -925,7 +933,13 @@ const Citta = (() => {
     back();
     if (!Gioco.advance(hours)) return;
     const heard = Gioco.rumor(c.city.id);
-    Gioco.toast(heard ? "Al bancone, una storia che vale oro. È nel diario." : "Dormi bene. Nessuno ha storie nuove da raccontare.");
+    // una volta per viaggio, il marinaio coi quattro occhi
+    const odd = !trip.fourEyes && (!heard || Math.random() < 0.4);
+    if (odd) {
+      trip.fourEyes = true;
+      trip.rumors.unshift({ msg: "Un marinaio che sembra avere quattro occhi giura che certi uccelli si spostano appena smetti di guardarli. «Per questo è così difficile osservarli.»", day: Gioco.day(), time: Gioco.now() });
+    }
+    Gioco.toast(heard ? "Al bancone, una storia che vale oro. È nel diario." : odd ? "Al bancone, un marinaio strano racconta una storia strana. È nel diario." : "Dormi bene. Nessuno ha storie nuove da raccontare.");
     drawPostcard();
     Gioco.renderStatus();
     Gioco.save();
@@ -992,6 +1006,7 @@ const Citta = (() => {
       sell(Gioco.trip.hold.map((it, i) => (refuse.includes(OGGETTI[it.kind].cat) ? -1 : i)).filter((i) => i >= 0));
     } else if (action.startsWith("sell:")) sell([+action.slice(5)]);
     else if (action === "sail") { leave(); Gioco.depart(); }
+    else if (action === "expert") { back(); leave(); Gioco.victory(); }
   });
 
   document.addEventListener("mouseover", (e) => {

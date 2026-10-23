@@ -2,6 +2,16 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.9 · 23 ottobre 2026
+
+- **La fine del gioco.** Quando il taccuino è completo (tutti gli uccelli, anche i rari e il Pulcino), sul globo, in alto a destra, compare **una busta** della Società ornitologica (L o un clic per aprirla, Invio per rompere il sigillo). Ti invita alla sua sede, al Forte: lì ricevi l'attestato di **Ornitologo esperto**, e il gioco finisce. Il libretto lo dice in copertina, in oro. Se la lettera non c'è, non c'è niente.
+- **I timbri**: un capitolo nuovo del taccuino con sei timbri, velati finché non li hai, senza spiegazioni. Stanno anche nel codice del taccuino. Per ora se ne può prendere uno solo…
+- **La radura del falò**: in un'isola, in una zona interna, un cerchio d'alberi con il fuoco nel mezzo e un **marshmallow** accanto. Lo prendi, lo cuoci sul fuoco (la prima volta resta bianco, la seconda è dorato, la terza è bruciato) e lo mangi con **M**: comunque sia cotto, ti rimette tutta la vita e ti dà **un cuore viola** in più, che se ne va al primo colpo.
+- **L'emporio** ha anche il **pesce in scatola** (2 m.o., cura due cuori con M; uno solo alla volta nello zaino) e le **tagliole** (3 m.o.). La tagliola si posa con **T**: il lupo ci muore (ma tre volte su dieci la schiva), l'orso e il cinghiale restano presi per 15 tuoi passi. Le tagliole restano nella zona finché non scattano.
+- **La bottiglia col messaggio**: in una zona caraibica sul mare su tre, sulla riva. Il messaggio (va nelle voci) conta i passi dalla bottiglia: *«Dalla bottiglia, sei passi verso nord, tre verso est… Scava.»* Si scava con **X**, con **la pala**, che ora hai sempre nello zaino col binocolo: costa un passo; nel posto giusto c'è un tesoro (fino a 9 m.o., e un oggetto se le monete sono poche), altrove una buca vuota.
+- **Le coste caraibiche** hanno la spiaggia: tre file di sabbia dal mare, poi sabbia ed erba, poi erba con chiazze di sabbia.
+- In taverna, una volta per viaggio, **un marinaio che sembra avere quattro occhi** racconta una cosa strana.
+
 ## 0.8 · 23 ottobre 2026
 
 - **La nave non si incaglia più dentro le isole.** Il grande lago contava come mare, e la nave poteva infilarsi tra due terre che si toccano solo per un angolo: così finiva nel lago, in mezzo alle zone interne. Ora il lago non si naviga e quei varchi sono chiusi; una nave già finita lì torna da sola al mare aperto.
