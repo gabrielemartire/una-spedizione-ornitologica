@@ -247,7 +247,7 @@ Ogni creatura mostra il suo stato (`!` ti insegue o carica, `?` ti cerca, `z` si
 
 | Creatura | Comportamento | Come la gestisci |
 |---|---|---|
-| Orso | Al tuo passo quando ti insegue o ti cerca, uno ogni due quando vaga; vagando ti gira intorno, ma ogni tanto se ne va di 5–6 caselle e poi torna; l'acqua gli costa doppio. Colpisce fortissimo: **−8, cioè quattro cuori su cinque**, ti lascia moribondo. Poi però è **sazio**: resta fermo per 3 tue mosse, poi si allontana da te (finché sei a meno di 8 caselle) e torna a vagare; ti riattacca solo se gli vai addosso o fai molto rumore accanto a lui. Ti fiuta solo da vicinissimo (3 caselle), ti vede da lontano, aggira gli ostacoli | Si può scappare: rompi la linea di vista, nasconditi nell'erba alta e nei cespugli, attraversa il ruscello |
+| Orso | Appena più veloce di te quando ti insegue (1,15 passi per tuo passo: in campo aperto ti prende in 6–7 passi), al tuo passo quando ti cerca, uno ogni due quando vaga; vagando ti gira intorno, ma ogni tanto se ne va di 5–6 caselle e poi torna; l'acqua gli costa doppio. Colpisce fortissimo: **−8, cioè quattro cuori su cinque**, ti lascia moribondo. Poi però è **sazio**: resta fermo per 3 tue mosse, poi si allontana da te (finché sei a meno di 8 caselle) e torna a vagare; ti riattacca solo se gli vai addosso o fai molto rumore accanto a lui. Ti fiuta solo da vicinissimo (3 caselle), ti vede da lontano, aggira gli ostacoli | Si può scappare: rompi la linea di vista, nasconditi nell'erba alta e nei cespugli, attraversa il ruscello |
 | Lupi | In branco, al tuo passo, colpiscono meno forte (−2) ma sono tanti; ci vedono bene anche di notte | Nasconditi e aspetta; *(v2: cercano di circondarti)* |
 | Cinghiale | Non sa curvare: se sei sulla sua riga o colonna, in vista, **carica in linea retta** di 2 caselle a battito (−3). Contro un ostacolo si pianta e resta stordito | Le sue linee di carica sono evidenziate: spostati di lato, oppure fallo schiantare contro un albero |
 | Serpente | Fermo nell'erba alta, morde chi è adiacente | Va notato ed evitato |
@@ -280,7 +280,7 @@ Servono a **vendere al mercato**, ma conviene tenerne qualcuno: **i mercanti** l
 
 **La bacheca.** In tutti e due i porti, sulla banchina, c'è la **bacheca dei ricercati**. A ogni visita c'è un avviso nuovo il **60%** delle volte, ma **al massimo uno ogni 6 giorni** e mai mentre ne hai uno in corso. L'avviso dice chi è, cosa ha fatto e in quale zona si nasconde.
 
-**La caccia.** Accettato l'avviso, sul globo compare una **W rossa** sulla zona, e col binocolo si vede **una colonna di fumo** che sale dagli alberi (nella cartolina della zona). Hai **3 giorni**, poi il ricercato lascia l'arcipelago. Sbarcando, il fuggitivo (icona *bandit*, rossa) sta al suo fuoco vicino agli alberi, lontano dalla nave:
+**La caccia.** Accettato l'avviso, sul globo compare una **W rossa** al **centro dell'isola** (non sulla zona). Il ricercato non fa fumo: **di notte** accende un fuoco, che si vede **solo col binocolo** come un puntino rosso tra gli alberi della sua zona (e nella cartolina della zona, se ci sbarchi di notte). All'alba e di pomeriggio è lì ma non si vede niente: bisogna aspettare la notte. Hai **3 giorni**, poi il ricercato lascia l'arcipelago. Sbarcando, il fuggitivo (icona *bandit*, rossa) sta al suo fuoco vicino agli alberi, lontano dalla nave:
 - finché non ti vede (8 caselle, 5 di notte, come gli animali: nascosto ti vede solo da vicinissimo) o non ti sente, resta fermo;
 - poi **scappa**: un passo per ogni tuo passo se cammini, due ogni tre se corri; si ferma contro alberi e rocce;
 - se ti vede entro 6 caselle **ti spara** (un cuore, un colpo ogni 4 battiti): alberi e rocce fermano il colpo, cespugli ed erba alta ti nascondono;
@@ -288,6 +288,16 @@ Servono a **vendere al mercato**, ma conviene tenerne qualcuno: **i mercanti** l
 - lo **prendi** arrivandogli accanto.
 
 Restano gli animali, che inseguono solo te, e l'uccello, che può spaventarsi (anche per il fuggitivo che gli passa vicino). Preso, il ricercato **va in stiva**; alla **gendarmeria del Forte** (non al porticciolo) si riscuote la **taglia: 15 m.o.**
+
+### 9.7 Il campo dei bucanieri (0.10)
+
+Uno o due per arcipelago, mai nella zona del ricercato, di una città, del castello, del vulcano, della torre o del falò; niente mercanti né forzieri. **Il segnale**: col binocolo, a ogni ora, una colonna di fumo grasso (il *boucan*); la prima volta il diario annota *«Fumo grasso dalla costa. Odore di carne.»*. Dal globo niente; il nome della zona non dice niente.
+
+**Dentro**: nessun animale (*«Nessuna traccia di animali.»*). Il tesoro (30 m.o., ci passi sopra) lontano da dove si arriva, accanto la carne che affumica, intorno **quattro bucanieri**: due col fucile (un cuore ogni 6 battiti, entro 6 caselle, in vista; da vicino aspettano di poter sparare), due con la spada (un cuore a contatto, poi 2 battiti di pausa). Al tuo passo; vista 6 caselle di giorno, 4 di notte; le tagliole le scavalcano. Svegli e tranquilli girano vicino al fuoco.
+
+**Di notte, finché il tesoro c'è, dormono** (`z`). Le caselle rumorose (vetri rotti, padelle, cocci, con la loro icona) li svegliano 4 volte su 5; andare addosso a uno che dorme li sveglia sempre; se se ne sveglia uno si svegliano tutti. Il generatore garantisce, da ogni entrata (la nave e i passaggi), un sentiero al tesoro senza caselle rumorose e senza bucanieri.
+
+**Dopo il furto** restano lì per sempre, non dormono più e sanno sempre dove sei: la zona è persa per il resto del viaggio, uccelli compresi.
 
 ## 10. Le città
 

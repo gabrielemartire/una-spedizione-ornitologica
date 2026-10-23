@@ -337,7 +337,7 @@ const Globo = (() => {
 
   const buffers = new Map();
 
-  // view = { lat, lon, heading }; opts = { res, time, wake: [{lat,lon}], highlight: zoneId, markers: true, marks: trip.zones, wanted: zoneId }
+  // view = { lat, lon, heading }; opts = { res, time, wake: [{lat,lon}], highlight: zoneId, markers: true, marks: trip.zones, wanted: {lat,lon}, tower: zoneId }
   function draw(canvas, world, view, opts) {
     const N = opts.res;
     if (!buffers.has(N)) {
@@ -443,9 +443,9 @@ const Globo = (() => {
       }
     }
 
-    // La W rossa del ricercato, sulla zona dove si nasconde
+    // La W rossa del ricercato, al centro dell'isola dove si nasconde
     if (opts.wanted != null) {
-      const z = world.zones[opts.wanted], s = project(z.lat, z.lon);
+      const s = project(opts.wanted.lat, opts.wanted.lon);
       const W = [[-4, -3], [-4, -2], [-3, -1], [-3, 0], [-2, 1], [-2, 2], [-1, 1], [-1, 0], [0, -1], [1, 0], [1, 1], [2, 2], [2, 1], [3, 0], [3, -1], [4, -2], [4, -3]];
       if (s) {
         for (const [dx, dy] of W) for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {

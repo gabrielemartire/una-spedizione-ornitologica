@@ -2,6 +2,16 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.10 · 23 ottobre 2026
+
+- **Il ricercato non fa più fumo.** Di notte accende **un fuoco**, che si vede solo col **binocolo**: un puntino rosso tra gli alberi della zona dove si nasconde. All'alba e di pomeriggio è sempre lì, ma non si vede niente. La **W** sul globo sta al **centro dell'isola**: per sapere su quale costa sbarcare bisogna aspettare la notte e guardare.
+- **Il campo dei bucanieri** (uno o due per arcipelago). Col binocolo, a qualsiasi ora, si vede **una colonna di fumo grasso**: affumicano la carne (*«Fumo grasso dalla costa. Odore di carne.»*). Dal globo niente.
+  - Dentro ci sono **quattro bucanieri**, due col **fucile** (un cuore, un colpo ogni 6 passi) e due con la **spada**; vanno al tuo passo, vedono meno lontano degli animali. Animali non ce ne sono (*«Nessuna traccia di animali.»*).
+  - In mezzo al campo c'è **un tesoro da 30 m.o.**: ci passi sopra e lo prendi.
+  - **Di notte, finché il tesoro c'è, dormono.** Intorno ci sono vetri rotti, padelle e cocci: calpestarli li sveglia quattro volte su cinque, e se se ne sveglia uno si svegliano tutti. Anche andare addosso a uno che dorme li sveglia. Dal punto in cui arrivi al tesoro c'è sempre un sentiero senza immondizia.
+  - **Dopo il furto** non dormono più e sanno sempre dove sei: quella zona è persa per il resto del viaggio.
+- **L'orso** è di nuovo appena più veloce di te: nella 0.8 andava al tuo passo e, camminando, non ti raggiungeva mai. In campo aperto ti prende in sei o sette passi; nascondendoti, rompendo la vista o passando dall'acqua lo puoi ancora seminare.
+
 ## 0.9 · 23 ottobre 2026
 
 - **La fine del gioco.** Quando il taccuino è completo (tutti gli uccelli, anche i rari e il Pulcino), sul globo, in alto a destra, compare **una busta** della Società ornitologica (L o un clic per aprirla, Invio per rompere il sigillo). Ti invita alla sua sede, al Forte: lì ricevi l'attestato di **Ornitologo esperto**, e il gioco finisce. Il libretto lo dice in copertina, in oro. Se la lettera non c'è, non c'è niente.

@@ -883,7 +883,15 @@ const Cartolina = (() => {
       ellipse(x, y, 3 + r() * 2, 2, (xx, yy) => (yy < y - 0.5 ? P.rockLight : P.rock));
     }
 
-    // Il fumo del fuoco del ricercato: una colonna sottile che sale dagli alberi
+    // Il fuoco del ricercato, di notte: un puntino rosso tra gli alberi, e nient'altro
+    if (zone.campfire) {
+      const fx = Math.round(24 + r() * (PW - 48)), fy = Math.round(HY + 9 + r() * 5);
+      for (const [dx, dy] of [[-1, 0], [2, 0], [0, -1], [1, -1], [0, 1], [1, 1]]) px(fx + dx, fy + dy, mix(get(fx + dx, fy + dy), "#8a2a14", 0.6, fx + dx, fy + dy));
+      px(fx, fy, "#ff4a20");
+      px(fx + 1, fy, "#ffb040");
+    }
+
+    // Il fumo grasso del campo dei bucanieri (il boucan, la carne affumicata): una colonna che sale dagli alberi
     if (zone.smoke) {
       let sx = 30 + r() * (PW - 60);
       const smoke = tintHex("#d8d4cc", zone.time), smokeDark = tintHex("#8a8680", zone.time);

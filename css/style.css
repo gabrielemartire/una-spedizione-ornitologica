@@ -870,3 +870,11 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .letter.is-open .env-seal { opacity: 0; }
 .letter.is-open .env-paper { transform: translateY(-46%) scale(1.08); z-index: 6; }
 .env-keys { margin: 0; color: var(--mid); font-size: 18px; }
+
+/* Il campo dei bucanieri: la carne che affumica, l'immondizia rumorosa (ben riconoscibile), gli uomini */
+.t-boucan { color: #e88a50; background: color-mix(in srgb, var(--f-ground) 60%, #4a2a14); }
+.cell.t-boucan .ic { opacity: 1; filter: drop-shadow(0 0 3px #c86a30); }
+.t-junk { color: #d8c8a0; background: color-mix(in srgb, var(--f-ground) 70%, #5a4a3a); }
+.cell.t-junk .ic { opacity: 0.95; }
+.e-pirate { color: #e8e0c8; filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 1px #000); }
+.e-pirate.is-gun { color: #d8b878; }

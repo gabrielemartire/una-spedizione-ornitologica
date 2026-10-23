@@ -129,7 +129,7 @@ const Mare = (() => {
     const canLand = near && near.distance <= LAND_RANGE;
     Globo.draw(el.canvas, trip.world, ship, {
       res: BIG_RES, time, wake, ship: true, markers: true, marks: trip.zones,
-      wanted: trip.wanted && trip.wanted.state === "free" ? trip.wanted.zone : null,
+      wanted: trip.wanted && trip.wanted.state === "free" ? islandCenter(trip.world, trip.wanted.zone) : null,
       tower: trip.towerKnown ? towerZone(trip) : null,
       highlight: scope ? scope.id : canLand ? near.zone.id : null,
     });
@@ -185,6 +185,20 @@ const Mare = (() => {
     Cartolina.render({ seed: trip.seed + trip.departures * 977 + trip.third * 31, sea: true, time, tags: new Set() }, el.postcard);
   }
 
+  // La W del ricercato sta al centro della sua isola, non sulla zona: la zona la dice il fuoco, di notte
+  const centers = new Map();
+  function islandCenter(world, zoneId) {
+    const island = world.zones[zoneId].island;
+    const k = `${world.seed}:${island}`;
+    if (!centers.has(k)) {
+      const ps = world.zones.filter((z) => z.island === island).map((z) => z.p);
+      const v = [0, 1, 2].map((i) => ps.reduce((a, p) => a + p[i], 0));
+      const n = Math.hypot(...v);
+      centers.set(k, { lat: Math.asin(v[2] / n) * 180 / Math.PI, lon: Math.atan2(v[1], v[0]) * 180 / Math.PI });
+    }
+    return centers.get(k);
+  }
+
   // La torre della donna, finché non le hai portato la lettera
   function towerZone(trip) {
     const z = trip.world.zones.find((zz) => zz.tags.has("torre"));
@@ -207,8 +221,14 @@ const Mare = (() => {
     const memory = trip.zones[zone.id];
     const bird = memory && memory.bird != null ? UCCELLI[memory.bird] : null;
     const flying = !!bird && !memory.done && !memory.gone && bird.ore.includes(Gioco.now());
-    const smoke = !!trip.wanted && trip.wanted.state === "free" && trip.wanted.zone === zone.id;
-    Cartolina.render({ seed: zone.seed, tags: zone.tags, time: Gioco.now(), bird: flying, smoke }, el.postcard);
+    // col binocolo: il fuoco del ricercato, solo di notte; il fumo grasso dei bucanieri, sempre
+    const campfire = !!trip.wanted && trip.wanted.state === "free" && trip.wanted.zone === zone.id && Gioco.now() === "notte";
+    const smoke = zone.tags.has("bucanieri");
+    if (smoke && !(trip.zones[zone.id] ||= { visited: false, done: false, gone: false }).smokeSeen) {
+      trip.zones[zone.id].smokeSeen = true;
+      Gioco.note("Fumo grasso dalla costa. Odore di carne.");
+    }
+    Cartolina.render({ seed: zone.seed, tags: zone.tags, time: Gioco.now(), bird: flying, smoke, campfire }, el.postcard);
     Suoni.play("pagina");
   }
 

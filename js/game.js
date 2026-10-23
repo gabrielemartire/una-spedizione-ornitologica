@@ -44,6 +44,12 @@ const Gioco = (() => {
   // della mappa solo se sei lontano; damage = mezzi cuori
   const OUTLAW = { sight: 8, nightSight: 5, hearing: 2, range: 6, reload: 4, damage: 2, escape: 10,
     death: "Impallinato", deathText: "Il ricercato aveva la mira migliore" };
+  // I bucanieri: due col fucile (un cuore ogni 6 battiti), due con la spada (colpiscono a contatto come i lupi).
+  // Al tuo passo, vedono meno lontano degli animali; di notte, finché il tesoro c'è, dormono
+  const PIRATE = { sight: 6, nightSight: 4, hearing: 1, range: 6, reload: 6, gun: 2, sword: 2, rest: 2, roam: 4,
+    death: "Infilzato", deathText: "I bucanieri non perdonano chi tocca il loro bottino" };
+  const PIRATE_TREASURE = 30;
+  const PIRATE_WAKE = 0.8;    // quanto spesso una casella rumorosa li sveglia
   const OUTLAWS = [
     ["Bartolo il Guercio", "ha svuotato la cassa del dazio"], ["Gegia Tre Dita", "ha venduto la stessa nave a tre capitani"],
     ["Mastro Ruggine", "ha rubato la campana del Forte"], ["Nando Senzapane", "ha incendiato il granaio"],
@@ -90,15 +96,21 @@ const Gioco = (() => {
     sand:   { name: "Sabbia",           ch: "·",            cls: "t-sand",   walk: true,  sight: true, noise: 1, sound: "passoErba" },
     // Il falò della radura: ci si cuoce il marshmallow
     fire:   { name: "Falò",             icon: "campfire",   cls: "t-fire",   walk: false, sight: true, fire: true },
+    // Il campo dei bucanieri: la carne che affumica, e intorno roba che fa rumore se la calpesti
+    boucan: { name: "Carne affumicata", icon: "boucan",     cls: "t-boucan", walk: false, sight: true },
+    glass:  { name: "Vetri rotti",      icon: "glass",      cls: "t-junk",   walk: true,  sight: true, noise: 4, sound: "macerie", junk: true },
+    pot:    { name: "Padelle",          icon: "pot",        cls: "t-junk",   walk: true,  sight: true, noise: 4, sound: "macerie", junk: true },
+    shards: { name: "Cocci",            icon: "shards",     cls: "t-junk",   walk: true,  sight: true, noise: 4, sound: "macerie", junk: true },
   };
 
   // Gli animali: l'orso di giorno, i lupi di notte, il cinghiale all'alba. L'orso colpisce forte (quattro
   // cuori) ma poi è sazio: dopo il fermo torna a vagare e ti riattacca solo se lo provochi da vicino.
-  // L'orso va al tuo passo e ha il fiuto corto: correndo e nascondendoti lo puoi seminare. Vagando ti
+  // L'orso è appena più veloce di te (in campo aperto ti prende in 6–7 passi) e ha il fiuto corto: rompendo la
+  // vista, nascondendoti o passando dall'acqua lo puoi seminare. Vagando ti
   // gira intorno, ma ogni tanto se ne va di cinque o sei caselle (roam) e poi torna.
   // speed = passi per ogni tuo passo (l'acqua ne costa 2); il cinghiale invece carica in linea retta
   const KINDS = {
-    bear: { name: "Orso", icon: "bear", speed: { hunt: 1, search: 1, wander: 0.5 }, sight: 9, nightSight: 6, smell: 3, roam: true, hearing: 2, damage: 8, rest: 3, sated: true, sound: "orso", step: "passoOrso",
+    bear: { name: "Orso", icon: "bear", speed: { hunt: 1.15, search: 1, wander: 0.5 }, sight: 9, nightSight: 6, smell: 3, roam: true, hearing: 2, damage: 8, rest: 3, sated: true, sound: "orso", step: "passoOrso",
       verb: "L'orso ti raggiunge e ti colpisce!", death: "Sbranato", deathText: "L'orso ha avuto la meglio" },
     wolf: { name: "Lupo", icon: "wolf", speed: { hunt: 1, search: 1, wander: 0.5 }, sight: 8, nightSight: 8, smell: 5, hearing: 3, damage: 2, rest: 2, sound: "lupo", step: null,
       verb: "Un lupo ti azzanna!", death: "Azzannato", deathText: "Il branco ha avuto la meglio" },
@@ -393,7 +405,39 @@ const Gioco = (() => {
     if (!lair.length) return null;
     lair.sort(() => r() - 0.5);
 
-    return { map, start, bird, lair, free, ruin, tower, camp, ship: shape.coastal ? { x: 0, y: shipY } : null };
+    // Il campo dei bucanieri: lontano da dove si arriva, col tesoro, la carne, quattro uomini e l'immondizia
+    const pirates = tags.has("bucanieri") ? placePirates(map, r, free, [start, ...shape.passes.map(inward)], bird) : null;
+    if (tags.has("bucanieri") && !pirates) return null;
+
+    // il campo non è posto per oggetti, mercanti e forzieri
+    const open = pirates ? free.filter((c) => ["grass", "tall", "sand"].includes(map[c.y][c.x]) && dist(c, pirates.treasure) > 7) : free;
+    return { map, start, bird, lair, free: open, ruin, tower, camp, pirates, ship: shape.coastal ? { x: 0, y: shipY } : null };
+  }
+
+  // Il tesoro in mezzo, la carne accanto, quattro uomini intorno, e caselle rumorose sparse. Da ogni entrata
+  // al tesoro c'è sempre un sentiero senza caselle rumorose e senza bucanieri
+  function placePirates(map, r, free, entries, bird) {
+    const far = free.filter((c) => entries.every((e) => dist(c, e) >= 14) && dist(c, bird) >= 6 && c.x > 2 && c.x < W - 3 && c.y > 2 && c.y < H - 3);
+    if (!far.length) return null;
+    const treasure = far[Math.floor(r() * far.length)];
+    const near = (lo, hi) => free.filter((c) => { const d = dist(c, treasure); return d >= lo && d <= hi; }).sort(() => r() - 0.5);
+    const boucan = DIRS.map(([dx, dy]) => ({ x: treasure.x + dx, y: treasure.y + dy })).find((c) => map[c.y][c.x] === "grass" || map[c.y][c.x] === "tall");
+    if (!boucan) return null;
+    map[boucan.y][boucan.x] = "boucan";
+    const men = near(2, 4).filter((c) => !same(c, boucan)).slice(0, 4);
+    if (men.length < 4) return null;
+    const taken = (c) => same(c, treasure) || same(c, boucan) || men.some((m) => same(m, c));
+    const junk = ["glass", "pot", "shards"];
+    for (const c of near(1, 7)) if (!taken(c) && r() < 0.3) map[c.y][c.x] = junk[Math.floor(r() * 3)];
+    // il sentiero silenzioso: da ogni entrata, evitando i bucanieri e la carne; l'immondizia sul sentiero si toglie
+    const menKeys = new Set(men.map(key));
+    for (const e of entries) {
+      const { prev } = bfs(map, e, Infinity, (c) => tile(map, c.x, c.y).walk && !menKeys.has(key(c)));
+      const path = pathFrom(prev, e, treasure);
+      if (!path) return null;
+      for (const c of path) if (tile(map, c.x, c.y).junk) map[c.y][c.x] = "grass";
+    }
+    return { treasure, boucan, men };
   }
 
   // La radura del falò: dentro tutto libero (glade, che la vegetazione non tocca), intorno un anello d'alberi
@@ -501,6 +545,7 @@ const Gioco = (() => {
   // Chi c'è in questo momento: di giorno l'orso, di notte i lupi, all'alba il cinghiale (o l'orso, vicino al
   // fiume). Una zona senza animali non c'è mai
   function spawnBeasts(gen, zone, time) {
+    if (zone.tags.has("bucanieri")) return [];
     const r = rng(zone.seed ^ Math.imul(trip.third + 1, 0x9e3779b1));
     const river = zone.tags.has("fiume");
     const spots = gen.lair.slice();
@@ -557,14 +602,18 @@ const Gioco = (() => {
     // la radura del falò: una, in una zona interna (se non ce ne sono, in una qualunque)
     const inner = (z) => !world.coastal[z.id] && !["castello", "vulcano", "torre"].some((t) => z.tags.has(t));
     (pickZone(inner) || pickZone((z) => !["castello", "vulcano", "torre"].some((t) => z.tags.has(t))))?.tags.add("falo");
+    // i campi dei bucanieri: rari, uno o due per arcipelago, mai dove c'è già qualcosa di speciale
+    const rb = rng(seed ^ 0xb0ca4);
+    const plain = (z) => !["castello", "vulcano", "torre", "falo"].some((t) => z.tags.has(t));
+    wild.filter(plain).sort(() => rb() - 0.5).slice(0, rb() < 0.4 ? 2 : 1).forEach((z) => z.tags.add("bucanieri"));
     // i forzieri chiusi: uno ogni CHEST_EVERY zone, almeno uno
     const rc = rng(seed ^ 0x7c4e57);
-    world.chests = wild.slice().sort(() => rc() - 0.5).slice(0, Math.max(1, Math.round(wild.length / CHEST_EVERY))).map((z) => z.id);
+    world.chests = wild.filter((z) => !z.tags.has("bucanieri")).slice().sort(() => rc() - 0.5).slice(0, Math.max(1, Math.round(wild.length / CHEST_EVERY))).map((z) => z.id);
     for (const z of world.zones) z.name = zoneName(z.tags, z.place);
     // Due mercanti girano per il globo, ognuno in una zona, e cercano un oggetto preciso
     const rm = rng(seed ^ 0x3e7c11);
     const kinds = Object.keys(OGGETTI);
-    world.merchants = wild.slice().sort(() => rm() - 0.5).slice(0, MERCHANTS)
+    world.merchants = wild.filter((z) => !z.tags.has("bucanieri")).sort(() => rm() - 0.5).slice(0, MERCHANTS)
       .map((z) => ({ zone: z.id, wants: kinds[Math.floor(rm() * kinds.length)] }));
     world.paths = makePaths(world, seed);
     return world;
@@ -829,6 +878,9 @@ const Gioco = (() => {
       traps: new Set(memory.traps || []),
       bottle: bottleOf(zone, gen, memory),
       holes: new Set(),
+      pirates: gen.pirates ? gen.pirates.men.map((c, i) => ({ ...c, home: { ...c }, gun: i < 2, reload: 0, energy: 0, rest: 0,
+        mode: memory.looted ? "hunt" : time === "notte" ? "sleep" : "guard" })) : [],
+      loot: gen.pirates && !memory.looted ? gen.pirates.treasure : null,
       run: 0,
       ticks: 0,
       noise: 0,
@@ -849,6 +901,7 @@ const Gioco = (() => {
     // All'ora sbagliata l'uccello non c'è, ma a volte lascia tracce (i rari no: di quelli si sa solo dalle voci)
     if (bird && !present && !memory.done && !memory.gone && !bird.rara) learn(bird, "traccia");
     if (s.merchant) log("Qualcuno col cappuccio aspetta vicino alla riva.");
+    if (s.pirates.length) note("Nessuna traccia di animali.");
     render();
   }
 
@@ -926,7 +979,7 @@ const Gioco = (() => {
   function wantedPoster() {
     if (trip.wanted || (trip.wantedDay != null && day() - trip.wantedDay < WANTED_EVERY)) return null;
     const cities = new Set(trip.world.cities.map((c) => c.zone));
-    const zones = trip.world.zones.filter((z) => !cities.has(z.id));
+    const zones = trip.world.zones.filter((z) => !cities.has(z.id) && !z.tags.has("bucanieri"));
     if (!zones.length) return null;
     const zone = zones[Math.floor(Math.random() * zones.length)];
     const [name, crime] = OUTLAWS[Math.floor(Math.random() * OUTLAWS.length)];
@@ -1000,7 +1053,8 @@ const Gioco = (() => {
   function drawPostcard() {
     if (!s) return;
     el.postcard.classList.remove("is-scope");
-    Cartolina.render({ seed: s.seed, tags: s.tags, time: s.time, bird: s.bird.present && !s.bird.gone && !s.bird.observed, smoke: !!s.fugitive }, el.postcard);
+    Cartolina.render({ seed: s.seed, tags: s.tags, time: s.time, bird: s.bird.present && !s.bird.gone && !s.bird.observed,
+      smoke: s.tags.has("bucanieri"), campfire: !!s.fugitive && s.time === "notte" }, el.postcard);
   }
 
   // Il diario annota gli sbarchi (vedi landAt) e i fatti importanti; due note uguali di fila non si ripetono
@@ -1083,7 +1137,7 @@ const Gioco = (() => {
   }
 
   function occupied(c) {
-    return (!!s.chest && same(s.chest, c)) || s.beasts.some((o) => same(o, c)) || (birdActive() && same(s.bird, c)) || (!!s.merchant && (same(s.merchant, c) || same(s.merchant.cart, c))) || (!!s.fugitive && same(s.fugitive, c));
+    return s.pirates.some((o) => same(o, c)) || (!!s.chest && same(s.chest, c)) || s.beasts.some((o) => same(o, c)) || (birdActive() && same(s.bird, c)) || (!!s.merchant && (same(s.merchant, c) || same(s.merchant.cart, c))) || (!!s.fugitive && same(s.fugitive, c));
   }
 
   // Tenere premuto è correre: ogni tre passi di fila il rumore sale di uno, fino a tre
@@ -1098,6 +1152,8 @@ const Gioco = (() => {
     if (t.gate) { toast("Il ponte levatoio è alzato. Entrare nel castello? Un'altra volta."); return false; }
     if (s.merchant && (same(s.merchant, n) || same(s.merchant.cart, n))) { meetMerchant(); return false; }
     if (s.fugitive && same(s.fugitive, n)) { capture(); return true; }
+    const pirate = s.pirates.find((o) => same(o, n));
+    if (pirate) { if (pirate.mode === "sleep") wakePirates("Inciampi in un bucaniere che dorme: si svegliano tutti!"); return false; }
     if (s.chest && same(s.chest, n)) { openChest(); return false; }
     if (t.tower) { meetLady(); return false; }
     if (t.fire) { campfire(); return false; }
@@ -1116,6 +1172,8 @@ const Gioco = (() => {
     s.noise = t.noise ? t.noise + (s.time === "notte" ? 1 : 0) + runNoise() : 0;
     if (s.item && same(s.item, n)) pickUp();
     if (s.marsh && same(s.marsh, n)) takeMarshmallow();
+    if (s.loot && same(s.loot, n)) takeLoot();
+    if (t.junk && s.pirates.some((o) => o.mode === "sleep") && Math.random() < PIRATE_WAKE) wakePirates(`${t.name} sotto i piedi: un rumore tremendo. I bucanieri si svegliano!`);
     if (s.bottle && same(s.bottle, n)) takeBottle();
     s.heard.push({ ...n, r: s.noise });
     // accanto alla torre, la donna si affaccia
@@ -1429,6 +1487,11 @@ const Gioco = (() => {
     birdTick();
     fugitiveTick();
     if (s.over) return;
+    for (const o of s.pirates) {
+      if (s.over) return;
+      pirateTick(o);
+    }
+    if (s.over) return;
     for (const o of s.beasts) {
       if (s.over) return;
       if (o.kind === "boar") boarTick(o);
@@ -1564,6 +1627,83 @@ const Gioco = (() => {
     bountyState(trip.wanted.name, "caught");
     Suoni.play("tonfo");
     log(`Preso! ${trip.wanted.name} finisce in stiva.`);
+  }
+
+  // --- I bucanieri: dormono di notte finché il tesoro c'è; svegli fanno la guardia; derubati, ti trovano sempre ---
+
+  function wakePirates(msg) {
+    for (const o of s.pirates) if (o.mode === "sleep") { o.mode = "hunt"; o.reload = 1; }
+    Suoni.play("petardo");
+    log(msg);
+  }
+
+  function takeLoot() {
+    s.loot = null;
+    trip.zones[s.zone.id].looted = true;
+    earn("tesoro dei bucanieri", PIRATE_TREASURE);
+    Suoni.play("monete");
+    // da ora sono in allarme per sempre: non dormono più e sanno sempre dove sei
+    for (const o of s.pirates) { o.mode = "hunt"; o.reload = Math.max(o.reload, 1); }
+    log(`Il tesoro dei bucanieri: ${PIRATE_TREASURE} m.o.! Adesso lo sanno.`);
+  }
+
+  function pirateSees(o) {
+    const p = s.player, d = dist(o, p);
+    if (hidden()) return d < 1.5;
+    return d <= (s.time === "notte" ? PIRATE.nightSight : PIRATE.sight) && los(s.map, o, p);
+  }
+
+  function pirateTick(o) {
+    const p = s.player;
+    if (o.mode === "sleep") return;
+    if (o.rest) { o.rest--; return; }
+    const looted = trip.zones[s.zone.id].looted;
+    if (looted || pirateSees(o) || s.heard.some((n) => n.r > 0 && dist(o, n) <= n.r + PIRATE.hearing)) {
+      if (o.mode !== "hunt") log(o.gun ? "Un bucaniere col fucile ti ha visto!" : "Un bucaniere sguaina la spada e ti corre incontro!");
+      o.mode = "hunt";
+    } else if (o.mode === "hunt") o.mode = "guard";
+    if (o.reload) o.reload--;
+    // il fucile: da vicino, se ti vede, spara invece di correre
+    if (o.mode === "hunt" && o.gun && !o.reload && dist(o, p) <= PIRATE.range && los(s.map, o, p) && !hidden()) {
+      o.reload = PIRATE.reload;
+      hurt(PIRATE.gun);
+      trip.stats.hits++;
+      Suoni.play("petardo");
+      el.map.classList.remove("is-hit");
+      void el.map.offsetWidth;
+      el.map.classList.add("is-hit");
+      log(`Un bucaniere ti spara! ${lostHearts(PIRATE.gun)}.`);
+      if (!p.hp) die("pirate");
+      return;
+    }
+    // un passo per ogni tuo passo: verso di te se ti cacciano, altrimenti in giro vicino al fuoco
+    const { prev } = beastPaths(o);
+    let target = p;
+    if (o.mode !== "hunt") {
+      const around = DIRS.map(([dx, dy]) => ({ x: o.x + dx, y: o.y + dy }))
+        .filter((c) => inside(c.x, c.y) && beastCost(c) === 1 && dist(c, o.home) <= PIRATE.roam && !same(c, p));
+      if (Math.random() > 0.4 || !around.length) return;
+      target = pickRandom(around);
+    }
+    const next = (pathFrom(prev, o, target) || [])[0];
+    if (!next) return;
+    if (same(next, p)) {
+      if (o.gun) return;   // il fucile non si usa da così vicino: aspetta di poter sparare
+      o.rest = PIRATE.rest;
+      hurt(PIRATE.sword);
+      trip.stats.hits++;
+      Suoni.play("tonfo");
+      el.map.classList.remove("is-hit");
+      void el.map.offsetWidth;
+      el.map.classList.add("is-hit");
+      log(`Un bucaniere ti colpisce con la spada! ${lostHearts(PIRATE.sword)}.`);
+      if (!p.hp) die("pirate");
+      return;
+    }
+    if (beastCost(next) > 1 || occupied(next)) return;
+    o.x = next.x;
+    o.y = next.y;
+    slide(o, [next]);
   }
 
   // --- Animali che inseguono: orso e lupi ---
@@ -1828,7 +1968,7 @@ const Gioco = (() => {
   }
 
   function die(kind) {
-    const k = KINDS[kind] || OUTLAW;
+    const k = KINDS[kind] || (kind === "pirate" ? PIRATE : OUTLAW);
     endTrip({ kind: "death", title: k.death, text: `${k.deathText}, al giorno ${day()}, ${now()}.` });
   }
 
@@ -1957,6 +2097,11 @@ const Gioco = (() => {
       o.el = pawn(`e-beast e-${o.kind}`, KINDS[o.kind].icon);
       o.slideEnd = 0;
     }
+    for (const o of s.pirates) {
+      o.el = pawn(`e-pirate${o.gun ? " is-gun" : ""}`, o.gun ? "gunner" : "buccaneer");
+      o.slideEnd = 0;
+      place(o.el, o);
+    }
     fitMap();
     requestAnimationFrame(() => el.map.querySelectorAll(".entity").forEach((e) => e.classList.remove("no-slide")));
   }
@@ -2032,6 +2177,7 @@ const Gioco = (() => {
         if (s.item && s.item.x === x && s.item.y === y && !roofed.has(k)) { icon = OGGETTI[s.item.kind].icona; cls += " item"; }
         if (s.chest && s.chest.x === x && s.chest.y === y) { icon = "chest"; cls += " chest"; }
         if (s.marsh && s.marsh.x === x && s.marsh.y === y) { icon = "marshmallow"; cls += " marsh"; }
+        if (s.loot && s.loot.x === x && s.loot.y === y) { icon = "coins"; cls += " item"; }
         if (s.bottle && s.bottle.x === x && s.bottle.y === y) { icon = "bottle"; cls += " item"; }
         if (s.holes.has(k) && t.walk) { icon = "hole"; cls += " hole"; }
         if (s.traps.has(k)) { icon = "trap"; cls += " trap"; }
@@ -2051,6 +2197,12 @@ const Gioco = (() => {
     for (const o of s.beasts) {
       if (performance.now() >= o.slideEnd) place(o.el, o);
       const intent = o.rest ? "z" : o.mode === "hunt" || o.mode === "charge" ? "!" : o.mode === "search" ? "?" : null;
+      if (intent) o.el.dataset.intent = intent;
+      else delete o.el.dataset.intent;
+    }
+    for (const o of s.pirates) {
+      if (performance.now() >= o.slideEnd) place(o.el, o);
+      const intent = o.mode === "sleep" ? "z" : o.mode === "hunt" ? "!" : null;
       if (intent) o.el.dataset.intent = intent;
       else delete o.el.dataset.intent;
     }

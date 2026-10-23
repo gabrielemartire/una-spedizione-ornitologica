@@ -725,15 +725,14 @@ const Citta = (() => {
   // La bacheca dei ricercati: l'avviso in corso, oppure uno nuovo da accettare
   function readBoard() {
     const trip = Gioco.trip, w = trip.wanted;
-    const zoneName = (id) => trip.world.zones[id].name;
     if (w && w.state === "caught") {
       dialog("La bacheca", `Il tuo avviso è ancora appeso: ${w.name}. Ce l'hai in stiva: portalo alla gendarmeria del Forte.`, [["back", "Va bene"]], { voice: false });
     } else if (w) {
       const left = Math.max(1, Math.ceil((w.until - trip.third) / 3));
-      dialog("La bacheca", `Il tuo avviso: ${w.name}, che ${w.crime}. Si nasconde a ${zoneName(w.zone)} (la W sul globo). Ancora ${left} giorn${left === 1 ? "o" : "i"}.`, [["back", "Va bene"]], { voice: false });
+      dialog("La bacheca", `Il tuo avviso: ${w.name}, che ${w.crime}. Si nasconde sull'isola della W; di notte accende un fuoco, e col binocolo se ne vede il puntino rosso. Ancora ${left} giorn${left === 1 ? "o" : "i"}.`, [["back", "Va bene"]], { voice: false });
     } else if (c.poster) {
       const pz = c.poster;
-      dialog("La bacheca", `RICERCATO: ${pz.name}, che ${pz.crime}. Lo hanno visto a ${zoneName(pz.zone)}: dove sale il fumo del suo fuoco. Taglia di ${Gioco.BOUNTY} m.o., da riscuotere alla gendarmeria del Forte. Avete ${Gioco.WANTED_DAYS} giorni.`, [
+      dialog("La bacheca", `RICERCATO: ${pz.name}, che ${pz.crime}. Si nasconde su un'isola, che vi segneremo con la W: di notte accende un fuoco, e col binocolo se ne vede il puntino rosso. Taglia di ${Gioco.BOUNTY} m.o., da riscuotere alla gendarmeria del Forte. Avete ${Gioco.WANTED_DAYS} giorni.`, [
         ["wanted", "Stacca l'avviso e accetta"],
         ["back", "Lascia stare"],
       ], { voice: false });
@@ -763,7 +762,7 @@ const Citta = (() => {
       Gioco.renderStatus();
       dialog("Gendarmeria", `«Ah, ${w.name}! Finalmente. Ecco la taglia: ${Gioco.BOUNTY} m.o.»`, [["back", "Esci"]]);
     } else if (w) {
-      dialog("Gendarmeria", `«${w.name} è ancora libero. Si nasconde a ${trip.world.zones[w.zone].name}: sbrigatevi.»`, [["back", "Esci"]]);
+      dialog("Gendarmeria", `«${w.name} è ancora libero, sull'isola della W. Aspettate la notte e cercate il suo fuoco: sbrigatevi.»`, [["back", "Esci"]]);
     } else {
       dialog("Gendarmeria", "«Nessuno da consegnare? Guardate la bacheca sulla banchina: c'è sempre qualcuno da prendere.»", [["back", "Esci"]]);
     }
