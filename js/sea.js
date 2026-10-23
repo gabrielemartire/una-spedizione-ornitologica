@@ -12,6 +12,13 @@ const Mare = (() => {
   const SCOPE_RANGE = 12;     // gradi: abbastanza vicino per il binocolo
   const CITY_RANGE = 4;
   const BIG_RES = 200;
+  // La nebbia, di notte: oltre una vela il pesce gatto ti sente; hai un attimo per ammainare
+  const FOG_SAILS = 1;
+  const FOG_GRACE = 1.5;      // secondi
+  // Il Kraken: andando al largo (fuori dalla portata del binocolo) una volta su 30 arriva, poco dopo
+  const KRAKEN_CHANCE = 1 / 30;
+  const KRAKEN_DELAY = [3, 7]; // secondi
+  const KRAKEN_RAD = 3.5;      // gradi
 
   let running = false;
   let loop = 0;               // ogni ingresso in mare avvia un solo ciclo di disegno
@@ -23,7 +30,11 @@ const Mare = (() => {
   let city = null;            // la città vicina, se c'è
   let scoping = false;        // il binocolo è in mano: segue la costa finché non ti allontani
   let scope = null;           // la zona che si sta guardando
-  let seaTime = null;         // il momento disegnato nella cartolina del mare
+  let seaTime = null;         // quello che è disegnato nella cartolina del mare (momento, nebbia, kraken)
+  let inFog = false;
+  let fogDanger = 0;          // da quanto corri nella nebbia
+  let wasNear = true;
+  let kraken = null;          // { lat, lon, rad, spin } quando c'è; krakenIn: tra quanto arriva
   let el = null;
 
   const COMPASS = ["N", "NE", "E", "SE", "S", "SO", "O", "NO"];
@@ -49,6 +60,10 @@ const Mare = (() => {
     scoping = false;
     scope = null;
     seaTime = null;
+    inFog = false;
+    fogDanger = 0;
+    wasNear = true;
+    kraken = null;
     el.scopeBadge.className = "";
     Gioco.showView("sea");
     fitCanvas();
@@ -132,8 +147,56 @@ const Mare = (() => {
       wanted: trip.wanted && trip.wanted.state === "free" ? islandCenter(trip.world, trip.wanted.zone) : null,
       tower: trip.towerKnown ? towerZone(trip) : null,
       highlight: scope ? scope.id : canLand ? near.zone.id : null,
+      fogs: time === "notte" ? trip.world.fogs : null,
+      ink: kraken,
+      lure: fogDanger > 0 ? { x: Math.sin(ship.heading * Math.PI / 180) * 9, y: -Math.cos(ship.heading * Math.PI / 180) * 9 } : null,
     });
-    if (!scoping && seaTime !== time) drawSeaPostcard(time);
+    // La nebbia del pesce gatto, solo di notte
+    const fogNow = time === "notte" && trip.world.fogs.some((f) => Globo.distance(f, ship) < f.rad);
+    if (fogNow && !inFog) Gioco.toast("Nebbia fitta. Qualcosa nuota qui sotto, e sente ogni rumore: al massimo una vela.");
+    inFog = fogNow;
+    if (inFog && ship.sails > FOG_SAILS) {
+      if (!fogDanger) { Suoni.play("campana"); Gioco.toast("Una lucina si accende nella nebbia, davanti alla prua. Ammaina!"); }
+      fogDanger += dt;
+      if (fogDanger >= FOG_GRACE) {
+        running = false;
+        Cartolina.render({ seed: trip.seed, sea: true, time, tags: new Set(), fog: true, catfish: true }, el.postcard);
+        Suoni.play("tonfo");
+        Gioco.sunk();
+        return;
+      }
+    } else fogDanger = 0;
+
+    // Il Kraken: si tira il dado una volta ogni volta che si va al largo; arriva poco dopo, una volta per viaggio
+    const far = !near;
+    if (far && wasNear && !trip.krakenDone && trip.krakenIn == null && Math.random() < KRAKEN_CHANCE) {
+      trip.krakenIn = KRAKEN_DELAY[0] + Math.random() * (KRAKEN_DELAY[1] - KRAKEN_DELAY[0]);
+    }
+    wasNear = !far;
+    if (trip.krakenIn != null && !kraken) {
+      trip.krakenIn -= dt;
+      if (trip.krakenIn <= 0) {
+        kraken = { lat: ship.lat, lon: ship.lon, rad: KRAKEN_RAD, spin: Math.random() * 6 };
+        Suoni.play("legno");
+        Gioco.note("Acqua nera a babordo. Nessuno vuole parlarne.");
+        Gioco.toast("Acqua nera a babordo. Nessuno vuole parlarne.");
+      }
+    }
+    if (kraken) {
+      kraken.spin += dt * 0.6;
+      if (ship.sails > 1) ship.sails = 1;   // nell'acqua nera la nave non va veloce
+      if (Globo.distance(kraken, ship) > kraken.rad) {
+        kraken = null;
+        trip.krakenIn = null;
+        trip.krakenDone = true;
+        if (!Gioco.advance(1)) return;
+        Gioco.toast(`Fuori dall'acqua nera. Si è fatto ${Gioco.now()}, e nessuno sa come.`);
+        document.getElementById("screen-game").dataset.time = Gioco.now();
+      }
+    }
+
+    const look = `${time}|${inFog}|${fogDanger > 0}|${!!kraken}`;
+    if (!scoping && seaTime !== look) drawSeaPostcard(time, look);
     renderHud(canLand);
     if (now - lastStatus > 250) { lastStatus = now; Gioco.renderStatus(); }
     requestAnimationFrame((t) => frame(t, id));
@@ -177,12 +240,12 @@ const Mare = (() => {
 
   // --- Cartolina: il mare dal ponte, oppure la costa vista col binocolo ---
 
-  function drawSeaPostcard(time) {
+  function drawSeaPostcard(time, look = time) {
     const trip = Gioco.trip;
-    seaTime = time;
+    seaTime = look;
     el.postcard.classList.remove("is-scope");
     // ogni traversata ha il suo mare: a volte il sole, uno scoglio, dei gabbiani
-    Cartolina.render({ seed: trip.seed + trip.departures * 977 + trip.third * 31, sea: true, time, tags: new Set() }, el.postcard);
+    Cartolina.render({ seed: trip.seed + trip.departures * 977 + trip.third * 31, sea: true, time, tags: new Set(), fog: inFog, lure: fogDanger > 0, ink: !!kraken }, el.postcard);
   }
 
   // La W del ricercato sta al centro della sua isola, non sulla zona: la zona la dice il fuoco, di notte

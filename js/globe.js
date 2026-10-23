@@ -356,6 +356,10 @@ const Globo = (() => {
     const { east, north } = basis(view.lat, view.lon);
     const L = [-0.45, 0.5, 0.74]; // la luce arriva da nord-ovest
 
+    // la nebbia del pesce gatto (di notte) e l'inchiostro del Kraken: macchie sul mare
+    const patches = [...(opts.fogs || []).map((f) => ({ v: vec(f.lat, f.lon), cos: Math.cos(f.rad * DEG), col: [120, 130, 140], amount: 0.6 })),
+      ...(opts.ink ? [{ v: vec(opts.ink.lat, opts.ink.lon), cos: Math.cos(opts.ink.rad * DEG), col: [6, 4, 12], amount: 0.9 }] : [])];
+
     data.fill(0);
     for (let j = 0; j < N; j++) {
       for (let i = 0; i < N; i++) {
@@ -370,6 +374,7 @@ const Globo = (() => {
         const tone = pal.biomes[world.biome[t]][kind] || pal[kind];
         let col = lightness > 0.35 + BAYER[j & 3][i & 3] * 0.3 ? tone.lit : tone.shade;
         if (world.border[t]) col = tone.border;
+        for (const pa of patches) if (kind <= T.SHALLOW && dot(p, pa.v) > pa.cos && BAYER[j & 3][i & 3] < pa.amount) col = blend(col, pa.col, 0.75);
         if (opts.highlight != null && world.zone[t] === opts.highlight && (i + j) % 2 === 0) col = blend(col, [255, 240, 180], 0.45);
         if (z < 0.22 && BAYER[j & 3][i & 3] > z * 4) col = pal.rim; // l'atmosfera sul bordo
         const o = (j * N + i) * 4;
@@ -467,6 +472,27 @@ const Globo = (() => {
       }
     }
 
+    // I tentacoli del Kraken, intorno alla macchia nera
+    if (opts.ink) {
+      const s = project(opts.ink.lat, opts.ink.lon);
+      if (s) {
+        const rad = Math.sin(opts.ink.rad * DEG) * R;
+        for (let k = 0; k < 6; k++) {
+          const a0 = (k / 6) * Math.PI * 2 + opts.ink.spin;
+          for (let q = 0; q < 14; q++) {
+            const a = a0 + Math.sin(q / 3 + opts.ink.spin * 3) * 0.25, d = rad * (0.75 + q * 0.035);
+            put(Math.round(s.x + Math.cos(a) * d), Math.round(s.y + Math.sin(a) * d), q % 4 === 0 ? [140, 90, 130] : [60, 30, 60]);
+          }
+        }
+      }
+    }
+    // La lucina del pesce gatto, nella nebbia accanto alla nave
+    if (opts.lure) {
+      const lx = Math.round(c + opts.lure.x), ly = Math.round(c + opts.lure.y);
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) put(lx + dx, ly + dy, [150, 140, 90]);
+      put(lx, ly, [255, 246, 192]);
+    }
+
     // La nave al centro, orientata secondo la rotta
     if (opts.ship) {
       const h = view.heading * DEG, fx = Math.sin(h), fy = -Math.cos(h);
@@ -486,5 +512,8 @@ const Globo = (() => {
     out.drawImage(small, 0, 0, canvas.width, canvas.height);
   }
 
-  return { createWorld, draw, isWater, canSail, nearestSea, nearestCoast, nearestCity, advance };
+  // La distanza in gradi tra due punti del globo
+  const distance = (a, b) => angle(vec(a.lat, a.lon), vec(b.lat, b.lon));
+
+  return { createWorld, draw, isWater, canSail, nearestSea, distance, nearestCoast, nearestCity, advance };
 })();

@@ -2,6 +2,11 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.11 · 23 ottobre 2026
+
+- **La nebbia del pesce gatto.** In mare aperto ci sono due o tre zone dove, **di notte**, cala una nebbia fitta (sul globo si vede: macchie grigie sul mare). Lì sotto nuota un pesce gatto enorme e cieco, che caccia col rumore. Con **una vela** passi; con di più, una lucina si accende nella nebbia davanti alla prua (anche nella vista dal ponte) e hai un attimo per ammainare: se non lo fai, ti trova e manda a fondo la nave. Di giorno la nebbia non c'è.
+- **Il Kraken.** Ogni volta che vai al largo, fuori dalla portata del binocolo, c'è una possibilità su 30 che poco dopo il mare intorno alla nave diventi **nero d'inchiostro**: sul globo una macchia nera con i tentacoli, dal ponte l'acqua nera e i tentacoli che escono. Lì dentro la nave non va oltre una vela; appena ne esci è passato un momento, e nessuno sa come. Il diario: *«Acqua nera a babordo. Nessuno vuole parlarne.»* Al massimo una volta per viaggio; costeggiando le isole non succede.
+
 ## 0.10 · 23 ottobre 2026
 
 - **Il ricercato non fa più fumo.** Di notte accende **un fuoco**, che si vede solo col **binocolo**: un puntino rosso tra gli alberi della zona dove si nasconde. All'alba e di pomeriggio è sempre lì, ma non si vede niente. La **W** sul globo sta al **centro dell'isola**: per sapere su quale costa sbarcare bisogna aspettare la notte e guardare.

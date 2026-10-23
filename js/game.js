@@ -616,6 +616,18 @@ const Gioco = (() => {
     world.merchants = wild.filter((z) => !z.tags.has("bucanieri")).sort(() => rm() - 0.5).slice(0, MERCHANTS)
       .map((z) => ({ zone: z.id, wants: kinds[Math.floor(rm() * kinds.length)] }));
     world.paths = makePaths(world, seed);
+    // le nebbie del pesce gatto: due o tre, in mare aperto, lontano dalle coste e dalla partenza
+    const rf = rng(seed ^ 0xf06f15);
+    world.fogs = [];
+    for (const clear of [14, 11, 9]) {
+      for (let tries = 0; world.fogs.length < 3 && tries < 600; tries++) {
+        const at = { lat: -62 + rf() * 124, lon: -180 + rf() * 360, rad: 5 + rf() * 2.5 };
+        if (!Globo.isWater(world, at.lat, at.lon) || Globo.nearestCoast(world, at.lat, at.lon, clear)) continue;
+        if (Globo.distance(at, world.start) < at.rad + 8 || world.fogs.some((f) => Globo.distance(f, at) < 30)) continue;
+        world.fogs.push(at);
+      }
+      if (world.fogs.length >= 2) break;
+    }
     return world;
   }
 
@@ -1979,6 +1991,11 @@ const Gioco = (() => {
     endTrip({ kind: "victory", title: "Ornitologo esperto", text: `Giorno ${day()}: la Società ornitologica ti consegna l'attestato di Ornitologo esperto. Il taccuino è completo.` });
   }
 
+  // Il pesce gatto della nebbia: cieco, caccia col rumore; una nave che corre la trova e la manda a fondo
+  function sunk() {
+    endTrip({ kind: "death", title: "Inghiottito", text: `Nella nebbia, al giorno ${day()}, ${now()}, una lucina si è accesa davanti alla prua. Il pesce gatto ha sentito la nave.` });
+  }
+
   function bankrupt() {
     trip.money = 0;
     Suoni.play("campana");
@@ -2311,7 +2328,7 @@ const Gioco = (() => {
   // Quello che serve alla navigazione (js/sea.js) e al diario (js/diario.js)
   return {
     start, resume, save, setNotebook: (data) => { notebook = data; }, code, hasSave: () => !!loadSave(), clearSave, loadNotebook, depart, landAt, rumor, pay, earn, visitCity, maxHp, EGG_DAYS,
-    wantedPoster, acceptWanted, bountyState, earnStamp, victory, STAMPS, advance, renderStatus, note, log, toast, timeOf, now, day, showView, iconHtml, fitMap,
+    wantedPoster, acceptWanted, bountyState, earnStamp, victory, sunk, STAMPS, advance, renderStatus, note, log, toast, timeOf, now, day, showView, iconHtml, fitMap,
     get trip() { return trip; },
     get el() { return el; },
     get explorer() { return explorer; },

@@ -601,6 +601,41 @@ const Cartolina = (() => {
           [[0, 0], [1, 1], [2, 1], [3, 0], [-1, -1], [4, -1]].forEach(([dx, dy]) => px(bx + dx, by + dy, P.bird));
         }
       }
+      // Il Kraken: l'acqua diventa nera d'inchiostro, e dall'acqua escono i tentacoli
+      if (zone.ink) {
+        for (let y = HY + 1; y < PH; y++) for (let x = 0; x < PW; x++) px(x, y, mix("#0c0a12", "#1c1626", (y * 7 + x * 3) % 11 === 0 ? 0.8 : 0.1, x, y));
+        const flesh = "#3a1e3a", fleshDark = "#22102a", sucker = "#8a5a7a";
+        for (const [x0, h, dir] of [[18 + r() * 10, 30, 1], [62 + r() * 12, 40, -1], [94 + r() * 10, 26, -1]]) {
+          for (let k = 0; k < h; k++) {
+            const t = k / h, w = 3.2 * (1 - t) + 0.6;
+            const cx = x0 + Math.sin(t * Math.PI * 1.6) * 6 * dir + t * t * 8 * dir, cy = PH - 18 - k;
+            for (let j = -w; j <= w; j++) px(cx + j, cy, j > w / 3 ? fleshDark : flesh);
+            if (k % 4 === 0 && t < 0.8) px(cx - w + 1, cy, sucker);
+          }
+        }
+      }
+      // La nebbia del pesce gatto: fitta, grigia; e se ti ha sentito, una lucina che si accende
+      if (zone.fog) {
+        for (let y = 0; y < PH; y++) for (let x = 0; x < PW; x++) px(x, y, mix(get(x, y), y < HY ? "#4a525a" : "#3a4248", 0.72, x, y));
+        if (zone.catfish) {
+          // il pesce gatto: una testa enorme che esce dalla nebbia, la bocca aperta piena di denti
+          const cx = PW / 2, cy = PH - 30;
+          ellipse(cx, cy, 54, 30, (x, y) => (y < cy - 20 ? "#2a3038" : "#161a20"));
+          ellipse(cx, cy + 4, 40, 13, () => "#05070a");
+          for (let x = cx - 36; x < cx + 36; x += 4) {
+            const up = Math.round(Math.sqrt(Math.max(0, 1 - ((x - cx) / 40) ** 2)) * 13);
+            px(x, cy + 4 - up, "#e8e4d0"); px(x + 1, cy + 5 - up, "#e8e4d0"); px(x + 1, cy + 6 - up, "#c8c4b0");
+            px(x + 2, cy + 3 + up, "#e8e4d0"); px(x + 2, cy + 2 + up, "#c8c4b0");
+          }
+          for (const ex of [cx - 30, cx + 30]) { px(ex, cy - 16, "#8a96a0"); px(ex + 1, cy - 16, "#5a6670"); }
+          for (let k = 0; k < 18; k++) px(cx + Math.sin(k / 5) * 6, cy - 30 - k, "#2a3038");
+          ellipse(cx + Math.sin(18 / 5) * 6, cy - 49, 2.5, 2.5, () => "#fff6c0");
+        } else if (zone.lure) {
+          const lx = 30 + r() * 60, ly = HY + 4 + r() * 8;
+          ellipse(lx, ly, 3, 3, (x, y) => mix(get(x, y), "#a8a070", 0.6, x, y));
+          px(lx, ly, "#fff6c0"); px(lx + 1, ly, "#fff6c0");
+        }
+      }
       drawDeck();
       return buf;
     }
