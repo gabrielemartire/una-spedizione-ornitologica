@@ -2,6 +2,14 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.7 · 23 ottobre 2026
+
+- **A piedi nell'interno.** Le zone che non toccano il mare prima non si raggiungevano mai. Ora ogni battlemap ha **uno o due passaggi** sul bordo (a nord, a sud, a est; a ovest solo nelle zone interne, perché lì non c'è il mare), segnati con l'icona del **ponte**. Ognuno porta a una zona confinante della stessa isola, interna o sulla costa. Ci passi sopra e scegli se prendere il sentiero: **costa un momento**, e arrivi dall'altra parte sul passaggio corrispondente. Ogni zona interna è collegata a una zona sul mare.
+- **La nave resta ferma** dove l'hai ormeggiata: per ripartire torni da lei a piedi. Le zone sulla costa raggiunte a piedi hanno il mare ma non la nave; le zone interne sono tutta terra.
+- **Isole più grandi**: quella del Forte è circa una volta e mezza, le altre un po' più grandi; quindi più zone, anche interne.
+- **L'isola col lago**: in ogni globo un'isola (non quella del Forte) ha un grande lago al centro, che non si naviga; le zone sulla sua riva hanno il lago sulla mappa e nella cartolina.
+- Ricaricando la pagina mentre sei a terra, ti risvegli sulla nave: cioè nella zona dove è ormeggiata.
+
 ## 0.6.9 · 23 ottobre 2026
 
 - **La cornice della battlemap** è sempre verde (in ogni bioma), a doppio filo, con un fregio barocco a ogni angolo; sta appena fuori dalla mappa, con un filo di margine, e non copre più le icone del bordo.

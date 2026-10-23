@@ -71,6 +71,8 @@ const Gioco = (() => {
     gate:   { name: "Ponte levatoio",   icon: "drawbridge", cls: "t-gate",   walk: false, sight: false, gate: true },
     bridge: { name: "Ponte",            icon: "bridge",     cls: "t-bridge", walk: true,  sight: true, noise: 1, sound: "macerie" },
     flag:   { name: "Bandiera",         icon: "flag",       cls: "t-flag",   walk: false, sight: true },
+    // Il passaggio a piedi verso una zona vicina della stessa isola: costa un momento
+    pass:   { name: "Passaggio",        icon: "bridge",     cls: "t-pass",   walk: true,  sight: true, noise: 1, sound: "macerie", pass: true },
     // La torre della donna che aspetta una lettera
     tower:  { name: "Torre",            icon: "tower",      cls: "t-castle", walk: false, sight: false, tower: true },
   };
@@ -200,14 +202,16 @@ const Gioco = (() => {
 
   const biomeOf = (tags) => Object.keys(BIOMI).find((b) => tags.has(b)) || "foresta";
 
-  function generate(seed, tags, bird) {
+  // shape = { coastal, passes: [{ x, y, to }] }: la zona tocca il mare (a ovest, con l'ormeggio) o è interna;
+  // i passaggi a piedi verso le zone vicine stanno sui bordi. La mappa è sempre la stessa, comunque ci arrivi
+  function generate(seed, tags, bird, shape = { coastal: true, passes: [] }) {
     for (let attempt = 0; ; attempt++) {
-      const zone = tryGenerate(rng(seed + attempt * 7919), tags, bird, attempt > 40);
+      const zone = tryGenerate(rng(seed + attempt * 7919), tags, bird, attempt > 40, shape, attempt > 60);
       if (zone) return zone;
     }
   }
 
-  function tryGenerate(r, tags, birdInfo, relaxed) {
+  function tryGenerate(r, tags, birdInfo, relaxed, shape, force = false) {
     const map = Array.from({ length: H }, () => Array(W).fill("grass"));
     const pick = (arr) => arr[Math.floor(r() * arr.length)];
     const shipY = 4 + Math.floor(r() * (H - 8));
@@ -216,14 +220,17 @@ const Gioco = (() => {
     const frozen = look.water === "ice" && !hot;
     const feature = []; // le caselle della caratteristica che l'uccello cerca
 
-    // Il mare a ovest, la nave ormeggiata sulla costa
-    let shore = 2;
-    for (let y = 0; y < H; y++) {
-      shore = Math.abs(y - shipY) <= 1 ? 1 : Math.max(1, Math.min(4, shore + (r() < 0.3 ? -1 : r() < 0.45 ? 1 : 0)));
-      for (let x = 0; x < shore; x++) map[y][x] = "sea";
+    // Il mare a ovest, la nave ormeggiata sulla costa; le zone interne sono tutta terra, e si entra dal passaggio
+    let start = null;
+    if (shape.coastal) {
+      let shore = 2;
+      for (let y = 0; y < H; y++) {
+        shore = Math.abs(y - shipY) <= 1 ? 1 : Math.max(1, Math.min(4, shore + (r() < 0.3 ? -1 : r() < 0.45 ? 1 : 0)));
+        for (let x = 0; x < shore; x++) map[y][x] = "sea";
+      }
+      map[shipY][0] = "ship";
+      start = { x: 1, y: shipY };
     }
-    map[shipY][0] = "ship";
-    const start = { x: 1, y: shipY };
 
     // Un ruscello che scende da nord a sud, con qualche pozza profonda
     const streamX = [];
@@ -304,13 +311,31 @@ const Gioco = (() => {
     blob(hot ? "basalt" : "rock", look.rocks, 0, 1);
 
     // Spazio libero allo sbarco
-    for (let y = shipY - 1; y <= shipY + 1; y++) {
+    if (shape.coastal) for (let y = shipY - 1; y <= shipY + 1; y++) {
       for (let x = 1; x <= 3; x++) if (inside(x, y) && map[y][x] !== "sea") map[y][x] = "grass";
+    }
+    // I passaggi verso le zone vicine, sul bordo, con un po' di spazio libero davanti
+    for (const ps of shape.passes) {
+      for (let y = ps.y - 1; y <= ps.y + 1; y++) for (let x = ps.x - 1; x <= ps.x + 1; x++) {
+        if (inside(x, y) && !["sea", "ship", "castle", "gate", "tower"].includes(map[y][x])) map[y][x] = "grass";
+      }
+      map[ps.y][ps.x] = "pass";
+    }
+    // nelle zone interne si entra dal primo passaggio: è il punto di riferimento della mappa
+    if (!start) start = inward(shape.passes[0]);
+    // dopo tanti tentativi andati male, un sentiero d'erba dritto da ogni passaggio all'entrata
+    if (force) for (const ps of shape.passes) {
+      let { x, y } = inward(ps);
+      while (x !== start.x || y !== start.y) {
+        if (!tile(map, x, y).walk && !["sea", "ship"].includes(map[y][x])) map[y][x] = "grass";
+        if (x !== start.x) x += Math.sign(start.x - x); else y += Math.sign(start.y - y);
+      }
     }
 
     const reach = bfs(map, start).depth;
     if (ruin && ![...ruin.interior].some((k) => reach.has(k))) return null;
     if (tower && !tower.some((c) => DIRS.some(([dx, dy]) => reach.has(key({ x: c.x + dx, y: c.y + dy }))))) return null;
+    if (shape.passes.some((ps) => !reach.has(key(ps)))) return null;
     const free = [...reach.keys()].map(unkey).filter((c) => map[c.y][c.x] === "grass" || map[c.y][c.x] === "tall");
 
     // L'uccello ama stare vicino all'acqua o agli alberi; chi cerca una caratteristica le sta vicino
@@ -334,8 +359,11 @@ const Gioco = (() => {
     if (!lair.length) return null;
     lair.sort(() => r() - 0.5);
 
-    return { map, start, bird, lair, free, ruin, tower };
+    return { map, start, bird, lair, free, ruin, tower, ship: shape.coastal ? { x: 0, y: shipY } : null };
   }
+
+  // La casella appena dentro la mappa, davanti a un passaggio sul bordo
+  const inward = (ps) => ({ x: ps.x === 0 ? 1 : ps.x === W - 1 ? W - 2 : ps.x, y: ps.y === 0 ? 1 : ps.y === H - 1 ? H - 2 : ps.y });
 
   // La torre: due caselle per due, di pietra, con un anello d'erba intorno per arrivarci
   function placeTower(map, r) {
@@ -480,7 +508,69 @@ const Gioco = (() => {
     const kinds = Object.keys(OGGETTI);
     world.merchants = wild.slice().sort(() => rm() - 0.5).slice(0, MERCHANTS)
       .map((z) => ({ zone: z.id, wants: kinds[Math.floor(rm() * kinds.length)] }));
+    world.paths = makePaths(world, seed);
     return world;
+  }
+
+  // I passaggi a piedi tra le zone confinanti della stessa isola (mai la zona di una città).
+  // Ogni zona interna è collegata, passaggio dopo passaggio, a una zona sul mare; poi ogni zona ne ha
+  // uno o due. Un passaggio sta sul bordo che guarda la zona vicina: a nord, a sud, a est (a ovest,
+  // dove c'è il mare, solo nelle zone interne)
+  function makePaths(world, seed) {
+    const r = rng(seed ^ 0x9a55e5);
+    const cityZones = new Set(world.cities.map((c) => c.zone));
+    const ok = (id) => !cityZones.has(id);
+    const near = (id) => world.adjacent[id].filter(ok);
+    const edges = new Set();
+    const link = (a, b) => edges.add(a < b ? `${a}-${b}` : `${b}-${a}`);
+    const count = (id) => [...edges].filter((e) => e.split("-").map(Number).includes(id)).length;
+    // dalle zone sul mare verso l'interno: ogni zona interna prende il passaggio da chi la scopre per primo
+    const seen = new Set(world.zones.filter((z) => ok(z.id) && world.coastal[z.id]).map((z) => z.id));
+    const queue = [...seen].sort(() => r() - 0.5);
+    while (queue.length) {
+      const id = queue.shift();
+      for (const n of near(id).sort(() => r() - 0.5)) {
+        if (seen.has(n)) continue;
+        seen.add(n);
+        link(id, n);
+        queue.push(n);
+      }
+    }
+    // chi non ha ancora un passaggio ne prende uno, verso un vicino che ne ha meno di due
+    for (const z of world.zones) {
+      if (!ok(z.id) || count(z.id) >= 1) continue;
+      const n = near(z.id).filter((m) => count(m) < 2).sort(() => r() - 0.5)[0];
+      if (n != null) link(z.id, n);
+    }
+    // da che parte della mappa sta ogni passaggio
+    const paths = {};
+    for (const e of edges) {
+      const [a, b] = e.split("-").map(Number);
+      for (const [from, to] of [[a, b], [b, a]]) {
+        const A = world.zones[from], B = world.zones[to];
+        const dLat = B.lat - A.lat, dLon = ((B.lon - A.lon + 540) % 360) - 180;
+        const east = dLon * Math.cos(A.lat * Math.PI / 180);
+        let side = Math.abs(east) > Math.abs(dLat) ? (east > 0 ? "est" : "ovest") : dLat > 0 ? "nord" : "sud";
+        if (side === "ovest" && world.coastal[from]) side = dLat > 0 ? "nord" : "sud";
+        (paths[from] ||= []).push({ to, side, pos: rng(A.seed ^ B.seed)() });
+      }
+    }
+    return paths;
+  }
+
+  // La forma della mappa di una zona: sul mare o interna, e dove stanno i passaggi
+  function zoneShape(zone) {
+    const list = trip.world.paths[zone.id] || [];
+    const used = {};
+    const passes = list.map(({ to, side, pos }) => {
+      // due passaggi sullo stesso lato non si toccano
+      const p = used[side] != null ? (used[side] + 0.5) % 1 : pos;
+      used[side] = p;
+      const x = Math.round(10 + p * (W - 14)), y = Math.round(3 + p * (H - 7));
+      const cell = side === "nord" ? { x, y: 0 } : side === "sud" ? { x, y: H - 1 } : side === "est" ? { x: W - 1, y } : { x: 0, y };
+      return { ...cell, to };
+    });
+    return { coastal: !!trip.world.coastal[zone.id], passes };
   }
 
   function start(name) {
@@ -550,7 +640,8 @@ const Gioco = (() => {
       for (const m of Object.values(trip.zones)) if (m.item && !OGGETTI[m.item.kind]) m.item.kind = "idolo";
       s = null;
       initUi();
-      const zone = world.zones.find((z) => z.id === trip.landZone);
+      // ci si risveglia sulla nave, cioè nella zona dove è ormeggiata (non in quella dove si era a piedi)
+      const zone = world.zones.find((z) => z.id === (trip.shipZone ?? trip.landZone));
       const city = world.cities.find((c) => c.id === trip.city);
       if (trip.mode === "land" && zone) {
         // Ricaricare a terra costa un giorno intero: niente fughe dagli orsi col refresh
@@ -591,16 +682,25 @@ const Gioco = (() => {
     Mare.enter();
   }
 
-  function landAt(zone, { waited = false } = {}) {
+  // Sbarcare dalla nave (la nave resta ormeggiata in questa zona), oppure arrivare a piedi da una zona
+  // vicina (via: da dove vieni), entrando dal passaggio che porta là
+  function landAt(zone, { waited = false, via = null } = {}) {
     trip.mode = "land";
     trip.landZone = zone.id;
+    if (via == null && !waited) trip.shipZone = zone.id;
+    if (trip.shipZone == null) trip.shipZone = zone.id;
     const time = now();
     const memory = (trip.zones[zone.id] ||= { visited: false, done: false, gone: false });
     // L'uccello della zona si decide al primo attracco, tra quelli adatti, e poi resta quello.
     // I rari no: li porterà in una zona solo una voce di taverna (al massimo due per spedizione)
     if (memory.bird === undefined) memory.bird = uccelloPerZona(zone.tags, zone.biome, Math.random)?.id ?? null;
     const bird = memory.bird != null ? UCCELLI[memory.bird] : null;
-    const gen = generate(zone.seed, zone.tags, bird);
+    const shape = zoneShape(zone);
+    const gen = generate(zone.seed, zone.tags, bird, shape);
+    // la nave c'è solo dove l'hai ormeggiata: altrove, sulla costa, il mare e basta
+    if (gen.ship && zone.id !== trip.shipZone) gen.map[gen.ship.y][gen.ship.x] = "sea";
+    const arrival = via != null ? shape.passes.find((ps) => ps.to === via) : null;
+    const entry = arrival ? inward(arrival) : gen.start;
     if (!memory.visited) {
       memory.visited = true;
       trip.stats.islands.add(zone.island);
@@ -641,8 +741,9 @@ const Gioco = (() => {
       map: gen.map,
       free: gen.free,
       ruin: gen.ruin,
-      startPos: gen.start,
-      player: { ...gen.start, hp: trip.hp },
+      startPos: entry,
+      player: { ...entry, hp: trip.hp },
+      passes: shape.passes,
       bird: { ...gen.bird, info: bird, present, observed: false, gone: false },
       beasts: spawnBeasts(gen, zone, time),
       item: memory.item && !memory.item.taken && itemAt ? { ...itemAt, kind: memory.item.kind } : null,
@@ -869,6 +970,7 @@ const Gioco = (() => {
     trip.stats.steps++;
     showTileInfo(n);
     if (t === TILES.ship) { backAboard(); return true; }
+    if (t.pass) { offerPass(n); return true; }
     Suoni.play(t.sound);
     // Di notte ogni passo fa un po' più rumore: l'uccello scappa prima
     s.noise = t.noise ? t.noise + (s.time === "notte" ? 1 : 0) + runNoise() : 0;
@@ -895,6 +997,27 @@ const Gioco = (() => {
     s.item = null;
     Suoni.play("monete");
     toast(`Hai trovato: ${it.nome}. Finisce in stiva.`);
+  }
+
+  // Il passaggio: si va a piedi nella zona vicina, e ci vuole un momento. La nave resta dov'è
+  function offerPass(c) {
+    const ps = s.passes.find((q) => same(q, c));
+    if (!ps) return;
+    const dest = trip.world.zones[ps.to];
+    s.over = true;
+    s.pendingPass = ps.to;
+    showOverlay("Un passaggio", `Il sentiero porta a <b>${dest.name}</b>. Ci vuole un momento: sarà ${timeOf(trip.third + 1)}. La nave resta dove l'hai ormeggiata.`, [
+      ["go-pass", "Prendi il sentiero"],
+      ["leave-merchant", "Resta qui"],
+    ]);
+  }
+
+  function goPass() {
+    const from = s.zone.id, to = s.pendingPass;
+    trip.hp = s.player.hp;
+    el.overlay.hidden = true;
+    if (!advance(1)) return;
+    landAt(trip.world.zones[to], { via: from });
   }
 
   const hasPack = (kind) => trip.pack.some((it) => it.kind === kind);
@@ -1539,6 +1662,7 @@ const Gioco = (() => {
     if (roofed) { el.tileInfo.textContent = "Rovine · il tetto nasconde l'interno"; return; }
     const parts = [t.name];
     if (t === TILES.ship) parts.push("torni a bordo");
+    else if (t.pass) { const ps = s.passes.find((q) => same(q, c)); if (ps) parts[0] = `Passaggio verso ${trip.world.zones[ps.to].name}`; parts.push("un momento a piedi"); }
     else if (t.gate) parts.push("chiuso");
     else parts.push(t.walk ? "si passa" : t.sight ? "non si passa" : "blocca passo e vista");
     if (t.hide) parts.push("ti nasconde");
@@ -1670,6 +1794,7 @@ const Gioco = (() => {
     if (action === "trade") trade();
     if (action === "leave-merchant") leaveMerchant();
     if (action === "give-letter") giveLetter();
+    if (action === "go-pass") goPass();
     if (action === "leave-lady") leaveMerchant();
 
     const cell = e.target.closest("#map > div");

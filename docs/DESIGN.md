@@ -89,7 +89,7 @@ Tutto sta in **una schermata senza scorrere**, anche su un portatile da 13" (cir
 
 ## 6. Il globo
 
-**Generazione.** Ogni spedizione genera un **pianeta piccolo**: un'isola grande (la foresta del Forte) e **11–13 isole sparse su tutta la sfera**, da un seed, su una texture di 360 × 180 gradi. **Il bioma di ogni isola dipende dalla latitudine**: ghiaccio verso i poli, taiga, foresta e palude alle medie latitudini, tropicale e deserto verso l'equatore. Ogni isola è divisa in **zone** (punti distanti almeno 9°, ognuno con il suo territorio); ogni zona ha un seed e dei tag (§ 7), quindi la stessa cartolina e la stessa mappa a ogni visita. Le zone ricordano se il loro uccello è già stato osservato o è volato via. **Non tutti i biomi sono presenti in ogni partita**: alcuni uccelli in certi viaggi semplicemente non ci sono.
+**Generazione.** Ogni spedizione genera un **pianeta piccolo**: un'isola grande (la foresta del Forte) e **11–13 isole sparse su tutta la sfera**, da un seed, su una texture di 360 × 180 gradi. **Il bioma di ogni isola dipende dalla latitudine**: ghiaccio verso i poli, taiga, foresta e palude alle medie latitudini, tropicale e deserto verso l'equatore. Le isole sono grandi (quella del Forte di circa 30° di raggio, le altre tra 9° e 18°) e **una per globo ha un grande lago al centro**, che non si naviga. Ogni isola è divisa in **zone** (punti distanti almeno 9°, ognuno con il suo territorio; quelle che non toccano il mare si raggiungono a piedi, § 9); ogni zona ha un seed e dei tag (§ 7), quindi la stessa cartolina e la stessa mappa a ogni visita. Le zone ricordano se il loro uccello è già stato osservato o è volato via. **Non tutti i biomi sono presenti in ogni partita**: alcuni uccelli in certi viaggi semplicemente non ci sono.
 
 **Navigazione (tempo reale).** In mare il riquadro A mostra il globo grande; a terra il globo non c'è.
 - ← → cambiano la rotta, ↑ ↓ le vele (4 livelli). Indicatori di rotta in gradi e punti cardinali.
@@ -197,6 +197,10 @@ Una griglia fitta (**40 × 24 caselle**) generata dallo stesso seed della cartol
 **Tempo a terra.** Sbarcare è gratis e a terra i passi non consumano tempo (contare i passi era troppo punitivo); il tempo passa solo ripartendo o aspettando a bordo (§ 6). Il passaggio dei giorni è sempre visibile: campana, banner *Giorno N*, paga della ciurma nel diario. Se non puoi pagare, la ciurma ti abbandona e la spedizione finisce.
 
 **Rovine.** Un edificio diroccato di circa 8 × 6 caselle: muri spessi, un varco e un crollo pieno di macerie (rumorose), a volte un pilastro. **Da fuori si vede solo il tetto: l'interno si scopre entrando.** I muri bloccano la vista, l'orso può entrare dai varchi. A volte l'uccello nidifica dentro.
+
+**Le zone interne e i passaggi.** Le isole grandi hanno zone che non toccano il mare. Ogni battlemap ha **uno o due passaggi** (a volte tre, nelle zone di snodo) sul bordo che guarda la zona vicina: a nord, a sud, a est; a ovest solo nelle zone interne, che non hanno il mare. Sono segnati con l'icona del **ponte**. Ognuno porta a una zona confinante della stessa isola (mai alla zona di una città), interna o sulla costa. Passandoci sopra, una finestrella dice dove porta: prendere il sentiero **costa un momento**, e si arriva sul passaggio corrispondente dell'altra zona. I passaggi sono scelti in modo che **ogni zona interna sia collegata a una zona sul mare**; sul globo non si vedono, si scoprono esplorando.
+
+**La nave resta ferma** dove l'hai ormeggiata: per ripartire o aspettare a bordo si torna da lei a piedi. Le zone sulla costa raggiunte a piedi hanno il mare ma non la nave; le zone interne sono tutta terra e si entra dal passaggio. La mappa di una zona è sempre la stessa, comunque ci si arrivi.
 
 ### 9.1 Rumore e visione
 Un unico sistema regola uccelli e mostri.

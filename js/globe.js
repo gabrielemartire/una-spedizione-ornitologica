@@ -75,14 +75,18 @@ const Globo = (() => {
     const noise = noise3(seed);
 
     // Un'isola grande, temperata, e tante isole minori sparse su tutto il globo
-    // (il pianeta è piccolo: le isole occupano tanti gradi, e tra l'una e l'altra c'è poco mare)
-    const islands = [{ c: vec(22 + r() * 8, r() * 20 - 10), rad: 18 + r() * 4 }];
+    // (il pianeta è piccolo: le isole occupano tanti gradi, e tra l'una e l'altra c'è poco mare).
+    // Le isole grandi hanno zone interne, che non toccano il mare: ci si arriva a piedi, dai passaggi
+    const islands = [{ c: vec(22 + r() * 8, r() * 20 - 10), rad: 27 + r() * 5 }];
     for (let tries = 0; islands.length < 12 + Math.floor(r() * 3) && tries < 3000; tries++) {
-      const c = vec(-64 + r() * 128, -180 + r() * 360), rad = 7 + r() * 7;
+      const c = vec(-64 + r() * 128, -180 + r() * 360), rad = 9 + r() * 9;
       if (islands.every((is) => angle(is.c, c) > is.rad + rad + 5)) islands.push({ c, rad });
     }
 
+    // Un'isola (non quella del Forte, la più grande tra le altre) ha un grande lago al centro, che non si naviga
+    const lakeIsle = islands.length > 1 ? islands.slice(1).reduce((best, is, k) => (is.rad > islands[best].rad ? k + 1 : best), 1) : -1;
     const height = new Float32Array(TW * TH);
+    const lake = new Uint8Array(TW * TH);
     const owner = new Uint8Array(TW * TH); // l'isola che "domina" ogni texel, anche in mare
     for (let i = 0; i < TW * TH; i++) {
       const { lat, lon } = texelLatLon(i);
@@ -93,6 +97,7 @@ const Globo = (() => {
         if (v > h) { h = v; owner[i] = k; }
       });
       height[i] = h + (noise(p) - 0.5) * 0.9;
+      if (owner[i] === lakeIsle && angle(p, islands[lakeIsle].c) < islands[lakeIsle].rad * 0.36) { height[i] = -0.2; lake[i] = 1; }
     }
 
     // Isole come gruppi di texel di terra collegati
@@ -172,13 +177,25 @@ const Globo = (() => {
       const z = zones[zone[i]];
       biome[i] = BIOME_KEYS.indexOf(z.biome);
       const wet = neighbors(i).some((n) => zone[n] < 0);
-      if (wet) coast.push({ i, p, zone: zone[i] });
+      // si sbarca solo dal mare aperto, non dalla riva del lago interno
+      if (neighbors(i).some((n) => zone[n] < 0 && !lake[n])) coast.push({ i, p, zone: zone[i] });
       if (h < 0.08 || wet) type[i] = T.SHORE;
       else if (z.tags.has("montagne") && h > 0.55) type[i] = h > 0.8 ? T.SNOW : T.ROCK;
       else if (h > 0.45) type[i] = T.HIGH;
       else type[i] = noise(p.map((v) => v * 3)) > 0.5 ? T.HIGH : T.LOW;
       border[i] = neighbors(i).some((n) => zone[n] >= 0 && zone[n] !== zone[i]) ? 1 : 0;
     }
+
+    // Le zone che si toccano (per i passaggi a piedi), quelle che toccano il mare, quelle sul lago interno
+    const adjacent = zones.map(() => new Set());
+    const coastal = zones.map(() => false);
+    for (const i of land) {
+      for (const n of neighbors(i)) {
+        if (zone[n] >= 0 && zone[n] !== zone[i]) adjacent[zone[i]].add(zone[n]);
+        if (zone[n] < 0 && lake[n]) zones[zone[i]].tags.add("lago");
+      }
+    }
+    for (const c of coast) coastal[c.zone] = true;
 
     // Le due città: il Forte sull'isola grande, il Porto del fiordo su un'isola minore
     const byIsland = (id) => coast.filter((c) => island[c.i] === id);
@@ -200,7 +217,7 @@ const Globo = (() => {
 
     // La nave parte in mare, poco fuori dal Forte
     const start = startAtSea(forteSpot.p, type);
-    return { seed, height, type, biome, zone, border, zones, coast, cities, start };
+    return { seed, height, type, biome, zone, border, zones, coast, cities, start, adjacent: adjacent.map((a) => [...a]), coastal, lake: lakeIsle > 0 ? toLatLon(islands[lakeIsle].c) : null };
   }
 
   // Cerca un punto di mare aperto vicino alla città di partenza

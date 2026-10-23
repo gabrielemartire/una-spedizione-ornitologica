@@ -197,6 +197,9 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 /* Dove si passa le icone sono velate; quello che blocca è pieno e ben visibile */
 .cell.walk .ic { opacity: 0.5; }
 .cell.t-ship .ic, .cell.t-bridge .ic { opacity: 1; }
+/* Il passaggio verso la zona vicina: ben visibile sul bordo */
+.cell.t-pass { color: #f2d070; background: color-mix(in srgb, var(--f-ground) 60%, #7a5a2a); }
+.cell.t-pass .ic { opacity: 1; filter: drop-shadow(0 0 3px rgba(242, 208, 112, 0.7)); }
 
 .t-grass { color: var(--f-dark); }
 .t-tall  { color: var(--f-mid); }

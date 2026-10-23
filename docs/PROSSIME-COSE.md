@@ -11,13 +11,13 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 
 ## Versione 2
 - [ ] **Eventi marini**: cose che attirano l'attenzione mentre si naviga (luccichii, relitti) e si possono visitare.
-- [ ] **Esplorare più a fondo un'isola grande**: una seconda porzione dell'isola, cioè una nuova battlemap (costa un momento), raggiungibile da ogni zona dell'isola (al massimo una zona centrale). Il passaggio dev'essere evidente, con un'icona ponte o un sentiero.
 - [ ] **Entrare nel castello e nelle rovine**: il ponte levatoio (già sulla mappa, tra due bandiere) apre una nuova battlemap con mostri o nemici che ti inseguono.
 - [ ] **Lupi che ti circondano**: oggi il branco ti insegue soltanto.
 - [ ] **Il vulcano scalda l'isola**: tutta l'isola diventa di un bioma più caldo (oggi l'effetto è solo nella zona del vulcano).
 - [ ] **Vignetta notturna**: di notte la mappa più scura lontano dall'esploratore.
 
 ## Fatto di recente
+- [x] **Versione 0.7**: zone interne raggiungibili a piedi dai passaggi (un momento ciascuno), la nave resta ormeggiata; isole più grandi e un'isola col grande lago.
 - [x] **Versione 0.6.9**: cornice verde barocca fuori dalla battlemap; il taccuino si reimpagina quando arrivano i caratteri.
 - [x] **Versione 0.6.8**: cornice chiara attorno alla battlemap; cuori di nuovo rossi.
 - [x] **Versione 0.6.7**: il diario segna solo gli sbarchi, con l'ora e se l'uccello c'era.
