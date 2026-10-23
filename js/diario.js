@@ -6,7 +6,7 @@
 const Diario = (() => {
   const TABS = [
     ["note", "Note"], ["uccelli", "Uccelli"], ["voci", "Voci"],
-    ["finanze", "Finanze"], ["zaino", "Zaino"], ["stiva", "Stiva"],
+    ["finanze", "Finanze"], ["zaino", "Zaino"], ["stiva", "Stiva"], ["taglie", "Taglie"],
   ];
   const STRIP_NOTES = 3;
   const LEDGER_ROWS = 14;   // le righe del registro dei pagamenti, anche vuote
@@ -149,12 +149,13 @@ const Diario = (() => {
     // il capitolo è quello cominciato per ultimo entro questa doppia pagina
     current = TABS.filter(([id]) => starts[id] <= spread).pop()[0];
     box.querySelector(".book-tabs").innerHTML = tabsHtml("is-side");
-    // i ricercati catturati: nella doppia pagina della stiva, in basso a destra, ognuno nella sua cella
-    const caught = trip().captured || [];
+    // i ricercati in stiva, cioè presi e non ancora consegnati: nella doppia pagina della stiva, in basso
+    // a destra, ognuno nella sua cella. Quelli consegnati restano solo nel capitolo delle taglie
+    const caught = (trip().captured || []).filter((p) => !p.delivered);
     const cells = box.querySelector(".book-cells");
     cells.hidden = spread !== starts.stiva || !caught.length;
     cells.innerHTML = caught.map((p) => `<figure class="jail"><div class="jail-bars"><span>${escapeHtml(p.name)}</span></div>
-      <figcaption>${p.delivered ? "consegnato" : "in stiva"} · G${p.day}</figcaption></figure>`).join("");
+      <figcaption>da consegnare · G${p.day}</figcaption></figure>`).join("");
     renderStrip();
   }
 
@@ -189,7 +190,7 @@ const Diario = (() => {
 
   const PAGES = {
     note() {
-      return `<ul class="book-notes">${trip().notes.map((n) => `<li>${when(n)} ${n.msg}</li>`).join("")}</ul>`;
+      return `<p class="pen-note">viaggio n. ${trip().voyage || 1}</p><ul class="book-notes">${trip().notes.map((n) => `<li>${when(n)} ${n.msg}</li>`).join("")}</ul>`;
     },
 
     // Per specie; ogni uccello è una scheda: vuota, qualche riga (tracce o voci), completa col disegno
@@ -207,8 +208,13 @@ const Diario = (() => {
       }).join("");
     },
 
+    // le voci su un uccello si barrano quando l'hai osservato
     voci() {
-      return `<ul class="book-notes">${(trip().rumors || []).map((n) => `<li>${when(n)} ${n.msg}</li>`).join("")}</ul>`;
+      const t = trip();
+      return `<ul class="book-notes">${(t.rumors || []).map((n) => {
+        const done = n.bird != null && t.birds[n.bird]?.level === "visto";
+        return `<li${done ? ' class="is-done"' : ""}>${when(n)} ${done ? `<s>${n.msg}</s>` : n.msg}</li>`;
+      }).join("")}</ul>`;
     },
 
     // Il registro delle finanze: quello che esce (la ciurma, le botteghe) e quello che entra (vendite, premi, taglie)
@@ -222,12 +228,27 @@ const Diario = (() => {
 
     zaino() {
       // l'uovo dice quanto manca; la chiave resta per tutta la spedizione
-      const extra = (it) => it.kind === "uovo" ? ` <small>(si schiude fra ${Math.max(1, Gioco.EGG_DAYS - (Gioco.day() - (it.day || 1)))} giorni)</small>` : "";
+      const extra = (it) => it.kind === "uovo" ? " <small>(potrebbe schiudersi)</small>" : "";
       return `<ul class="book-items"><li>${icon("binoculars")}Binocolo</li>${trip().pack.map((it) => `<li>${icon(OGGETTI_SPECIALI[it.kind].icona)}${OGGETTI_SPECIALI[it.kind].nome}${extra(it)}</li>`).join("")}</ul>`;
     },
 
     stiva() {
       return `<ul class="book-items">${trip().hold.map((it) => `<li>${icon(OGGETTI[it.kind].icona)}${OGGETTI[it.kind].nome}</li>`).join("")}</ul>`;
+    },
+
+    // Una pagina per ogni avviso accettato, con l'insegna WANTED; consegnato il ricercato, il timbro CATTURATO
+    taglie() {
+      const list = trip().bounties || [];
+      if (!list.length) return `<p class="book-empty">Nessun avviso accettato. Le bacheche dei ricercati sono sulle banchine.</p>`;
+      const stamp = { delivered: '<span class="poster-stamp">catturato</span>', escaped: '<span class="poster-stamp is-gone">sfuggito</span>' };
+      return list.map((b) => `<div class="poster">
+          <div class="poster-head">${icon("wanted")}<b>Wanted</b></div>
+          <p class="poster-name">${escapeHtml(b.name)}</p>
+          ${b.crime ? `<p class="poster-crime">che ${b.crime}</p>` : ""}
+          <p class="poster-prize">taglia: ${Gioco.BOUNTY} m.o.</p>
+          <p class="poster-day">avviso accettato il giorno ${b.day}${b.state === "caught" ? " · in stiva" : ""}</p>
+          ${stamp[b.state] || ""}
+        </div>`).join("");
     },
   };
 
@@ -259,6 +280,7 @@ const Diario = (() => {
     const zones = Object.values(t.zones).filter((z) => z.visited).length;
     const seen = UCCELLI.filter((u) => t.birds[u.id]?.level === "visto");
     return [
+      ["Viaggio", `n. ${t.voyage || 1}`],
       ["Giorni di viaggio", Gioco.day()],
       ["Sbarchi", t.stats.landings],
       ["Zone esplorate", zones],
@@ -365,6 +387,8 @@ const Diario = (() => {
     penLine(g, `${days} ${days === 1 ? "giorno" : "giorni"}`, ox + 330, oy + 880, PW - 440);
     write(g, "data", ox + 110, oy + 960, { size: 26, color: SEPIA, italic: true });
     penLine(g, new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" }), ox + 330, oy + 960, PW - 440);
+    write(g, "viaggio n.", ox + 110, oy + 1040, { size: 26, color: SEPIA, italic: true });
+    penLine(g, String(t.voyage || 1), ox + 330, oy + 1040, PW - 440);
   }
 
   // Il retro: il QR (color sabbia) che apre il gioco col codice già scritto, e il codice

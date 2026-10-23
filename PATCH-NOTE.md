@@ -2,6 +2,26 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.8 · 23 ottobre 2026
+
+- **La nave non si incaglia più dentro le isole.** Il grande lago contava come mare, e la nave poteva infilarsi tra due terre che si toccano solo per un angolo: così finiva nel lago, in mezzo alle zone interne. Ora il lago non si naviga e quei varchi sono chiusi; una nave già finita lì torna da sola al mare aperto.
+- **Niente avvisi sopra la battlemap.** I fatti importanti (oggetti, colpi, fughe, l'uccello osservato o volato via, il ricercato) vanno nel diario; i suggerimenti piccoli tacciono. I dialoghi restano. Arrivando a piedi in una zona, il diario lo segna: *(a piedi da …)*.
+- **Il taccuino:**
+  - nuovo capitolo **Taglie**, in fondo: una pagina con l'insegna **WANTED** per ogni avviso accettato; consegnato il ricercato, il timbro **CATTURATO** (se scappa, *sfuggito*);
+  - la **stiva** è com'è adesso: i ricercati consegnati non ci sono più;
+  - le **voci** su un uccello si barrano quando l'hai osservato;
+  - l'uovo dice solo *potrebbe schiudersi*;
+  - in alto nelle Note, **il numero del viaggio**.
+- **La lettera ha l'indirizzo**: ricevendola, la torre della donna si segna sul globo con un **cuore rosa**, e l'indirizzo va nelle voci.
+- **Il codice del taccuino** ora ha 20 caratteri: oltre agli uccelli porta **il numero dei viaggi** e i timbri (che arriveranno). I codici vecchi valgono ancora.
+- **Persa una spedizione, si riparte col taccuino collegato**: *Nuova spedizione* dalla schermata di fine riprende gli uccelli di quella appena finita, e il viaggio dopo. Il nome si chiede sempre, proponendo il tuo.
+- **Benvenuto**: alla prima spedizione, le istruzioni rapide. Si riaprono da *Spedizione → Istruzioni*.
+- **L'orso** va al tuo passo e ti fiuta solo da vicinissimo: rompendo la linea di vista e nascondendoti lo puoi seminare. Vagando ti gira intorno, ma ogni tanto se ne va di cinque o sei caselle e poi torna.
+- **Il ricercato** spara un cuore a colpo (prima mezzo).
+- **La taverna** costa 5 m.o. al Forte e 4 al porticciolo.
+- **Il Forte**: niente più barile davanti alla taverna.
+- **Il fiume della cartolina** serpeggia di traverso: parte dalla cascata, se c'è, e se ne va verso destra o sinistra.
+
 ## 0.7 · 23 ottobre 2026
 
 - **A piedi nell'interno.** Le zone che non toccano il mare prima non si raggiungevano mai. Ora ogni battlemap ha **uno o due passaggi** sul bordo (a nord, a sud, a est; a ovest solo nelle zone interne, perché lì non c'è il mare), segnati con l'icona del **ponte**. Ognuno porta a una zona confinante della stessa isola, interna o sulla costa. Ci passi sopra e scegli se prendere il sentiero: **costa un momento**, e arrivi dall'altra parte sul passaggio corrispondente. Ogni zona interna è collegata a una zona sul mare.

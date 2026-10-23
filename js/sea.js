@@ -41,6 +41,8 @@ const Mare = (() => {
     const trip = Gioco.trip;
     trip.mode = "sea";
     trip.ship.sails = 0;
+    // una nave rimasta nel lago o tra le terre (prima della 0.8 poteva succedere) torna al mare aperto
+    Object.assign(trip.ship, Globo.nearestSea(trip.world, trip.ship.lat, trip.ship.lon));
     turning = 0;
     scoping = false;
     scope = null;
@@ -88,7 +90,7 @@ const Mare = (() => {
     if (ship.sails > 0) {
       const step = ship.sails * SAIL_SPEED * dt;
       const next = Globo.advance(ship.lat, ship.lon, ship.heading, step);
-      if (Globo.isWater(trip.world, next.lat, next.lon)) {
+      if (Globo.canSail(trip.world, ship, next)) {
         Object.assign(ship, next);
         if (!wake.length || Math.hypot(wake[0].lat - ship.lat, wake[0].lon - ship.lon) > 0.6) {
           wake.unshift({ lat: ship.lat, lon: ship.lon });
@@ -125,6 +127,7 @@ const Mare = (() => {
     Globo.draw(el.canvas, trip.world, ship, {
       res: BIG_RES, time, wake, ship: true, markers: true, marks: trip.zones,
       wanted: trip.wanted && trip.wanted.state === "free" ? trip.wanted.zone : null,
+      tower: trip.towerKnown ? towerZone(trip) : null,
       highlight: scope ? scope.id : canLand ? near.zone.id : null,
     });
     if (!scoping && seaTime !== time) drawSeaPostcard(time);
@@ -169,6 +172,12 @@ const Mare = (() => {
     el.postcard.classList.remove("is-scope");
     // ogni traversata ha il suo mare: a volte il sole, uno scoglio, dei gabbiani
     Cartolina.render({ seed: trip.seed + trip.departures * 977 + trip.third * 31, sea: true, time, tags: new Set() }, el.postcard);
+  }
+
+  // La torre della donna, finché non le hai portato la lettera
+  function towerZone(trip) {
+    const z = trip.world.zones.find((zz) => zz.tags.has("torre"));
+    return z && !trip.zones[z.id]?.ladyHappy ? z.id : null;
   }
 
   const cityOf = (zone) => Gioco.trip.world.cities.find((c) => c.zone === zone.id) || null;

@@ -243,11 +243,11 @@ Ogni creatura mostra il suo stato (`!` ti insegue o carica, `?` ti cerca, `z` si
 
 **Non esiste una zona senza animali**: in ogni momento del giorno almeno uno c'è (prima capitava troppo spesso di trovare la zona vuota).
 
-**Esplorazione pura.** Sbarcando non compare nessun avviso sull'uccello ("canta un uccello", "il canto viene dalle rovine") né sugli animali (impronte, ululati), e il riquadro B non elenca più gli animali: si cerca a occhio. Resta solo, all'ora sbagliata, *«Nessun canto. Forse non è l'ora giusta.»* (virgolettato e in corsivo).
+**Esplorazione pura.** Sbarcando non compare nessun avviso sull'uccello ("canta un uccello", "il canto viene dalle rovine") né sugli animali (impronte, ululati), e il riquadro B non elenca più gli animali: si cerca a occhio. Dalla 0.8 **sopra la battlemap non compare nessun avviso**: i fatti importanti (oggetti, colpi, fughe, l'uccello osservato o volato via, il ricercato) vanno nel diario, i suggerimenti piccoli tacciono. I dialoghi restano.
 
 | Creatura | Comportamento | Come la gestisci |
 |---|---|---|
-| Orso | 4 passi ogni 3 tuoi quando ti insegue (più veloce di te!), al tuo passo quando ti cerca, uno ogni due quando vaga; l'acqua gli costa doppio. Colpisce fortissimo: **−8, cioè quattro cuori su cinque**, ti lascia moribondo. Poi però è **sazio**: resta fermo per 3 tue mosse, poi si allontana da te (finché sei a meno di 8 caselle) e torna a vagare; ti riattacca solo se gli vai addosso o fai molto rumore accanto a lui. Tenace: ti fiuta da vicino, ti vede da lontano, aggira gli ostacoli e ti segue | Correndo non lo semini: nasconditi nell'erba alta e nei cespugli, attraversa il ruscello |
+| Orso | Al tuo passo quando ti insegue o ti cerca, uno ogni due quando vaga; vagando ti gira intorno, ma ogni tanto se ne va di 5–6 caselle e poi torna; l'acqua gli costa doppio. Colpisce fortissimo: **−8, cioè quattro cuori su cinque**, ti lascia moribondo. Poi però è **sazio**: resta fermo per 3 tue mosse, poi si allontana da te (finché sei a meno di 8 caselle) e torna a vagare; ti riattacca solo se gli vai addosso o fai molto rumore accanto a lui. Ti fiuta solo da vicinissimo (3 caselle), ti vede da lontano, aggira gli ostacoli | Si può scappare: rompi la linea di vista, nasconditi nell'erba alta e nei cespugli, attraversa il ruscello |
 | Lupi | In branco, al tuo passo, colpiscono meno forte (−2) ma sono tanti; ci vedono bene anche di notte | Nasconditi e aspetta; *(v2: cercano di circondarti)* |
 | Cinghiale | Non sa curvare: se sei sulla sua riga o colonna, in vista, **carica in linea retta** di 2 caselle a battito (−3). Contro un ostacolo si pianta e resta stordito | Le sue linee di carica sono evidenziate: spostati di lato, oppure fallo schiantare contro un albero |
 | Serpente | Fermo nell'erba alta, morde chi è adiacente | Va notato ed evitato |
@@ -283,7 +283,7 @@ Servono a **vendere al mercato**, ma conviene tenerne qualcuno: **i mercanti** l
 **La caccia.** Accettato l'avviso, sul globo compare una **W rossa** sulla zona, e col binocolo si vede **una colonna di fumo** che sale dagli alberi (nella cartolina della zona). Hai **3 giorni**, poi il ricercato lascia l'arcipelago. Sbarcando, il fuggitivo (icona *bandit*, rossa) sta al suo fuoco vicino agli alberi, lontano dalla nave:
 - finché non ti vede (8 caselle, 5 di notte, come gli animali: nascosto ti vede solo da vicinissimo) o non ti sente, resta fermo;
 - poi **scappa**: un passo per ogni tuo passo se cammini, due ogni tre se corri; si ferma contro alberi e rocce;
-- se ti vede entro 6 caselle **ti spara** (mezzo cuore, un colpo ogni 4 battiti): alberi e rocce fermano il colpo, cespugli ed erba alta ti nascondono;
+- se ti vede entro 6 caselle **ti spara** (un cuore, un colpo ogni 4 battiti): alberi e rocce fermano il colpo, cespugli ed erba alta ti nascondono;
 - se arriva al bordo della mappa mentre sei lontano (più di 10 caselle) **sparisce** e l'avviso è perso;
 - lo **prendi** arrivandogli accanto.
 
@@ -346,12 +346,13 @@ Sotto la mappa c'è il **bordo del diario**: carta vecchia, macchiata ai bordi, 
 La linguetta, **Tab** o *Diario* nella barra aprono il **taccuino**: un libro aperto con due pagine e la piega in mezzo, **sempre della stessa misura** (si rimpicciolisce solo su schermi troppo piccoli). Le linguette dei capitoli escono da sotto il libro a sinistra, con la coda biforcuta verso fuori. **← →** sfogliano le pagine (finito un capitolo si passa al successivo), **↑ ↓** cambiano capitolo, **Esc** o Tab chiudono. Col mouse: clic sulla pagina sinistra o destra.
 
 Il diario è un diario, non un manuale: niente spiegazioni, se un capitolo è vuoto è vuoto.
-- **Note**: **solo gli sbarchi**, con giorno e momento, la zona e se l'uccello c'era: *c'era un uccello*, *nessun uccello, ora sbagliata*, *l'uccello è volato via*, *uccello già nel taccuino*. Nient'altro, per ora: il resto (oggetti, ricercati, premi) è negli avvisi che spariscono e nei capitoli del taccuino.
+- **Note**: in alto a penna *viaggio n. X*. Gli sbarchi, con giorno e momento, la zona e se l'uccello c'era (*c'era un uccello*, *nessun uccello, ora sbagliata*, *l'uccello è volato via*, *uccello già nel taccuino*); arrivando a piedi da un passaggio, *(a piedi da …)*. Poi i fatti importanti della battlemap, che non ha più avvisi sopra.
 - **Uccelli**: per specie, con sotto il titolo **dove si trovano** i suoi uccelli comuni (*Si trovano: foresta · taiga · palude · ovunque*), così si può partire a caccia di una specie intera. Ogni uccello è una **scheda**: quattro angoli appena segnati, il riquadro del disegno e righe vuote da riempire. **Sconosciuto**: tutto vuoto. **Incrociato** (traccia: sbarcato all'ora sbagliata, volato via, o tornato a bordo senza osservarlo): nome sulla prima riga, habitat e ore sulla seconda, terza e quarta vuote, niente disegno. **Osservato**: nome (e latino), habitat e ore, curiosità, dove e quando, e il disegno a colori. **I rari osservati hanno una cornice d'oro** (doppio filo dorato, gemme agli angoli, *✦ raro*).
-- **Voci**: le voci sentite.
+- **Voci**: le voci sentite; quella su un uccello **si barra** quando l'hai osservato. La lettera sigillata aggiunge l'indirizzo della torre (e un cuore rosa sul globo).
 - **Finanze**: in alto a destra, a penna e di sbieco, *ciurma: 8 m.o. al giorno*; sotto il registro delle **entrate e uscite** a tre colonne (cosa · giorno · importo), con le uscite in rosso (ciurma, medico, taverna, rapine) e le entrate in verde (mercato, premi della Società, taglie); le righe vuote si riempiono man mano.
-- **Zaino**: la lista degli oggetti (per ora il binocolo).
-- **Stiva**: gli oggetti trovati. **I ricercati catturati** stanno in basso nella pagina di destra, ognuno in **una cella con le sbarre** col nome dentro e, sotto, *in stiva* o *consegnato* e il giorno della cattura.
+- **Zaino**: la lista degli oggetti (il binocolo, gli oggetti magici; l'uovo dice solo *potrebbe schiudersi*).
+- **Stiva**: com'è adesso. Gli oggetti, e in basso nella pagina di destra **i ricercati presi e non ancora consegnati**, ognuno in **una cella con le sbarre**; consegnato, sparisce dalla stiva.
+- **Taglie** (l'ultimo capitolo): una pagina per ogni avviso accettato, con l'insegna **WANTED**, il nome, il delitto, la taglia e il giorno; consegnato il ricercato, un timbro rosso bordato **CATTURATO**; se scappa, un timbro grigio *sfuggito*.
 
 **È un solo libro**: le pagine sono numerate di seguito (Note 1–2, Uccelli dalla 3…) e **ogni capitolo comincia su una pagina di sinistra**. Testo in corsivo d'epoca (IM Fell English), carta in pixel art con grana, macchie, bordi bruniti e la piega; linguette di stoffa vecchia.
 
@@ -392,12 +393,19 @@ Ogni uccello ha: bioma (o "ovunque"), a volte una caratteristica (fiume, lago, c
 
 | Parte | Bit |
 |---|---|
-| Versione del formato | 4 |
+| Versione del formato (2) | 4 |
 | Uccelli visti (uno per ID, oggi 58) | 60 |
+| Viaggi intrapresi | 8 |
+| Timbri del taccuino | 6 |
+| Per il futuro | 6 |
 | Checksum | 16 |
-| **Totale** | **80 bit = 16 caratteri** |
+| **Totale** | **100 bit = 20 caratteri** |
 
-Codifica **Crockford base32**, che non ha lettere ambigue come I, L, O e U. Formato: `K7QF-2MXA-9PLD-R4TB`.
+Codifica **Crockford base32**, che non ha lettere ambigue come I, L, O e U. Formato: `K7QF-2MXA-9PLD-R4TB-0C3E`. I codici della versione 1 (16 caratteri, solo uccelli) valgono ancora: un viaggio, nessun timbro.
+
+**Il numero del viaggio**: la prima spedizione è il viaggio 1, ogni spedizione col taccuino ripreso è il successivo. Sta nel taccuino (Note), nel resoconto e sulla copertina del libretto.
+
+**Dopo la fine** (morte o bancarotta), *Nuova spedizione* riparte **col taccuino di quella appena finita già collegato**; il nome si chiede sempre, proponendo quello di prima.
 
 Il controllo è un CRC-16: intercetta gli errori di battitura. Nel leggere si perdonano minuscole, spazi e trattini, e I, L, O valgono 1, 1, 0. Il codice è falsificabile da chi ci si mette: è un gioco, va bene così.
 
@@ -447,7 +455,9 @@ Idea: **ogni uccello ha il suo verso**, generato dal suo ID. Lo stesso uccello c
 
 ## 19. Decisioni prese
 
-- **Nome del giocatore:** si sceglie all'inizio della partita ("Il registro di bordo").
+- **Nome del giocatore:** si sceglie all'inizio della partita ("Il registro di bordo"), anche col taccuino ripreso, proponendo quello di prima.
+- **Benvenuto:** alla prima spedizione, un riquadro con le istruzioni rapide (e la promessa di attività secondarie ed easter egg); si riapre da *Spedizione → Istruzioni*.
+- **Il grande lago non si naviga**, e la nave non passa tra due terre che si toccano per un angolo (§ 6).
 - **Tempo in terzi:** attraccare gratis, ripartire due momenti, aspettare a bordo uno, traversate lunghe uno ogni 60° (§ 6).
 - **Animali per momento:** alba cinghiale, pomeriggio orso, notte lupi; mai una zona vuota (§ 9.3).
 - **Esplorazione pura:** niente avvisi su uccello e animali, solo «Nessun canto» (§ 9.3).

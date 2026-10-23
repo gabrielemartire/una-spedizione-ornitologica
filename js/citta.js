@@ -39,7 +39,7 @@ const Citta = (() => {
   const SHOPS = {
     forte: {
       medico: { cost: 5, extra: 0 },
-      taverna: { cost: 11 },
+      taverna: { cost: 5 },
       mercato: { price: 2, refuse: [] },
       emporio: { semi: 5 },
       gendarmeria: {},
@@ -47,7 +47,7 @@ const Citta = (() => {
     },
     porto: {
       medico: { cost: 3, extra: 2 }, // tutti i cuori e uno in più, che il Forte non ripristina
-      taverna: { cost: 7, name: "Taverna Pesce Sgozzato" },
+      taverna: { cost: 4, name: "Taverna Pesce Sgozzato" },
       mercato: { price: 4, refuse: ["arte"] },
       emporio: { semi: 5 },
     },
@@ -216,7 +216,7 @@ const Citta = (() => {
     for (const [x, yy] of [[6, 4], [5, 19], [6, 17]]) set(x, yy, "crate");
     for (const yy of [0, 19]) vessel(m, "boat", 1, yy, 2, 5);
     fillHouses(m, r, "lot", ["coppi", "coppi", "ardesia", "paglia", "mattoni"]);
-    // due barili davanti alla taverna, uno in piazza
+    // un barile in piazza (davanti alla taverna niente: chiudeva la strada)
     const roads = ["road", "square"];
     placeShop(m, "medico", { x: 10, y: 10 }, roads);
     placeShop(m, "taverna", { x: 16, y: 15 }, roads);
@@ -225,10 +225,6 @@ const Citta = (() => {
     placeShop(m, "gendarmeria", { x: 26, y: 20 }, roads);
     placeShop(m, "societa", { x: 24, y: 8 }, roads);
     set(6, 6, "board"); // la bacheca dei ricercati, sulla banchina
-    if (m.doors.taverna) {
-      const f = m.doors.taverna.front;
-      for (const [dx, dy] of DIRS) if (m.map[f.y + dy]?.[f.x + dx] === "road" && r() < 0.5) { set(f.x + dx, f.y + dy, "barrel"); break; }
-    }
     set(24, 4, "barrel");
     // la tua nave: tre caselle per nove, ormeggiata lungo la banchina; a bordo si sale dalla banchina
     const ship = { x: 4, y: m.main[0].y };
@@ -758,6 +754,7 @@ const Citta = (() => {
       trip.wanted = null;
       const jailed = (trip.captured || []).find((p) => p.name === w.name && !p.delivered);
       if (jailed) jailed.delivered = true;
+      Gioco.bountyState(w.name, "delivered");
       Gioco.earn(`taglia: ${w.name}`, Gioco.BOUNTY);
       Suoni.play("monete");
       Gioco.renderStatus();
@@ -812,7 +809,13 @@ const Citta = (() => {
       const kind = left[Math.floor(Math.random() * left.length)];
       trip.gifts.push(kind);
       trip.pack.push({ kind, day: Gioco.day() });
-      dialog("Uno sconosciuto", `«Tenete, a me non serve più.» Ti mette in mano ${OGGETTI_SPECIALI[kind].nome.toLowerCase()} e se ne va. Finisce nello zaino.`, [["back", "Grazie…?"]]);
+      // la lettera ha l'indirizzo: la torre si segna sul globo, con un cuore rosa
+      const tower = kind === "lettera" && trip.world.zones.find((z) => z.tags.has("torre"));
+      if (tower) {
+        trip.towerKnown = true;
+        trip.rumors.unshift({ msg: `Sulla lettera sigillata c'è scritto: «Alla dama della torre, ${tower.name}». Segnata sul globo con un cuore rosa.`, day: Gioco.day(), time: Gioco.now() });
+      }
+      dialog("Uno sconosciuto", `«Tenete, a me non serve più.» Ti mette in mano ${OGGETTI_SPECIALI[kind].nome.toLowerCase()} e se ne va. Finisce nello zaino.${tower ? ` Sopra c'è un indirizzo: la torre di ${tower.name}.` : ""}`, [["back", "Grazie…?"]]);
     }
   }
 

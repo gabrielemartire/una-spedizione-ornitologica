@@ -31,7 +31,7 @@ const Gioco = (() => {
   const PULCINO = 57;         // l'uccello che nasce dall'uovo
   // Il fuggitivo: ti vede come un animale, spara da vicino ogni `reload` battiti, scappa dal bordo
   // della mappa solo se sei lontano; damage = mezzi cuori
-  const OUTLAW = { sight: 8, nightSight: 5, hearing: 2, range: 6, reload: 4, damage: 1, escape: 10,
+  const OUTLAW = { sight: 8, nightSight: 5, hearing: 2, range: 6, reload: 4, damage: 2, escape: 10,
     death: "Impallinato", deathText: "Il ricercato aveva la mira migliore" };
   const OUTLAWS = [
     ["Bartolo il Guercio", "ha svuotato la cassa del dazio"], ["Gegia Tre Dita", "ha venduto la stessa nave a tre capitani"],
@@ -79,9 +79,11 @@ const Gioco = (() => {
 
   // Gli animali: l'orso di giorno, i lupi di notte, il cinghiale all'alba. L'orso colpisce forte (quattro
   // cuori) ma poi è sazio: dopo il fermo torna a vagare e ti riattacca solo se lo provochi da vicino.
+  // L'orso va al tuo passo e ha il fiuto corto: correndo e nascondendoti lo puoi seminare. Vagando ti
+  // gira intorno, ma ogni tanto se ne va di cinque o sei caselle (roam) e poi torna.
   // speed = passi per ogni tuo passo (l'acqua ne costa 2); il cinghiale invece carica in linea retta
   const KINDS = {
-    bear: { name: "Orso", icon: "bear", speed: { hunt: 4 / 3, search: 1, wander: 0.5 }, sight: 10, nightSight: 6, smell: 6, hearing: 2, damage: 8, rest: 3, sated: true, sound: "orso", step: "passoOrso",
+    bear: { name: "Orso", icon: "bear", speed: { hunt: 1, search: 1, wander: 0.5 }, sight: 9, nightSight: 6, smell: 3, roam: true, hearing: 2, damage: 8, rest: 3, sated: true, sound: "orso", step: "passoOrso",
       verb: "L'orso ti raggiunge e ti colpisce!", death: "Sbranato", deathText: "L'orso ha avuto la meglio" },
     wolf: { name: "Lupo", icon: "wolf", speed: { hunt: 1, search: 1, wander: 0.5 }, sight: 8, nightSight: 8, smell: 5, hearing: 3, damage: 2, rest: 2, sound: "lupo", step: null,
       verb: "Un lupo ti azzanna!", death: "Azzannato", deathText: "Il branco ha avuto la meglio" },
@@ -475,7 +477,7 @@ const Gioco = (() => {
   // trip.third conta i momenti passati: 0 = alba del primo giorno, 1 = pomeriggio, 2 = notte, 3 = alba del secondo…
   let trip = null;
   let explorer = "";
-  let notebook = null;   // gli uccelli di un taccuino ripreso col codice, per la prossima spedizione
+  let notebook = null;   // il taccuino ripreso ({ birds, voyages, stamps }), per la prossima spedizione
 
   // la vita massima: cinque cuori, più quello rosa della donna della torre
   const maxHp = () => MAX_HP + (trip && trip.pink ? 2 : 0);
@@ -583,11 +585,12 @@ const Gioco = (() => {
       hold: [], pack: [], rumors: [], heard: { taverna: 0, mercante: 0 },
       stats: { steps: 0, landings: 0, waits: 0, hits: 0, escapes: 0, islands: new Set() },
       ship: { ...world.start, sails: 0 },
+      voyage: notebook ? (notebook.voyages || 1) + 1 : 1, stamps: notebook ? [...(notebook.stamps || [])] : [], bounties: [],
     };
     s = null;
     // il taccuino ripreso: i suoi uccelli sono già osservati
     if (notebook) {
-      for (const id of notebook) if (UCCELLI[id]) trip.birds[id] = { level: "visto", zone: "taccuino precedente", day: 0, time: "" };
+      for (const id of notebook.birds) if (UCCELLI[id]) trip.birds[id] = { level: "visto", zone: "taccuino precedente", day: 0, time: "" };
       notebook = null;
       // le specie già complete nel vecchio taccuino la Società le ha già premiate: non si ripagano
       trip.society = Object.keys(SPECIE).filter((sp) => UCCELLI.filter((u) => u.specie === sp && !u.rara && !u.uovo).every((u) => trip.birds[u.id]));
@@ -611,10 +614,16 @@ const Gioco = (() => {
 
   // A fine spedizione il taccuino resta nel browser: "Riprendi un taccuino" lo userà senza dover scrivere il codice
   function saveNotebook() {
-    const seen = UCCELLI.filter((u) => trip.birds[u.id]?.level === "visto").map((u) => u.id);
-    const data = { explorer: trip.explorer, birds: seen, code: Taccuino.encode(seen), day: day(), date: new Date().toISOString().slice(0, 10) };
+    const data = { explorer: trip.explorer, ...notebookData(), code: code(), day: day(), date: new Date().toISOString().slice(0, 10) };
     try { localStorage.setItem(NOTEBOOK_KEY, JSON.stringify(data)); } catch (e) { /* senza memoria resterà il codice */ }
   }
+
+  // Quello che il codice del taccuino si porta dietro: gli uccelli osservati, i viaggi, i timbri
+  function notebookData() {
+    return { birds: UCCELLI.filter((u) => trip.birds[u.id]?.level === "visto").map((u) => u.id), voyages: trip.voyage || 1, stamps: trip.stamps || [] };
+  }
+
+  const code = () => Taccuino.encode(notebookData());
 
   function loadNotebook() {
     try { return JSON.parse(localStorage.getItem(NOTEBOOK_KEY)); } catch (e) { return null; }
@@ -632,7 +641,13 @@ const Gioco = (() => {
     try {
       const world = makeWorld(data.seed);
       explorer = data.explorer;
-      trip = { hold: [], pack: [], rumors: [], heard: { taverna: 0, mercante: 0 }, ...data, world, stats: { ...data.stats, islands: new Set(data.stats.islands) } };
+      trip = { hold: [], pack: [], rumors: [], heard: { taverna: 0, mercante: 0 }, voyage: 1, stamps: [], ...data, world, stats: { ...data.stats, islands: new Set(data.stats.islands) } };
+      // le taglie accettate prima della 0.8: dai prigionieri e dall'avviso in corso
+      if (!trip.bounties) {
+        trip.bounties = (trip.captured || []).map((p) => ({ name: p.name, crime: "", day: p.day, state: p.delivered ? "delivered" : "caught" }));
+        if (trip.wanted?.state === "free") trip.bounties.push({ name: trip.wanted.name, crime: trip.wanted.crime, day: trip.wantedDay || day(), state: "free" });
+      }
+      if (trip.pack.some((it) => it.kind === "lettera")) trip.towerKnown = true;
       // gli oggetti delle versioni vecchie (spade, piume…) non esistono più: diventano idoli
       trip.hold = trip.hold.map((it) => (OGGETTI[it.kind] ? it : { kind: "idolo" }));
       trip.pack = trip.pack.filter((it) => OGGETTI_SPECIALI[it.kind]);   // la bussola non c'è più
@@ -647,7 +662,7 @@ const Gioco = (() => {
         // Ricaricare a terra costa un giorno intero: niente fughe dagli orsi col refresh
         if (!advance(REFRESH_COST)) return true;
         landAt(zone, { waited: true });
-        toast("Hai perso un giorno: ti risvegli sulla nave.");
+        log("Hai perso un giorno: ti risvegli sulla nave.");
       } else {
         Mare.enter();
         if (data.mode === "city" && city) { Mare.stop(); visitCity(city); }
@@ -719,7 +734,8 @@ const Gioco = (() => {
     }
     const present = !!bird && !memory.done && !memory.gone && bird.ore.includes(time);
     // il diario segna solo gli sbarchi: dove, a che ora (lo dice la data della nota) e se l'uccello c'era
-    note(`${zone.name}: ${present ? "c'era un uccello." : memory.done ? "uccello già nel taccuino." : memory.gone ? "l'uccello è volato via." : bird ? "nessun uccello, ora sbagliata." : "nessun uccello."}`, "bird");
+    const from = via != null ? ` <small>(a piedi da ${trip.world.zones[via].name})</small>` : "";
+    note(`${zone.name}${from}: ${present ? "c'era un uccello." : memory.done ? "uccello già nel taccuino." : memory.gone ? "l'uccello è volato via." : bird ? "nessun uccello, ora sbagliata." : "nessun uccello."}`, "bird");
     // L'oggetto della zona si decide al primo sbarco, e resta lì finché non lo prendi
     const ri = rng(zone.seed ^ 0x17e3);
     if (memory.item === undefined) memory.item = gen.ruin || ri() < ITEM_CHANCE ? { kind: oggettoACaso(ri, !!gen.ruin), taken: false } : null;
@@ -770,14 +786,8 @@ const Gioco = (() => {
     Suoni.toggleAmbient(time === "notte" ? "notte" : "vento");
 
     // All'ora sbagliata l'uccello non c'è, ma a volte lascia tracce (i rari no: di quelli si sa solo dalle voci)
-    if (bird && !present && !memory.done && !memory.gone) {
-      if (!bird.rara) learn(bird, "traccia");
-      toast("<em>«Nessun canto. Forse non è l'ora giusta.»</em>", true);
-    } else if (memory.done) {
-      toast("L'uccello di questa zona è già nel taccuino.");
-    }
-    if (s.merchant) setTimeout(() => s && s.zone === zone && toast("Qualcuno col cappuccio aspetta vicino alla riva."), 3200);
-    if (s.fugitive) setTimeout(() => s && s.zone === zone && toast("Odore di fumo: qualcuno ha acceso un fuoco, più in là."), 1600);
+    if (bird && !present && !memory.done && !memory.gone && !bird.rara) learn(bird, "traccia");
+    if (s.merchant) log("Qualcuno col cappuccio aspetta vicino alla riva.");
     render();
   }
 
@@ -819,12 +829,21 @@ const Gioco = (() => {
     const zone = trip.world.zones[poster.zone];
     trip.wanted = { ...poster, until: trip.third + WANTED_DAYS * 3, state: "free" };
     trip.wantedDay = day();
+    // nel taccuino, una pagina per ogni avviso accettato
+    trip.bounties.push({ name: poster.name, crime: poster.crime, day: day(), state: "free" });
+  }
+
+  // Come è finita una taglia: presa (caught), consegnata (delivered), sfuggita (escaped)
+  function bountyState(name, state) {
+    const b = [...(trip.bounties || [])].reverse().find((x) => x.name === name && x.state !== "delivered" && x.state !== "escaped");
+    if (b) b.state = state;
   }
 
   // Passato il tempo, il ricercato ancora libero lascia l'arcipelago
   function wantedExpired() {
     const w = trip.wanted;
     if (!w || w.state !== "free" || trip.third < w.until) return;
+    bountyState(w.name, "escaped");
     trip.wanted = null;
     if (s && s.fugitive) { s.fugitive = null; el.ents.fugitive.hidden = true; }
   }
@@ -864,7 +883,7 @@ const Gioco = (() => {
       trip.heard[from]++;
       const who = { forte: "Un vecchio marinaio, al bancone del Forte", porto: "Un pescatore, al porticciolo", mercante: "Il mercante" }[source];
       const msg = `${who}: «A ${zone.name} c'è un ${SPECIE[u.specie].nome.split(" ")[0].toLowerCase()} che nessuno ha mai disegnato.» Segnato sul globo con una X.`;
-      trip.rumors.unshift({ msg, day: day(), time: now() });
+      trip.rumors.unshift({ msg, day: day(), time: now(), bird: u.id });
       return true;
     }
     return false;
@@ -876,14 +895,24 @@ const Gioco = (() => {
     Cartolina.render({ seed: s.seed, tags: s.tags, time: s.time, bird: s.bird.present && !s.bird.gone && !s.bird.observed, smoke: !!s.fugitive }, el.postcard);
   }
 
-  // Il diario annota solo gli sbarchi (vedi landAt); il resto è un avviso che sparisce
+  // Il diario annota gli sbarchi (vedi landAt) e i fatti importanti; due note uguali di fila non si ripetono
   function note(msg, icon = null) {
+    const last = trip.notes[0];
+    if (last && last.msg === msg && last.day === day() && last.time === now()) return;
     trip.notes.unshift({ msg, icon, day: day(), time: now() });
     Diario.renderStrip();
   }
 
+  // Un fatto importante: a terra va nel diario, altrove è un avviso
+  function log(msg) {
+    if (trip && trip.mode === "land" && s) note(msg);
+    else toast(msg);
+  }
+
+  // Un avviso che sparisce. Sopra la battlemap niente avvisi: i suggerimenti piccoli lì tacciono
   function toast(msg, html = false) {
     if (!el) return;
+    if (trip && trip.mode === "land" && s) return;
     if (html) el.toast.innerHTML = msg;
     else el.toast.textContent = msg;
     el.toast.hidden = false;
@@ -996,7 +1025,7 @@ const Gioco = (() => {
     trip.zones[s.zone.id].item.taken = true;
     s.item = null;
     Suoni.play("monete");
-    toast(`Hai trovato: ${it.nome}. Finisce in stiva.`);
+    log(`Hai trovato: ${it.nome}. Finisce in stiva.`);
   }
 
   // Il passaggio: si va a piedi nella zona vicina, e ci vuole un momento. La nave resta dov'è
@@ -1024,7 +1053,7 @@ const Gioco = (() => {
 
   // Il forziere: con la chiave si apre (la chiave resta), dentro un oggetto rituale e qualche moneta
   function openChest() {
-    if (!hasPack("chiave")) { toast("Un forziere chiuso. Serve una chiave."); return; }
+    if (!hasPack("chiave")) { log("Un forziere chiuso. Serve una chiave."); return; }
     const kind = oggettoACaso(Math.random, true);
     const coins = CHEST_COINS[0] + Math.floor(Math.random() * (CHEST_COINS[1] - CHEST_COINS[0] + 1));
     trip.hold.push({ kind });
@@ -1032,7 +1061,7 @@ const Gioco = (() => {
     trip.zones[s.zone.id].chestOpen = true;
     s.chest = null;
     Suoni.play("monete");
-    toast(`Il forziere si apre: ${OGGETTI[kind].nome} e ${coins} m.o.`);
+    log(`Il forziere si apre: ${OGGETTI[kind].nome} e ${coins} m.o.`);
     render();
   }
 
@@ -1070,7 +1099,7 @@ const Gioco = (() => {
     trip.pack.splice(trip.pack.findIndex((it) => it.kind === "semi"), 1);
     memory.seededAt = trip.third;
     Suoni.play("cespuglio");
-    toast("Spargi i semi. Ora bisogna aspettare un momento.");
+    log("Spargi i semi. Ora bisogna aspettare un momento.");
   }
 
   // L'uovo: passati EGG_DAYS giorni da quando l'hai avuto, si schiude e nel taccuino arriva il Pulcino
@@ -1079,7 +1108,7 @@ const Gioco = (() => {
     if (i < 0) return;
     trip.pack.splice(i, 1);
     trip.birds[PULCINO] = { level: "visto", zone: "nato dall'uovo", day: day(), time: now() };
-    setTimeout(() => toast("Crac! L'uovo si è schiuso: un Pulcino nel taccuino."), 1500);
+    log("Crac! L'uovo si è schiuso: un Pulcino nel taccuino.");
   }
 
   // Il mercante vuole un oggetto preciso: se ce l'hai, in cambio ti racconta una voce
@@ -1100,7 +1129,7 @@ const Gioco = (() => {
     s.merchant = null;
     el.ents.merchant.hidden = el.ents.cart.hidden = true;
     const heard = rumor("mercante");
-    toast(heard ? "Il mercante si avvicina e sussurra. È nel diario." : "Il mercante prende l'oggetto, ma non sa niente di nuovo.");
+    log(heard ? "Il mercante si avvicina e sussurra. È nel diario." : "Il mercante prende l'oggetto, ma non sa niente di nuovo.");
     leaveMerchant();
   }
 
@@ -1122,7 +1151,7 @@ const Gioco = (() => {
       learn(b.info, "visto");
       trip.zones[s.zone.id].done = true;
       Suoni.play("osservato");
-      toast(`${b.info.nome} annotato nel taccuino! Torna alla nave.`);
+      log(`${b.info.nome} annotato nel taccuino! Torna alla nave.`);
       drawPostcard();
     } else if (d <= OBSERVE) {
       toast("Qualcosa ti copre la vista.");
@@ -1196,11 +1225,11 @@ const Gioco = (() => {
       trip.zones[s.zone.id].gone = true;
       drawPostcard();
       if (!b.info.rara) learn(b.info, "traccia");
-      toast(`${reason}: l'uccello vola via dalla zona.`);
+      log(`${reason}: l'uccello vola via dalla zona.`);
       return;
     }
     Object.assign(b, pickRandom(spots));
-    toast(`${reason}: l'uccello vola in un altro punto.`);
+    log(`${reason}: l'uccello vola in un altro punto.`);
   }
 
   // --- Il ricercato: sta al suo fuoco finché non ti vede o ti sente, poi scappa e ti spara ---
@@ -1220,7 +1249,7 @@ const Gioco = (() => {
       if (!seen && !s.heard.some((n) => n.r > 0 && dist(f, n) <= n.r + OUTLAW.hearing)) return;
       f.mode = "flee";
       f.reload = 1;
-      toast("Il ricercato ti ha visto: scappa!");
+      log("Il ricercato ti ha visto: scappa!");
     }
     if (f.reload) f.reload--;
     // da vicino, se ti vede, spara invece di correre: alberi e rocce fermano il colpo, i cespugli ti nascondono
@@ -1232,7 +1261,7 @@ const Gioco = (() => {
       el.map.classList.remove("is-hit");
       void el.map.offsetWidth;
       el.map.classList.add("is-hit");
-      toast(`Il ricercato ti spara! ${lostHearts(OUTLAW.damage)}.`);
+      log(`Il ricercato ti spara! ${lostHearts(OUTLAW.damage)}.`);
       if (!p.hp) die("fugitive");
       return;
     }
@@ -1256,8 +1285,9 @@ const Gioco = (() => {
     if (edge && dist(f, p) > OUTLAW.escape) {
       s.fugitive = null;
       el.ents.fugitive.hidden = true;
+      bountyState(trip.wanted.name, "escaped");
       trip.wanted = null;
-      toast("Il ricercato è sparito oltre il bosco. Addio taglia.");
+      log("Il ricercato è sparito oltre il bosco. Addio taglia.");
     }
   }
 
@@ -1267,8 +1297,9 @@ const Gioco = (() => {
     el.ents.fugitive.hidden = true;
     trip.wanted.state = "caught";
     (trip.captured ||= []).push({ name: trip.wanted.name, day: day(), delivered: false });   // nel taccuino, dietro le sbarre
+    bountyState(trip.wanted.name, "caught");
     Suoni.play("tonfo");
-    toast(`Preso! ${trip.wanted.name} finisce in stiva.`);
+    log(`Preso! ${trip.wanted.name} finisce in stiva.`);
   }
 
   // --- Animali che inseguono: orso e lupi ---
@@ -1328,14 +1359,14 @@ const Gioco = (() => {
     // sazio, ti nota solo se gli vai addosso o se fai molto rumore vicino a lui
     const provoked = o.sated ? dist(o, p) <= 1 || s.heard.some((n) => n.r >= 3 && dist(o, n) <= 2) : sees(o) || hears(o);
     if (provoked) {
-      if (o.mode !== "hunt") { Suoni.play(k.sound); toast(`${o.kind === "wolf" ? "Un lupo" : "L'orso"} ti ha fiutato e ti insegue!`); }
+      if (o.mode !== "hunt") { Suoni.play(k.sound); log(`${o.kind === "wolf" ? "Un lupo" : "L'orso"} ti ha fiutato e ti insegue!`); }
       o.mode = "hunt";
       o.last = { x: p.x, y: p.y };
     } else if (o.mode === "hunt") {
       o.mode = "search";
       o.searchLeft = 6;
       trip.stats.escapes++;
-      toast(`${o.kind === "wolf" ? "Il lupo" : "L'orso"} ti ha perso: va a cercarti dove ti ha visto.`);
+      log(`${o.kind === "wolf" ? "Il lupo" : "L'orso"} ti ha perso: va a cercarti dove ti ha visto.`);
     }
 
     o.energy += k.speed[o.mode];
@@ -1347,6 +1378,7 @@ const Gioco = (() => {
         .filter((c) => inside(c.x, c.y) && beastCost(c) < Infinity && !same(c, p));
       // sazio e ancora vicino a te, se ne va dall'altra parte
       if (o.sated && dist(o, p) < 8) target = around.sort((a, b) => dist(b, p) - dist(a, p))[0];
+      else if (k.roam) target = roamTarget(o, p) || pickRandom(around);
       else target = !o.sated && Math.random() < 0.6 ? p : pickRandom(around);
     }
     const path = (target && pathFrom(prev, o, target)) || [];
@@ -1370,6 +1402,20 @@ const Gioco = (() => {
 
     if (o.mode === "search" && same(o, o.last) && --o.searchLeft <= 0) o.mode = "wander";
     o.next = o.mode === "wander" ? null : (pathFrom(beastPaths(o).prev, o, o.mode === "hunt" ? p : o.last) || [])[0] || null;
+  }
+
+  // L'orso che vaga: per un po' ti si avvicina, poi sceglie un posto a cinque o sei caselle da te
+  // e ci va, poi torna ad avvicinarsi
+  function roamTarget(o, p) {
+    o.roamLeft = (o.roamLeft ?? 8 + Math.floor(Math.random() * 6)) - 1;
+    if (o.roamLeft <= 0) {
+      const far = s.free.filter((c) => { const d = dist(c, o); return d >= 5 && d <= 6.5 && dist(c, p) > dist(o, p); });
+      o.away = far.length ? pickRandom(far) : null;
+      o.roamLeft = 14 + Math.floor(Math.random() * 8);
+    }
+    if (o.away && (same(o, o.away) || o.roamLeft < 6)) o.away = null;
+    if (o.away) return o.away;
+    return Math.random() < 0.6 ? p : null;
   }
 
   // --- Il cinghiale: non sa curvare ---
@@ -1400,7 +1446,7 @@ const Gioco = (() => {
         o.dir = [Math.sign(p.x - o.x), Math.sign(p.y - o.y)];
         o.run = 0;
         Suoni.play(k.sound);
-        toast("Il cinghiale abbassa la testa e carica!");
+        log("Il cinghiale abbassa la testa e carica!");
       }
     }
 
@@ -1413,7 +1459,7 @@ const Gioco = (() => {
           // Contro un ostacolo si pianta e resta stordito
           o.rest = k.rest;
           o.mode = "stunned";
-          toast("Il cinghiale si pianta e resta stordito.");
+          log("Il cinghiale si pianta e resta stordito.");
           break;
         }
         o.x = c.x;
@@ -1459,7 +1505,7 @@ const Gioco = (() => {
     el.map.classList.remove("is-hit");
     void el.map.offsetWidth; // fa ripartire l'animazione
     el.map.classList.add("is-hit");
-    toast(`${k.verb} ${lostHearts(k.damage)}.${k.sated && p.hp ? " Poi si siede, sazio." : ""}`);
+    log(`${k.verb} ${lostHearts(k.damage)}.${k.sated && p.hp ? " Poi si siede, sazio." : ""}`);
     if (!p.hp) die(o.kind);
     else render();
   }
@@ -1820,8 +1866,8 @@ const Gioco = (() => {
 
   // Quello che serve alla navigazione (js/sea.js) e al diario (js/diario.js)
   return {
-    start, resume, save, setNotebook: (ids) => { notebook = ids; }, code: () => Taccuino.encode(UCCELLI.filter((u) => trip.birds[u.id]?.level === "visto").map((u) => u.id)), hasSave: () => !!loadSave(), clearSave, loadNotebook, depart, landAt, rumor, pay, earn, visitCity, maxHp, EGG_DAYS,
-    wantedPoster, acceptWanted, advance, renderStatus, note, toast, timeOf, now, day, showView, iconHtml, fitMap,
+    start, resume, save, setNotebook: (data) => { notebook = data; }, code, hasSave: () => !!loadSave(), clearSave, loadNotebook, depart, landAt, rumor, pay, earn, visitCity, maxHp, EGG_DAYS,
+    wantedPoster, acceptWanted, bountyState, advance, renderStatus, note, log, toast, timeOf, now, day, showView, iconHtml, fitMap,
     get trip() { return trip; },
     get el() { return el; },
     get explorer() { return explorer; },

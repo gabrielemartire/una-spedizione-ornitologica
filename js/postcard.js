@@ -787,15 +787,31 @@ const Cartolina = (() => {
         return Math.abs(x - sunX) < 2 && r() < 0.6 ? P.waterLight : P.water;
       });
     }
-    for (let y = waterTop; y < PH && spots.fiume; y++) {
-      const half = 1.5 + (y - waterTop) * 0.45;
-      rx += Math.sin(y * 0.25) * 0.6;
-      for (let x = Math.round(rx - half); x <= rx + half; x++) {
-        const edge = x <= rx - half + 1 || x >= rx + half - 1;
-        // Increspature: brevi lineette orizzontali di luce
-        let c = edge ? P.waterDark : (y * 7 + Math.floor((x + y * 2) / 3) * 5) % 13 === 0 ? P.waterLight : P.water;
-        if (Math.abs(x - sunX) < 3 && r() < 0.6) c = P.waterLight; // il riflesso del sole o della luna
-        px(x, y, c);
+    // Il fiume serpeggia di traverso, largo vicino e sottile lontano: parte dalla cascata ed esce da un
+    // lato; senza cascata attraversa tutta la cartolina, da un lato all'altro
+    if (spots.fiume) {
+      const fromFall = zone.tags.has("cascata");
+      const dir = r() < 0.5 ? 1 : -1;
+      const x0 = fromFall ? rx : dir > 0 ? -8 : PW + 8, y0 = fromFall ? waterTop - 2 : forestY + 3;
+      const x1 = dir > 0 ? PW + 8 : -8, y1 = PH - 12 - r() * 6;
+      const phase = r() * Math.PI * 2, bends = 1.5 + r();
+      const band = new Map();   // per colonna: il centro e la mezza altezza del fiume
+      for (let t = 0; t <= 1; t += 0.002) {
+        const x = Math.round(x0 + (x1 - x0) * t);
+        const y = y0 + (y1 - y0) * t + Math.sin(t * Math.PI * 2 * bends + phase) * (2 + t * 6) * (fromFall ? Math.min(1, t * 4) : 1);
+        const half = 0.8 + Math.max(0, y - HY) * 0.09;
+        if (!band.has(x)) band.set(x, []);
+        band.get(x).push([y, half]);
+      }
+      for (const [x, list] of band) {
+        for (const [cy, half] of list) {
+          for (let y = Math.round(cy - half); y <= cy + half; y++) {
+            const edge = y <= cy - half + 0.6;
+            let c = edge ? P.waterDark : (y * 7 + Math.floor((x + y * 2) / 3) * 5) % 13 === 0 ? P.waterLight : P.water;
+            if (Math.abs(x - sunX) < 3 && r() < 0.6) c = P.waterLight; // il riflesso del sole o della luna
+            px(x, y, c);
+          }
+        }
       }
     }
 
@@ -863,7 +879,7 @@ const Cartolina = (() => {
     }
     for (let i = 0; i < 3; i++) {
       const x = 20 + r() * (PW - 40), y = PH - 3;
-      if (Math.abs(x - rx) < 12) continue;
+      if ([-6, 0, 6].some((dx) => isWater(get(Math.round(x + dx), y)))) continue;
       ellipse(x, y, 3 + r() * 2, 2, (xx, yy) => (yy < y - 0.5 ? P.rockLight : P.rock));
     }
 

@@ -8,7 +8,7 @@ function show(id, { resume = false } = {}) {
   document.body.classList.toggle("in-game", id === "screen-game");
   closeMenubar();
   if (id === "screen-game") {
-    if (!resume || !Gioco.resume()) Gioco.start(document.getElementById("player-name").value);
+    if (!resume || !Gioco.resume()) { Gioco.start(document.getElementById("player-name").value); welcomeOnce(); }
     return;
   }
   if (id === "screen-menu") { renderContinue(); Gioco.setNotebook(null); }
@@ -71,8 +71,8 @@ const urlCode = new URLSearchParams(location.search).get("taccuino");
 if (urlCode) history.replaceState(null, "", location.pathname);   // un refresh non riapre la ripresa
 document.getElementById("resume-form").addEventListener("submit", (e) => {
   e.preventDefault();
-  const ids = Taccuino.decode(document.getElementById("resume-code").value);
-  if (!ids) {
+  const data = Taccuino.decode(document.getElementById("resume-code").value);
+  if (!data) {
     document.getElementById("resume-msg").textContent = "Il codice non torna: controlla le lettere.";
     Suoni.play("blip");
     return;
@@ -80,7 +80,7 @@ document.getElementById("resume-form").addEventListener("submit", (e) => {
   Suoni.play("conferma");
   const saved = Gioco.loadNotebook();
   show(Gioco.hasSave() ? "screen-confirm" : "screen-name");
-  Gioco.setNotebook(ids);
+  Gioco.setNotebook(data);
   if (saved?.explorer && !Gioco.hasSave()) document.getElementById("player-name").value = saved.explorer;
 });
 
@@ -106,6 +106,16 @@ document.addEventListener("click", (e) => {
     // c'è una spedizione salvata: prima di perderla si chiede
     Suoni.play("conferma");
     show(Gioco.hasSave() ? "screen-confirm" : "screen-name");
+  } else if (el.dataset.action === "again") {
+    // dopo la fine di una spedizione si riparte col taccuino di quella, già collegato
+    Suoni.play("conferma");
+    const saved = Gioco.loadNotebook();
+    show("screen-name");
+    if (saved?.birds) Gioco.setNotebook(saved);
+  } else if (el.dataset.action === "instructions") {
+    Suoni.play("conferma");
+    closeMenubar();
+    showWelcome();
   } else if (el.dataset.action === "continue") {
     Suoni.play("conferma");
     show("screen-game", { resume: true });
@@ -174,11 +184,47 @@ function renderContinue() {
 
 const PATCH_KEY = "spedizione-ornitologica:patch";
 
+// --- Il benvenuto: alla prima spedizione, le istruzioni rapide; si riaprono dal menu "Spedizione" ---
+
+const WELCOME_KEY = "spedizione-ornitologica:benvenuto";
+
+function showWelcome() {
+  const box = document.getElementById("patch");
+  box.dataset.kind = "welcome";
+  box.innerHTML = `<div class="patch-card" role="dialog" aria-label="Benvenuto">
+      <h2>Benvenuto a bordo</h2>
+      <p class="welcome-lead">La Società ornitologica ti affida un taccuino da riempire: osserva tutti gli uccelli dell'arcipelago.</p>
+      <ul>
+        <li><b>In mare</b>: ← → la rotta, ↑ ↓ le vele, T il binocolo per guardare la costa, Invio per sbarcare o entrare in porto.</li>
+        <li><b>A terra</b>: frecce o WASD per muoverti, spazio per osservare l'uccello da vicino, ma non troppo. Tenere premuto è correre e fa rumore. Torna alla nave per ripartire.</li>
+        <li><b>Il tempo</b> passa a momenti: alba, pomeriggio, notte. Ogni uccello vola solo in certi momenti; ripartire ne costa due, aspettare a bordo uno.</li>
+        <li><b>Gli animali</b> cacciano a seconda dell'ora: nasconditi nell'erba alta e nei cespugli, sta' zitto, scappa.</li>
+        <li><b>Le monete</b>: la ciurma vuole la paga ogni alba. Si guadagnano vendendo quel che trovi, con le taglie e coi premi della Società.</li>
+        <li><b>Il diario</b> (Tab) annota tutto; il taccuino ha un codice per riprenderlo nel viaggio dopo.</li>
+      </ul>
+      <p class="welcome-lead">Ci sono tante attività secondarie da scoprire, e qualche easter egg ben nascosto. Occhi aperti.</p>
+      <p class="patch-foot">Le istruzioni restano nel menu <i>Spedizione</i> · Invio per chiudere</p>
+      <button class="menu-item" data-action="close-patch">Si salpa!</button>
+    </div>`;
+  box.hidden = false;
+  box.querySelector("button").focus();
+}
+
+// La prima volta che si gioca, prima di salpare
+function welcomeOnce() {
+  let seen = null;
+  try { seen = localStorage.getItem(WELCOME_KEY); } catch (e) { /* senza memoria si mostra ogni volta */ }
+  if (seen || !document.getElementById("patch").hidden) return;
+  try { localStorage.setItem(WELCOME_KEY, "1"); } catch (e) { /* pazienza */ }
+  showWelcome();
+}
+
 function showPatchNotes() {
   let seen = null;
   try { seen = localStorage.getItem(PATCH_KEY); } catch (e) { /* senza memoria si mostrano ogni volta */ }
   if (seen === VERSIONE) return;
   const box = document.getElementById("patch");
+  box.dataset.kind = "patch";
   box.innerHTML = `<div class="patch-card" role="dialog" aria-label="Patch note">
       <h2>Patch note ${VERSIONE.slice(1)}</h2>
       <ul>${NOVITA.map((n) => `<li>${n}</li>`).join("")}</ul>
@@ -192,7 +238,7 @@ function showPatchNotes() {
 function closePatchNotes() {
   const box = document.getElementById("patch");
   box.hidden = true;
-  try { localStorage.setItem(PATCH_KEY, VERSIONE); } catch (e) { /* pazienza */ }
+  if (box.dataset.kind === "patch") try { localStorage.setItem(PATCH_KEY, VERSIONE); } catch (e) { /* pazienza */ }
   if (document.body.classList.contains("in-game")) document.querySelector("#map-overlay:not([hidden]) .menu-item")?.focus();
   else focusFirst();
 }

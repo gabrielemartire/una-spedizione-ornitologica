@@ -217,7 +217,7 @@ const Globo = (() => {
 
     // La nave parte in mare, poco fuori dal Forte
     const start = startAtSea(forteSpot.p, type);
-    return { seed, height, type, biome, zone, border, zones, coast, cities, start, adjacent: adjacent.map((a) => [...a]), coastal, lake: lakeIsle > 0 ? toLatLon(islands[lakeIsle].c) : null };
+    return { seed, height, type, biome, zone, border, zones, coast, cities, start, adjacent: adjacent.map((a) => [...a]), coastal, lakeMask: lake, lake: lakeIsle > 0 ? toLatLon(islands[lakeIsle].c) : null };
   }
 
   // Cerca un punto di mare aperto vicino alla città di partenza
@@ -237,8 +237,31 @@ const Globo = (() => {
 
   // --- Interrogare il mondo ---
 
+  // Il mare navigabile: il grande lago dentro l'isola è acqua, ma la nave non ci entra
   function isWater(world, lat, lon) {
-    return world.type[texel(lat, lon)] <= T.SHALLOW;
+    const t = texel(lat, lon);
+    return world.type[t] <= T.SHALLOW && !(world.lakeMask && world.lakeMask[t]);
+  }
+
+  // Un passo di nave da un punto all'altro: dove si arriva dev'essere mare, e passando in diagonale
+  // da un grado all'altro non ci si infila tra due terre che si toccano per un angolo
+  function canSail(world, from, to) {
+    if (!isWater(world, to.lat, to.lon)) return false;
+    const a = texel(from.lat, from.lon), b = texel(to.lat, to.lon);
+    if (a % TW === b % TW || Math.floor(a / TW) === Math.floor(b / TW)) return true;
+    return isWater(world, from.lat, to.lon) || isWater(world, to.lat, from.lon);
+  }
+
+  // Il mare navigabile più vicino a un punto (per una nave finita dove non deve stare)
+  function nearestSea(world, lat, lon) {
+    if (isWater(world, lat, lon)) return { lat, lon };
+    for (let d = 1; d < 40; d++) {
+      for (let a = 0; a < 360; a += 10) {
+        const la = Math.max(-89, Math.min(89, lat + Math.sin(a * DEG) * d)), lo = lon + Math.cos(a * DEG) * d;
+        if (isWater(world, la, lo) && isWater(world, la + 1, lo) && isWater(world, la - 1, lo)) return { lat: la, lon: lo };
+      }
+    }
+    return { lat: world.start.lat, lon: world.start.lon };
   }
 
   // Il punto di costa più vicino entro `maxDeg` gradi, con la sua zona
@@ -432,6 +455,18 @@ const Globo = (() => {
       }
     }
 
+    // Il cuore rosa sulla torre della donna, quando hai la sua lettera
+    if (opts.tower != null) {
+      const z = world.zones[opts.tower], s = project(z.lat, z.lon);
+      const HEART = [[-2, -1], [-1, -2], [1, -2], [2, -1], [-2, 0], [-1, -1], [0, -1], [1, -1], [2, 0], [-1, 0], [0, 0], [1, 0], [-1, 1], [0, 1], [1, 1], [0, 2]];
+      if (s) {
+        for (const [dx, dy] of HEART) for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          if (!HEART.some(([x, y]) => x === dx + ox && y === dy + oy)) put(s.x + dx + ox, s.y + dy + oy, [60, 20, 40]);
+        }
+        for (const [dx, dy] of HEART) put(s.x + dx, s.y + dy, [240, 120, 170]);
+      }
+    }
+
     // La nave al centro, orientata secondo la rotta
     if (opts.ship) {
       const h = view.heading * DEG, fx = Math.sin(h), fy = -Math.cos(h);
@@ -451,5 +486,5 @@ const Globo = (() => {
     out.drawImage(small, 0, 0, canvas.width, canvas.height);
   }
 
-  return { createWorld, draw, isWater, nearestCoast, nearestCity, advance };
+  return { createWorld, draw, isWater, canSail, nearestSea, nearestCoast, nearestCity, advance };
 })();
