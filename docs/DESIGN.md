@@ -237,6 +237,8 @@ Basta **un'azione di osservazione** dalla fascia tra i due anelli, con l'uccello
 Comportamenti possibili: *timido* (fuga ampia), *curioso* (si avvicina se stai fermo), *nomade* (cambia posatoio), *notturno*, *mattiniero*, *ghiotto* (attirato dai semi).
 
 ### 9.3 Creature
+**Tutti i nemici** (animali, ricercato, bucanieri) hanno **lo stesso rosso scuro** (`--enemy`), così si riconoscono a colpo d'occhio; li distingue l'icona.
+
 Ogni creatura mostra il suo stato (`!` ti insegue o carica, `?` ti cerca, `z` si riposa o è stordita) e la sua portata: non si viene mai colpiti a sorpresa.
 
 **Chi c'è dipende dal momento del giorno**, ed è deciso a ogni sbarco:

@@ -2,6 +2,10 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.11.1 · 24 ottobre 2026
+
+- **Tutti i nemici sono rossi**, dello stesso rosso scuro: orso, lupi, cinghiale, il ricercato e i bucanieri. Si riconoscono a colpo d'occhio (prima i lupi erano grigi, il cinghiale marrone, i bucanieri color carta).
+
 ## 0.11 · 23 ottobre 2026
 
 - **La nebbia del pesce gatto.** In mare aperto ci sono due o tre zone dove, **di notte**, cala una nebbia fitta (sul globo si vede: macchie grigie sul mare). Lì sotto nuota un pesce gatto enorme e cieco, che caccia col rumore. Con **una vela** passi; con di più, una lucina si accende nella nebbia davanti alla prua (anche nella vista dal ponte) e hai un attimo per ammainare: se non lo fai, ti trova e manda a fondo la nave. Di giorno la nebbia non c'è.

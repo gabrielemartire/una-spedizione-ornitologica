@@ -101,6 +101,7 @@ body {
   --f-sea: #1c3448;
   --bird: #f2c230;
   --danger: #d2552b;
+  --enemy: #b3262a;   /* tutti i nemici: un rosso scuro, non acceso */
 }
 
 /* In partita tutto sta in una schermata: la mappa si adatta allo spazio che resta */
@@ -238,7 +239,7 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .e-npc.e-carpenter { color: #e8a040; }
 .e-merchant { color: #e8a040; filter: drop-shadow(0 0 2px #000); }
 .e-cart { color: #c89058; filter: drop-shadow(0 0 2px #000); }
-.e-fugitive { color: #e0402a; filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 1px #000); }
+.e-fugitive { color: var(--enemy); filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 1px #000); }
 .cc-board { color: #f0d8a0; filter: drop-shadow(0 0 3px rgba(242, 194, 48, 0.8)); }
 .cc-sign { color: #f4ecd8; background: rgba(20, 14, 8, 0.82) !important; box-shadow: inset 0 0 0 1px #c8a060; border-radius: 2px; }
 .cell.item .ic { opacity: 1; color: var(--bird); filter: drop-shadow(0 0 3px var(--bird)); }
@@ -271,9 +272,8 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 }
 .e-bird { color: var(--bird-color, var(--bird)); filter: drop-shadow(0 0 3px var(--bird-color, var(--bird))) drop-shadow(0 0 1px #000); }
 .e-bird.is-observed { opacity: 0.45; filter: none; }
-.e-beast { color: var(--danger); font-weight: bold; filter: drop-shadow(0 0 1px #000); }
-.e-wolf { color: #c8ccd8; }
-.e-boar { color: #c8885a; }
+/* I nemici sono tutti dello stesso rosso, così si riconoscono a colpo d'occhio */
+.e-beast { color: var(--enemy); font-weight: bold; filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000); }
 .map { position: relative; }
 .entity {
   position: absolute;
@@ -876,5 +876,4 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .cell.t-boucan .ic { opacity: 1; filter: drop-shadow(0 0 3px #c86a30); }
 .t-junk { color: #d8c8a0; background: color-mix(in srgb, var(--f-ground) 70%, #5a4a3a); }
 .cell.t-junk .ic { opacity: 0.95; }
-.e-pirate { color: #e8e0c8; filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 1px #000); }
-.e-pirate.is-gun { color: #d8b878; }
+.e-pirate { color: var(--enemy); filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 1px #000); }
