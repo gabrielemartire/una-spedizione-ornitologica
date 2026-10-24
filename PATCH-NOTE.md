@@ -2,6 +2,10 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.11.2 · 24 ottobre 2026
+
+- **Come si gioca**: il riquadro d'inizio è riscritto, più asciutto. I tasti in due colonne (in mare, a terra) e cinque regole brevi. Si riapre da *Spedizione → Istruzioni*.
+
 ## 0.11.1 · 24 ottobre 2026
 
 - **Tutti i nemici sono rossi**, dello stesso rosso scuro: orso, lupi, cinghiale, il ricercato e i bucanieri. Si riconoscono a colpo d'occhio (prima i lupi erano grigi, il cinghiale marrone, i bucanieri color carta).

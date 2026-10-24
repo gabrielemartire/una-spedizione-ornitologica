@@ -489,7 +489,7 @@ Idea: **ogni uccello ha il suo verso**, generato dal suo ID. Lo stesso uccello c
 ## 19. Decisioni prese
 
 - **Nome del giocatore:** si sceglie all'inizio della partita ("Il registro di bordo"), anche col taccuino ripreso, proponendo quello di prima.
-- **Benvenuto:** alla prima spedizione, un riquadro con le istruzioni rapide (e la promessa di attività secondarie ed easter egg); si riapre da *Spedizione → Istruzioni*.
+- **Come si gioca:** alla prima spedizione, un riquadro asciutto, senza retorica: i tasti in due colonne (in mare, a terra) e cinque regole brevi, l'ultima dice che ci sono attività secondarie e qualche segreto. Si riapre da *Spedizione → Istruzioni*.
 - **Il grande lago non si naviga**, e la nave non passa tra due terre che si toccano per un angolo (§ 6).
 - **Tempo in terzi:** attraccare gratis, ripartire due momenti, aspettare a bordo uno, traversate lunghe uno ogni 60° (§ 6).
 - **Animali per momento:** alba cinghiale, pomeriggio orso, notte lupi; mai una zona vuota (§ 9.3).

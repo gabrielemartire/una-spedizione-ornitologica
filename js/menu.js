@@ -191,20 +191,24 @@ const WELCOME_KEY = "spedizione-ornitologica:benvenuto";
 function showWelcome() {
   const box = document.getElementById("patch");
   box.dataset.kind = "welcome";
-  box.innerHTML = `<div class="patch-card" role="dialog" aria-label="Benvenuto">
-      <h2>Benvenuto a bordo</h2>
-      <p class="welcome-lead">La Società ornitologica ti affida un taccuino da riempire: osserva tutti gli uccelli dell'arcipelago.</p>
+  box.innerHTML = `<div class="patch-card welcome" role="dialog" aria-label="Come si gioca">
+      <h2>Come si gioca</h2>
+      <p class="welcome-lead">Devi osservare gli uccelli dell'arcipelago e annotarli nel taccuino.</p>
+      <div class="welcome-cols">
+        <dl><dt>In mare</dt>
+          <dd><kbd>← →</kbd> rotta</dd><dd><kbd>↑ ↓</kbd> vele</dd><dd><kbd>T</kbd> binocolo</dd><dd><kbd>Invio</kbd> sbarca, entra in porto</dd></dl>
+        <dl><dt>A terra</dt>
+          <dd><kbd>frecce</kbd> muoviti (tenere premuto è correre)</dd><dd><kbd>spazio</kbd> osserva</dd><dd><kbd>Invio</kbd> aspetta</dd><dd><kbd>X</kbd> scava · <kbd>T</kbd> tagliola · <kbd>M</kbd> mangia</dd></dl>
+      </div>
       <ul>
-        <li><b>In mare</b>: ← → la rotta, ↑ ↓ le vele, T il binocolo per guardare la costa, Invio per sbarcare o entrare in porto.</li>
-        <li><b>A terra</b>: frecce o WASD per muoverti, spazio per osservare l'uccello da vicino, ma non troppo. Tenere premuto è correre e fa rumore. Torna alla nave per ripartire.</li>
-        <li><b>Il tempo</b> passa a momenti: alba, pomeriggio, notte. Ogni uccello vola solo in certi momenti; ripartire ne costa due, aspettare a bordo uno.</li>
-        <li><b>Gli animali</b> cacciano a seconda dell'ora: nasconditi nell'erba alta e nei cespugli, sta' zitto, scappa.</li>
-        <li><b>Le monete</b>: la ciurma vuole la paga ogni alba. Si guadagnano vendendo quel che trovi, con le taglie e coi premi della Società.</li>
-        <li><b>Il diario</b> (Tab) annota tutto; il taccuino ha un codice per riprenderlo nel viaggio dopo.</li>
+        <li>Ogni uccello si fa vedere solo in certi momenti: alba, pomeriggio o notte. Per osservarlo serve vista libera, né troppo vicino né troppo lontano.</li>
+        <li>Rumore e vicinanza lo fanno volare via, e attirano gli animali (in rosso). Erba alta e cespugli ti nascondono.</li>
+        <li>Ripartire costa due momenti, aspettare a bordo uno. La ciurma va pagata ogni alba.</li>
+        <li><kbd>Tab</kbd> apre il diario. A fine viaggio il taccuino ha un codice per riprenderlo.</li>
+        <li>Oltre agli uccelli ci sono attività secondarie e qualche segreto.</li>
       </ul>
-      <p class="welcome-lead">Ci sono tante attività secondarie da scoprire, e qualche easter egg ben nascosto. Occhi aperti.</p>
-      <p class="patch-foot">Le istruzioni restano nel menu <i>Spedizione</i> · Invio per chiudere</p>
-      <button class="menu-item" data-action="close-patch">Si salpa!</button>
+      <p class="patch-foot">Lo ritrovi in <i>Spedizione → Istruzioni</i> · Invio per chiudere</p>
+      <button class="menu-item" data-action="close-patch">Chiudi</button>
     </div>`;
   box.hidden = false;
   box.querySelector("button").focus();

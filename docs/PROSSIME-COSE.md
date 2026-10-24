@@ -21,6 +21,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Il castello abbandonato** (v2, già sotto: entrare nel castello).
 
 ## Fatto di recente
+- [x] **Versione 0.11.2**: *Come si gioca* riscritto, più asciutto.
 - [x] **Versione 0.11.1**: tutti i nemici dello stesso rosso scuro.
 - [x] **Versione 0.11**: la nebbia notturna col pesce gatto cieco; il Kraken in mare aperto.
 - [x] **Versione 0.10**: il fuoco notturno del ricercato (solo col binocolo) e la W al centro dell'isola; il campo dei bucanieri; l'orso di nuovo appena più veloce di te.
