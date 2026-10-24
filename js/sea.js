@@ -19,6 +19,7 @@ const Mare = (() => {
   const KRAKEN_CHANCE = 1 / 8;
   const KRAKEN_DELAY = [3, 7]; // secondi
   const KRAKEN_RAD = 3.5;      // gradi
+  const KRAKEN_DRAG = 0.35;    // nell'acqua nera la nave va a un terzo della velocità
 
   let running = false;
   let loop = 0;               // ogni ingresso in mare avvia un solo ciclo di disegno
@@ -106,7 +107,7 @@ const Mare = (() => {
 
     ship.heading = (ship.heading + turning * TURN_RATE * dt + 360) % 360;
     if (ship.sails > 0) {
-      const step = ship.sails * SAIL_SPEED * dt;
+      const step = ship.sails * SAIL_SPEED * dt * (kraken ? KRAKEN_DRAG : 1);
       const next = Globo.advance(ship.lat, ship.lon, ship.heading, step);
       if (Globo.canSail(trip.world, ship, next)) {
         Object.assign(ship, next);
@@ -177,6 +178,7 @@ const Mare = (() => {
       trip.krakenIn -= dt;
       if (trip.krakenIn <= 0) {
         kraken = { lat: ship.lat, lon: ship.lon, rad: KRAKEN_RAD, spin: Math.random() * 6 };
+        ship.sails = 0;   // la nave si ferma di colpo
         Suoni.play("legno");
         Gioco.note("Acqua nera a babordo. Nessuno vuole parlarne.");
         Gioco.toast("Acqua nera a babordo. Nessuno vuole parlarne.");
@@ -184,7 +186,7 @@ const Mare = (() => {
     }
     if (kraken) {
       kraken.spin += dt * 0.6;
-      if (ship.sails > 1) ship.sails = 1;   // nell'acqua nera la nave non va veloce
+      if (ship.sails > 1) ship.sails = 1;   // nell'acqua nera al massimo una vela, e lenta (KRAKEN_DRAG)
       if (Globo.distance(kraken, ship) > kraken.rad) {
         kraken = null;
         trip.krakenIn = null;

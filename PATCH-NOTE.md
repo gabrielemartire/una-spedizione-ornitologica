@@ -2,6 +2,10 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.9 · 24 ottobre 2026
+
+- **Il Kraken ferma la nave**: quando arriva, le vele vanno a zero. Nell'acqua nera si può alzare al massimo una vela, e la nave va a un terzo della velocità: per uscirne ci vogliono cinque o sei secondi. Uscendo passa sempre un momento.
+
 ## 0.12.8 · 24 ottobre 2026
 
 - **Gli animali gironzolano.** Vagando scelgono una meta, anche lontano dalla tana (fino a 12 caselle), e ci vanno barcollando: quasi sempre dritti, ma ogni tanto un passo di lato o indietro. Arrivati si fermano un po' ad annusare, poi ne scelgono un'altra. Il branco di lupi ha una meta sola e si muove insieme. Continuano a non sapere dove sei finché non ti vedono, sentono o fiutano: ma se la loro strada passa di lì…
