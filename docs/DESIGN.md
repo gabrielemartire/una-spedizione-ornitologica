@@ -241,7 +241,7 @@ Basta **un'azione di osservazione** dalla fascia tra i due anelli, con l'uccello
 Comportamenti possibili: *timido* (fuga ampia), *curioso* (si avvicina se stai fermo), *nomade* (cambia posatoio), *notturno*, *mattiniero*, *ghiotto* (attirato dai semi).
 
 ### 9.3 Creature
-**Vagando gli animali non sanno dove sei** (0.12.7): ognuno ha la sua tana (dove compare) e ci gira intorno, entro 6 caselle, da una meta a caso all'altra; ti vengono addosso solo se ti vedono, sentono o fiutano. I lupi hanno la tana vicina: restano in branco.
+**Vagando gli animali non sanno dove sei** (0.12.7–0.12.8): ognuno ha la sua tana (dove compare) e sceglie una meta lontana almeno 5 caselle, entro 12 dalla tana; ci va **barcollando** (4 volte su 10 un passo di lato, o ogni tanto indietro), arrivato **annusa** 2–5 battiti, poi un'altra meta. Il branco di lupi ha **una meta sola** e si muove insieme. Ti vengono addosso solo se ti vedono, sentono o fiutano.
 
 **Tutti i nemici** (animali, ricercato, bucanieri) hanno **lo stesso rosso scuro** (`--enemy`), così si riconoscono a colpo d'occhio; li distingue l'icona.
 

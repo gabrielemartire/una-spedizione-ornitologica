@@ -2,6 +2,10 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.8 · 24 ottobre 2026
+
+- **Gli animali gironzolano.** Vagando scelgono una meta, anche lontano dalla tana (fino a 12 caselle), e ci vanno barcollando: quasi sempre dritti, ma ogni tanto un passo di lato o indietro. Arrivati si fermano un po' ad annusare, poi ne scelgono un'altra. Il branco di lupi ha una meta sola e si muove insieme. Continuano a non sapere dove sei finché non ti vedono, sentono o fiutano: ma se la loro strada passa di lì…
+
 ## 0.12.7 · 24 ottobre 2026
 
 - **Gli animali non sanno dove sei** finché non ti vedono, sentono o fiutano. Prima, vagando, lupi e orso andavano comunque verso di te più di una volta su due. Ora ognuno ha **la sua tana**, dove compare, e ci gira intorno (entro sei caselle) da una meta all'altra; i lupi hanno la tana vicina e restano in branco. L'orso non fa più il giro intorno a te.

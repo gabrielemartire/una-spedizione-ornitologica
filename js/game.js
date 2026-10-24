@@ -2245,7 +2245,7 @@ const Gioco = (() => {
       if (o.sated && dist(o, p) < 8) target = around.sort((a, b) => dist(b, p) - dist(a, p))[0];
       else target = wanderGoal(o);
     }
-    const path = (target && pathFrom(prev, o, target)) || [];
+    const path = stagger(o, (target && pathFrom(prev, o, target)) || []);
 
     const steps = [];
     for (const c of path) {
@@ -2269,18 +2269,34 @@ const Gioco = (() => {
     o.next = o.mode === "wander" ? null : (pathFrom(beastPaths(o).prev, o, o.mode === "hunt" ? p : o.last) || [])[0] || null;
   }
 
-  // La meta di un animale che vaga: un posto a caso entro WANDER caselle dalla sua tana; arrivato (o se ci
-  // mette troppo), ne sceglie un'altra. I lupi del branco hanno la tana vicina: restano insieme
-  const WANDER = 6;
+  // La meta di un animale che vaga: un posto lontano almeno qualche casella, entro WANDER dalla sua tana. Ci va
+  // barcollando (vedi stagger), arrivato si ferma un po' ad annusare, poi ne sceglie un'altra. Il branco di lupi
+  // ha una meta sola, così resta insieme
+  const WANDER = 12, SNIFF = [2, 5];
   function wanderGoal(o) {
-    o.goalLeft = (o.goalLeft ?? 0) - 1;
-    if (!o.goal || same(o, o.goal) || o.goalLeft <= 0) {
+    const g = o.kind === "wolf" ? (s.pack ||= {}) : o;
+    g.goalLeft = (g.goalLeft ?? 0) - 1;
+    const there = g.goal && dist(o, g.goal) <= (o.kind === "wolf" ? 2 : 0.5);
+    if (there && !g.sniff) g.sniff = SNIFF[0] + Math.floor(Math.random() * (SNIFF[1] - SNIFF[0] + 1));
+    if (g.sniff) { if (--g.sniff > 0) return null; g.goal = null; }
+    if (!g.goal || g.goalLeft <= 0) {
       const home = o.home || o;
-      const spots = s.free.filter((c) => dist(c, home) <= WANDER && !same(c, s.player));
-      o.goal = spots.length ? pickRandom(spots) : null;
-      o.goalLeft = 30;
+      const spots = s.free.filter((c) => dist(c, home) <= WANDER && dist(c, o) >= 5 && !same(c, s.player));
+      g.goal = spots.length ? pickRandom(spots) : null;
+      g.goalLeft = 40;
     }
-    return o.goal;
+    return g.goal;
+  }
+
+  // Vagando non va dritto: tre volte su dieci un passo di lato, una su dieci un passo indietro
+  function stagger(o, path) {
+    if (o.mode !== "wander" || !path.length || Math.random() > 0.4) return path;
+    const ahead = path[0], fwd = [ahead.x - o.x, ahead.y - o.y];
+    const back = Math.random() < 0.25;
+    const opts = DIRS.filter(([dx, dy]) => (back ? dx === -fwd[0] && dy === -fwd[1] : dx * fwd[0] + dy * fwd[1] === 0))
+      .map(([dx, dy]) => ({ x: o.x + dx, y: o.y + dy }))
+      .filter((c) => inside(c.x, c.y) && beastCost(c) < Infinity && !same(c, s.player));
+    return opts.length ? [pickRandom(opts)] : path;
   }
 
   // --- Il cinghiale: non sa curvare ---
