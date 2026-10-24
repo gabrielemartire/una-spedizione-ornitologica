@@ -15,8 +15,8 @@ const Mare = (() => {
   // La nebbia, di notte: oltre una vela il pesce gatto ti sente; hai un attimo per ammainare
   const FOG_SAILS = 1;
   const FOG_GRACE = 1.5;      // secondi
-  // Il Kraken: andando al largo (fuori dalla portata del binocolo) una volta su 30 arriva, poco dopo
-  const KRAKEN_CHANCE = 1 / 30;
+  // Il Kraken: andando al largo (fuori dalla portata del binocolo) una volta su 8 arriva, poco dopo
+  const KRAKEN_CHANCE = 1 / 8;
   const KRAKEN_DELAY = [3, 7]; // secondi
   const KRAKEN_RAD = 3.5;      // gradi
 

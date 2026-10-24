@@ -118,7 +118,7 @@ Così il ciclo tipico (sbarco, esplorazione, ripartenza) costa due terzi di gior
 
 **La nebbia del pesce gatto**: 2–3 macchie in mare aperto (raggio 5–7,5°, lontane dalle coste e dalla partenza), solo **di notte**, visibili sul globo come macchie grigie e dal ponte come nebbia fitta. Il pesce gatto (come quello di *Outer Wilds*, cieco, con la lucina) caccia col rumore: **oltre una vela** si accende la lucina (sul globo accanto alla nave, dal ponte nella nebbia) e dopo **1,5 secondi** la nave affonda (*Inghiottito*, e dal ponte la sua bocca). Con una vela si passa.
 
-**Il Kraken**: ogni volta che la nave va **al largo** (nessuna costa alla portata del binocolo) si tira 1 su 30; se esce, **3–7 secondi dopo** il mare intorno diventa nero d'inchiostro (macchia di 3,5° con sei tentacoli sul globo; dal ponte acqua nera e tentacoli). Dentro, al massimo una vela; uscendo passa un momento. Diario: *«Acqua nera a babordo. Nessuno vuole parlarne.»* Una volta per viaggio. Il timbro del Kraken per ora non si prende.
+**Il Kraken**: ogni volta che la nave va **al largo** (nessuna costa alla portata del binocolo) si tira 1 su 8; se esce, **3–7 secondi dopo** il mare intorno diventa nero d'inchiostro (macchia di 3,5° con sei tentacoli sul globo; dal ponte acqua nera e tentacoli). Dentro, al massimo una vela; uscendo passa un momento. Diario: *«Acqua nera a babordo. Nessuno vuole parlarne.»* Una volta per viaggio. Il timbro del Kraken per ora non si prende.
 
 ## 7. Zone, biomi e caratteristiche
 

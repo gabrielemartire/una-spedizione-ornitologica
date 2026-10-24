@@ -2,6 +2,10 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.11.5 · 24 ottobre 2026
+
+- **Il Kraken** è meno raro: ogni volta che vai al largo arriva una volta su 8 (prima una su 30). Sempre al massimo una volta per viaggio.
+
 ## 0.11.4 · 24 ottobre 2026
 
 - **Il mare sta dal lato giusto.** Sulla battlemap il mare non è più sempre a sinistra: sta dove sta sul globo (a nord, a sud, a est o a ovest della zona), e il nord è sempre in alto. La nave ormeggia su quella riva, la spiaggia caraibica le corre lungo, i passaggi a piedi stanno sugli altri lati.
