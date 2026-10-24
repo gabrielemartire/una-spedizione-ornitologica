@@ -309,6 +309,26 @@ Uno o due per arcipelago, mai nella zona del ricercato, di una città, del caste
 
 **Dopo il furto** restano lì per sempre, non dormono più e sanno sempre dove sei: la zona è persa per il resto del viaggio, uccelli compresi.
 
+### 9.8 Il labirinto di siepi (0.12)
+
+Uno per globo, in una zona di **foresta** (*… del labirinto*), senza fiume, lago, rovine né villaggio. La **cartolina** lo mostra dall'alto, in prospettiva, col centro che brilla d'oro. **La battlemap** è tutta labirinto: un labirinto perfetto su caselle dispari con il 7% di varchi in più (anelli), siepi piene, uno slargo 5×5 al centro; dalla nave e da ogni passaggio un'apertura fino al corridoio più vicino.
+- **Le trappole**: 16 caselle *foglie smosse* nei corridoi, lontane dalle entrate, appena visibili; un cuore ogni volta che ci passi (non si consumano). Sono la difficoltà del labirinto, con i corridoi.
+- **Nessun animale.** Ci girano **l'unicorno** e **il mostro con le corna**, gentili e garbati: la prima volta che sono vicini salutano (nel diario); andandoci contro si scambiano di posto con te, come la gente in città, con una battuta.
+- **Al centro**: l'uccello della zona (con le sue ore, come altrove) e la **Coppa dei Tre Maghi** (in stiva; al mercato **11 m.o.**, una sola per viaggio).
+- **Uscire costa un giorno intero** (a bordo o da un passaggio), una volta per visita.
+
+### 9.9 Il castello abbandonato (0.12)
+
+Il ponte levatoio: ci vai contro e sei dentro; il tempo non passa né entrando né uscendo. Una battlemap a parte (`js/castello.js`), sempre uguale nello stesso viaggio:
+- **La pianta**: l'atrio in basso col portone; 7–10 stanze nella pietra, legate da corridoi (un albero dall'atrio più due anelli) e 7 vicoli ciechi. **Le stanze sono buie finché non ci entri** (come il tetto delle rovine); i corridoi si vedono.
+- **I mostri**: pipistrelli e fantasmi (rossi), uno o due in quattro o cinque stanze, mai nell'atrio. Vanno in diagonale e **rimbalzano sui muri della loro stanza** senza uscirne; i fantasmi a metà velocità. Toccarli costa un cuore.
+- **Le cose**: monete (4–9 m.o.) in due stanze, una cosa da vendere in una terza; la **chiave d'ottone** in una stanza qualunque apre la **porta chiusa** della sala del trono; un **muro che cede** (sembra un muro: ci vai contro e si apre) porta alla stanza del tesoro (20–25 m.o.). Quello che prendi resta preso per tutto il viaggio.
+- **La sala del trono**, in alto, addobbata a nozze: tappeto rosso, rose, il trono; accanto, **la dama in bianco**: «Volete sposarmi?»
+- **Sì**: auguri (riquadro), il buio, **la festa** (una scena in pixel art: la tavolata, gli invitati coi boccali, gli sposi, l'unicorno e il mostro del labirinto, i coriandoli; quattro battute con Invio), il buio. Ti risvegli **all'alba** in un cespuglio accanto alla nave, con la **fede nuziale** nello zaino e il timbro dell'anello. La dama non è più nel castello. **No**: lei resta lì.
+- **Poi** (da fare): in città una casa nuova, la tua.
+
+**I passaggi** hanno l'icona del cartello (non più del ponte, che si confondeva col ponte del castello) e non stanno mai sul lato del castello.
+
 ## 10. Le città
 
 Due città per globo, sempre presenti. **La città è disegnata in pixel art vista dall'alto**: tetti a falde di forme diverse (coppi, ardesia, paglia, mattoni; a L, lunghi, stretti) con comignoli e ombre, ciottoli, banchina di assi, mura coi merli. **Sopra, ben visibili, solo le cose con cui si interagisce**: le porte delle botteghe (→) con **l'insegna sul tetto, un'icona di game-icons.net** (medicine per il medico, il boccale della taverna, la bottega del mercato, la porta chiusa dell'emporio, le manette della gendarmeria, la casetta degli uccelli della Società ornitologica; sulla porta l'icona della porta aperta), i **barili** (c'è una nota da leggere: la ricetta del grog), la **bacheca dei ricercati**, le persone (icona *walk*). **Le navi sono in scala**: la tua è grande (tre caselle per nove, tre alberi) e ormeggiata lungo la banchina, dove l'icona della nave segna il punto per salire a bordo; anche le navi del Forte e i pescherecci rossi del porticciolo sono disegnati interi. **La gente si muove poco**: qualche passo ogni tanto vicino a dove sta, mai davanti a porte, nave o falegname, e se le vai addosso si scansa. **Davanti a una porta compare un cartellino in basso** che dice cos'è la bottega, cosa offre e quanto costa, con la freccia da premere per entrare. **I popup della città sono piccoli e stanno in basso**: i dialoghi sono una finestrella sopra la mappa, le parole di chi parla compaiono una alla volta con la vocina (Invio le mostra tutte), poi arrivano le risposte.
@@ -433,7 +453,7 @@ Il controllo è un CRC-16: intercetta gli errori di battitura. Nel leggere si pe
 
 **Il taccuino completo** è *tutti* gli uccelli, rari e Pulcino compresi: ci vogliono più viaggi col taccuino ripreso. Appena completo, sul globo in alto a destra (dall'altra parte del binocolo) compare la **busta della Società**; prima non c'è niente, nemmeno un riquadro vuoto. Si apre con L o col clic: la busta col sigillo di ceralacca, Invio rompe il sigillo e la lettera esce. Alla **Società ornitologica** del Forte, con la lettera, si riceve l'attestato di **Ornitologo esperto** e il gioco finisce (resoconto *Ornitologo esperto*, in oro sulla copertina del libretto).
 
-**I timbri**: un capitolo del taccuino, prima delle Taglie, con sei riquadri. Velati finché non li hai, nessuna descrizione. Nel codice, un bit ciascuno, in quest'ordine: marshmallow bruciato (falò), l'Appeso, la Morte, il Sole, la Luna, il Kraken. Per ora si prende solo il primo.
+**I timbri**: un capitolo del taccuino, prima delle Taglie, con sei riquadri. Velati finché non li hai, nessuna descrizione. Nel codice, un bit ciascuno, in quest'ordine: marshmallow bruciato (falò), l'anello di fidanzamento (le nozze nel castello; dalla 0.12, al posto dell'Appeso), la Morte, il Sole, la Luna, il Kraken. Per ora si prendono i primi due.
 
 ### 14.2 La radura del falò, il cibo, le tagliole, la bottiglia (0.9)
 

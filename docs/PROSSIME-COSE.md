@@ -11,16 +11,17 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 
 ## Versione 2
 - [ ] **Eventi marini**: cose che attirano l'attenzione mentre si naviga (luccichii, relitti) e si possono visitare.
-- [ ] **Entrare nel castello e nelle rovine**: il ponte levatoio (già sulla mappa, tra due bandiere) apre una nuova battlemap con mostri o nemici che ti inseguono.
+- [ ] **Entrare nelle rovine**: come il castello (fatto nella 0.12), una battlemap dentro.
 - [ ] **Lupi che ti circondano**: oggi il branco ti insegue soltanto.
 - [ ] **Il vulcano scalda l'isola**: tutta l'isola diventa di un bioma più caldo (oggi l'effetto è solo nella zona del vulcano).
 - [ ] **Vignetta notturna**: di notte la mappa più scura lontano dall'esploratore.
 
 ## In arrivo (chiesto il 23 ottobre)
 - [ ] **I timbri dei tarocchi e del Kraken**: l'Appeso, la Morte, il Sole, la Luna, il Kraken sono nel taccuino ma non si prendono ancora.
-- [ ] **Il castello abbandonato** (v2, già sotto: entrare nel castello).
+- [ ] **La casa degli sposi**: dopo le nozze, in città una casa nuova da visitare, la tua (da sviluppare).
 
 ## Fatto di recente
+- [x] **Versione 0.12**: il labirinto di siepi (unicorno, mostro gentile, trappole, Coppa dei Tre Maghi, un giorno per uscirne); il castello abbandonato (stanze buie, mostri che rimbalzano, chiave, muro che cede, la dama e le nozze); timbro dell'anello; i passaggi col cartello.
 - [x] **Versione 0.11.7**: la bussola in pixel art sul diario, l'ago verso la città più vicina.
 - [x] **Versione 0.11.6**: nel diario *sembra un cinguettio* invece di *c'era un uccello*.
 - [x] **Versione 0.11.5**: il Kraken una volta su 8 (prima 30).

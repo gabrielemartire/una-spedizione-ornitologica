@@ -2,6 +2,14 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12 · 24 ottobre 2026
+
+- **Il labirinto di siepi.** In un'isola, una zona di foresta è tutta un labirinto: la cartolina lo mostra dall'alto, col centro che brilla. Dentro, corridoi tra siepi alte, **trappole tra le foglie** (si vedono appena: un cuore ciascuna) e nessun animale. Ci girano **un unicorno** e **un mostro con le corna**, gentilissimi e garbati: ti salutano, e se ci vai contro si scansano scambiandosi di posto con te. Al centro, nello slargo, c'è l'uccello della zona e la **Coppa dei Tre Maghi**, che al mercato vale 11 m.o. Ma attento: **uscire dal labirinto costa un giorno intero**.
+- **Il castello abbandonato si apre.** Vai contro il ponte levatoio e sei dentro (il tempo non passa né entrando né uscendo). Corridoi nella pietra, qualche vicolo cieco, **stanze buie finché non ci entri**; in alcune, **pipistrelli e fantasmi** che rimbalzano da un muro all'altro senza uscire mai (un cuore se ti toccano). Qua e là monete e una cosa da vendere; una **chiave d'ottone** apre la porta della sala del trono, e da qualche parte **un muro che cede** nasconde la stanza del tesoro. Si esce dal portone.
+- **Le nozze.** La sala del trono è addobbata a nozze, e accanto al trono una dama in bianco ti chiede di sposarla. Se dici sì: gli auguri, il buio, **la festa** (la tavolata, gli invitati, birra e vino, cin cin, l'unicorno e il mostro del labirinto tra gli ospiti), di nuovo il buio. Ti risvegli all'alba in un cespuglio accanto alla nave, con **una fede nuziale** nello zaino. Continua…
+- **I timbri**: l'Appeso non c'è più, al suo posto **l'anello di fidanzamento**, che si prende sposandosi.
+- **I passaggi** verso le zone vicine hanno l'icona di un **cartello**, non più del ponte: accanto al castello si confondevano col suo ponte e portavano in un'altra zona. E non stanno più sul lato del castello.
+
 ## 0.11.7 · 24 ottobre 2026
 
 - **La bussola** si è spostata sulla pagina del diario, sotto la linguetta, ed è in pixel art: cassa d'ottone, quadrante color crema, la tacca rossa al nord. **L'ago punta alla città più vicina**: in mare dalla nave, a terra dalla zona dove sei; in città, verso l'altra città. Passandoci sopra col mouse dice quale.

@@ -796,6 +796,44 @@ const Cartolina = (() => {
       }
     }
 
+    // Il labirinto di siepi, visto dall'alto della collina: corridoi chiari, siepi scure col bordo in luce,
+    // l'entrata davanti a noi e il centro che brilla d'oro
+    if (zone.tags.has("labirinto")) {
+      const GW = 15, GH = 9;
+      const wall = Array.from({ length: GH }, () => Array(GW).fill(true));
+      const stack = [[7, 4]];
+      wall[4][7] = false;
+      while (stack.length) {
+        const [x, y] = stack[stack.length - 1];
+        const next = [[2, 0], [-2, 0], [0, 2], [0, -2]].map(([dx, dy]) => [x + dx, y + dy, x + dx / 2, y + dy / 2])
+          .filter(([nx, ny]) => nx > 0 && ny > 0 && nx < GW - 1 && ny < GH - 1 && wall[ny][nx]);
+        if (!next.length) { stack.pop(); continue; }
+        const [nx, ny, wx, wy] = next[Math.floor(r() * next.length)];
+        wall[wy][wx] = false;
+        wall[ny][nx] = false;
+        stack.push([nx, ny]);
+      }
+      for (let y = 3; y <= 5; y++) for (let x = 6; x <= 8; x++) wall[y][x] = false;   // lo slargo
+      wall[GH - 1][7] = false;                                                          // l'entrata
+      const hedge = tint("#2e5a28"), hedgeLit = tint("#5a8a3e"), hedgeDark = tint("#1a3a18"), path = tint("#c8b88a"), pathDark = tint("#a89868");
+      const top = HY + 6, bottom = PH - 6, mid = PW / 2;
+      for (let y = top; y < bottom; y++) {
+        const t = (y - top) / (bottom - top), half = 30 + t * 36;
+        const gy = Math.min(GH - 1, Math.floor(Math.pow(t, 0.85) * GH));
+        const rowTop = Math.floor(Math.pow(t, 0.85) * GH) !== Math.floor(Math.pow((y - 1 - top) / (bottom - top), 0.85) * GH);
+        for (let x = Math.ceil(mid - half); x <= mid + half; x++) {
+          const gx = Math.min(GW - 1, Math.floor((x - (mid - half)) / (2 * half) * GW));
+          if (wall[gy][gx]) px(x, y, rowTop || y === top ? hedgeLit : (x + y) % 5 === 0 ? hedgeDark : hedge);
+          else px(x, y, (x + y * 2) % 7 === 0 ? pathDark : path);
+        }
+      }
+      // il centro: un bagliore d'oro e la coppa
+      const cy = top + (bottom - top) * Math.pow(4.5 / GH, 1 / 0.85);
+      ellipse(mid, cy, 4, 2, (x, y) => mix(get(x, y), "#f2c230", 0.5, x, y));
+      for (const [dx, dy] of [[-1, -2], [0, -2], [1, -2], [-1, -1], [0, -1], [1, -1], [0, 0], [-1, 1], [0, 1], [1, 1]]) px(mid + dx, cy + dy - 1, "#f2c230");
+      px(mid, cy - 3, "#fff6c0");
+    }
+
     // 8. L'acqua: un ruscello che scende verso di noi, forse da una cascata
     let waterTop = forestY - 2;
     if (zone.tags.has("cascata")) {

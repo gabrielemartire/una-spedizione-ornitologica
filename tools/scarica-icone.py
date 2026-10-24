@@ -116,7 +116,7 @@ ICONS = {
     # I timbri del taccuino: il marshmallow bruciato, i tarocchi, il kraken
     "campfire": "lorc/campfire",
     "marshmallow": "delapouite/marshmallows",
-    "hanged": "caro-asercion/tarot-12-the-hanged-man",
+    "engagement": "lorc/engagement-ring",
     "death": "caro-asercion/tarot-13-death",
     "tarotsun": "caro-asercion/tarot-19-the-sun",
     "tarotmoon": "caro-asercion/tarot-18-the-moon",
@@ -136,6 +136,24 @@ ICONS = {
     "shards": "delapouite/broken-pottery",
     # Il pesce gatto della nebbia
     "anglerfish": "lorc/angler-fish",
+    # Il labirinto di siepi: l'unicorno e il mostro gentili, la coppa
+    "unicorn": "delapouite/unicorn",
+    "minotaur": "lorc/minotaur",
+    "cup": "delapouite/trophy-cup",
+    # Il castello abbandonato: porte, chiavi, mostri che rimbalzano, il trono e le nozze
+    "signpost": "delapouite/direction-signs",
+    "door": "delapouite/door",
+    "lockeddoor": "delapouite/locked-door",
+    "brasskey": "lorc/key",
+    "bat": "delapouite/bat",
+    "ghost": "lorc/ghost",
+    "throne": "delapouite/throne-king",
+    "rose": "lorc/rose",
+    "ring": "delapouite/ring",
+    "cheers": "delapouite/glass-celebration",
+    "wine": "lorc/wine-glass",
+    "cake": "lorc/cake-slice",
+    "popper": "delapouite/party-popper",
 }
 
 BASE = "https://raw.githubusercontent.com/game-icons/icons/master/{}.svg"

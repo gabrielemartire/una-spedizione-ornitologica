@@ -846,13 +846,14 @@ const Citta = (() => {
     } else if (kind === "mercato") {
       const hold = trip.hold;
       const buys = (it) => !shop.refuse.includes(OGGETTI[it.kind].cat);
+      const price = (it) => OGGETTI[it.kind].valore ?? shop.price;
       const items = hold.map((it, i) => buys(it)
-        ? [`sell:${i}`, `${OGGETTI[it.kind].nome} <small>(+${shop.price} m.o.)</small>`]
+        ? [`sell:${i}`, `${OGGETTI[it.kind].nome} <small>(+${price(it)} m.o.)</small>`]
         : ["none", `${OGGETTI[it.kind].nome} <small>(non gli interessa)</small>`]);
       const sellable = hold.filter(buys).length;
       dialog("Mercato", hold.length ? `«Volete vendere la vostra merce? ${shop.price} m.o. al pezzo.»${shop.refuse.length ? " «L'arte la lasciamo alla città.»" : ""}`
         : "«Non avete niente da vendere, mi pare.»", [
-        sellable > 1 && ["sellall", `Vendi tutto (+${sellable * shop.price} m.o.)`],
+        sellable > 1 && ["sellall", `Vendi tutto (+${hold.filter(buys).reduce((sum, it) => sum + price(it), 0)} m.o.)`],
         ...items,
         ["back", "Esci"],
       ]);
@@ -947,9 +948,10 @@ const Citta = (() => {
   function sell(indexes) {
     const trip = Gioco.trip, shop = SHOPS[c.city.id].mercato;
     const sold = indexes.sort((a, b) => b - a).map((i) => trip.hold.splice(i, 1)[0]);
-    Gioco.earn(`mercato: ${sold.length} oggett${sold.length === 1 ? "o" : "i"}`, sold.length * shop.price);
+    const total = sold.reduce((sum, it) => sum + (OGGETTI[it.kind].valore ?? shop.price), 0);
+    Gioco.earn(`mercato: ${sold.length} oggett${sold.length === 1 ? "o" : "i"}`, total);
     Suoni.play("monete");
-    Gioco.toast(`Venduto: ${sold.map((it) => OGGETTI[it.kind].nome).join(", ")}. +${sold.length * shop.price} m.o.`);
+    Gioco.toast(`Venduto: ${sold.map((it) => OGGETTI[it.kind].nome).join(", ")}. +${total} m.o.`);
     Gioco.renderStatus();
     openShop("mercato");
   }

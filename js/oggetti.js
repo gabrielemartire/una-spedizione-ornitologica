@@ -11,11 +11,13 @@ const OGGETTI = {
   vaso: { nome: "Vaso dipinto", icona: "vase", cat: "arte", rovine: true },
   quadro: { nome: "Ritratto antico", icona: "painting", cat: "arte", rovine: true },
   idolo: { nome: "Idolo di pietra", icona: "statue", cat: "arte", rovine: true },
+  // la coppa del centro del labirinto: una sola, vale di più (valore: il prezzo al mercato)
+  coppa: { nome: "Coppa dei Tre Maghi", icona: "cup", cat: "reliquia", valore: 11, unica: true },
 };
 
 // Un oggetto a caso: nelle rovine solo cose antiche, nel bosco di tutto
 function oggettoACaso(r, rovine) {
-  const ids = Object.keys(OGGETTI).filter((id) => !rovine || OGGETTI[id].rovine);
+  const ids = Object.keys(OGGETTI).filter((id) => !OGGETTI[id].unica && (!rovine || OGGETTI[id].rovine));
   return ids[Math.floor(r() * ids.length)];
 }
 
@@ -32,5 +34,8 @@ const OGGETTI_SPECIALI = {
   tagliola: { nome: "Tagliola", icona: "trap" },
   // il marshmallow della radura del falò: si cuoce, si mangia
   marshmallow: { nome: "Marshmallow", icona: "marshmallow" },
+  // il castello abbandonato: la chiave della sala del trono, e la fede delle nozze
+  ottone: { nome: "Chiave d'ottone", icona: "brasskey" },
+  fede: { nome: "Fede nuziale", icona: "ring" },
 };
 const OGGETTI_SPECIALI_IDS = ["lettera", "chiave", "uovo"];   // quelli che regala lo sconosciuto
