@@ -460,11 +460,11 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
   height: 5.2em;      /* fissa: se la striscia cresce con le note, la mappa si rimpicciolisce di colpo */
   overflow: hidden;
 }
-.ds-notes { list-style: none; margin: 0; padding: 0 120px 0 0; font-size: 19px; line-height: 1.12; }
+.ds-notes { list-style: none; margin: 0; padding: 0 96px 0 0; font-size: 19px; line-height: 1.12; }
 .ds-notes li { color: #5a4a34; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* una riga per nota: il diario non ruba spazio alla mappa */
 .ds-notes li.is-new { color: #2a2014; }
 .ds-notes em, .book-notes em { font-style: normal; color: #8a2a1a; margin-right: 4px; }
-.ds-sign { position: absolute; right: 16px; bottom: 2px; font-size: 26px; font-weight: bold; color: #3a2a18; transform: rotate(-4deg); }
+.ds-sign { position: absolute; right: 92px; bottom: 2px; font-size: 26px; font-weight: bold; color: #3a2a18; transform: rotate(-4deg); }
 
 /* Il taccuino aperto: un libro con due pagine e la piega in mezzo, sempre della stessa misura */
 .diary-popup {
@@ -900,14 +900,6 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 }
 @media (prefers-reduced-motion: reduce) { .cell.t-sea .ic { animation: none; } }
 
-/* La bussola, in basso a destra nella sidebar: il nord è sempre in alto, come sul globo */
-.panel-b { position: relative; }
-.compass { position: absolute; right: 10px; bottom: 10px; width: 92px; height: 92px; overflow: visible; }
-.compass .cp-ring { fill: rgba(15, 26, 18, 0.6); stroke: var(--mid); stroke-width: 2; }
-.compass .cp-ring2 { fill: none; stroke: var(--dark); stroke-width: 1; stroke-dasharray: 2 4; }
-.compass .cp-n { fill: #b3262a; }
-.compass .cp-s { fill: var(--paper); }
-.compass .cp-ew { fill: var(--mid); opacity: 0.6; }
-.compass .cp-pin { fill: #f2c230; }
-.compass .cp-letter { fill: var(--mid); font-size: 12px; text-anchor: middle; font-family: inherit; }
-.compass .cp-letter.is-n { fill: #f2c230; font-size: 14px; }
+/* La bussola in pixel art, sulla pagina del diario sotto la linguetta */
+.col-main { position: relative; }
+.compass { position: absolute; right: 20px; bottom: 12px; width: 66px; height: 66px; image-rendering: pixelated; z-index: 3; pointer-events: auto; filter: drop-shadow(2px 2px 0 rgba(90, 60, 30, 0.45)); }

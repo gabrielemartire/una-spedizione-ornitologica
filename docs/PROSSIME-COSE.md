@@ -21,6 +21,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Il castello abbandonato** (v2, già sotto: entrare nel castello).
 
 ## Fatto di recente
+- [x] **Versione 0.11.7**: la bussola in pixel art sul diario, l'ago verso la città più vicina.
 - [x] **Versione 0.11.6**: nel diario *sembra un cinguettio* invece di *c'era un uccello*.
 - [x] **Versione 0.11.5**: il Kraken una volta su 8 (prima 30).
 - [x] **Versione 0.11.4**: il mare dal lato giusto come sul globo, nord in alto; la bussola; la bottiglia è una fiaschetta.

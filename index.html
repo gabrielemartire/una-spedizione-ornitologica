@@ -107,6 +107,8 @@
             <div class="panel-foot"><span id="tile-info" class="tile-info"></span><span class="keys" id="keys"></span></div>
           </div>
           <div class="diary-strip" id="diary-strip"></div>
+          <!-- La bussola, sulla pagina del diario sotto la linguetta: l'ago punta alla città più vicina -->
+          <canvas id="compass" class="compass" width="21" height="21" title="La bussola: punta alla città più vicina"></canvas>
         </div>
         <div class="col-side">
           <div class="panel panel-d">
@@ -114,14 +116,6 @@
           </div>
           <div class="panel panel-b">
             <div id="status" class="status"></div>
-            <!-- La bussola: sul globo e sulla battlemap il nord è sempre in alto -->
-            <svg class="compass" viewBox="-50 -50 100 100" aria-label="Bussola: il nord è in alto">
-              <circle r="44" class="cp-ring"/><circle r="38" class="cp-ring2"/>
-              <path d="M0 -36 L7 0 L0 6 L-7 0Z" class="cp-n"/><path d="M0 36 L7 0 L0 -6 L-7 0Z" class="cp-s"/>
-              <path d="M36 0 L0 5 L-36 0 L0 -5Z" class="cp-ew"/>
-              <circle r="3" class="cp-pin"/>
-              <text y="-40" class="cp-letter is-n">N</text><text y="47" class="cp-letter">S</text><text x="44" y="4" class="cp-letter">E</text><text x="-44" y="4" class="cp-letter">O</text>
-            </svg>
           </div>
         </div>
       </div>

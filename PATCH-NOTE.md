@@ -2,6 +2,10 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.11.7 · 24 ottobre 2026
+
+- **La bussola** si è spostata sulla pagina del diario, sotto la linguetta, ed è in pixel art: cassa d'ottone, quadrante color crema, la tacca rossa al nord. **L'ago punta alla città più vicina**: in mare dalla nave, a terra dalla zona dove sei; in città, verso l'altra città. Passandoci sopra col mouse dice quale.
+
 ## 0.11.6 · 24 ottobre 2026
 
 - **Il diario**, sbarcando dove l'uccello c'è, non dice più *c'era un uccello* ma *sembra un cinguettio*.

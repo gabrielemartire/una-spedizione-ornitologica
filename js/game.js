@@ -2321,6 +2321,61 @@ const Gioco = (() => {
       html += trip.mode === "city" ? Citta.statusRows() : Mare.statusRows();
     }
     el.status.innerHTML = html;
+    drawCompass();
+  }
+
+  // --- La bussola: in pixel art, l'ago verso la città più vicina (in città, verso l'altra) ---
+
+  let compassAngle = null;
+
+  // La rotta iniziale da un punto all'altro del globo, in gradi da nord in senso orario
+  function bearing(a, b) {
+    const R = Math.PI / 180, f1 = a.lat * R, f2 = b.lat * R, dl = (b.lon - a.lon) * R;
+    return (Math.atan2(Math.sin(dl) * Math.cos(f2), Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(dl)) / R + 360) % 360;
+  }
+
+  function drawCompass() {
+    const cv = document.getElementById("compass");
+    if (!cv || !trip) return;
+    const here = trip.mode === "sea" ? trip.ship : trip.mode === "land" && s ? s.zone : trip.world.cities.find((c) => c.id === trip.city);
+    const at = here.p ? { lat: Math.asin(here.p[2]) * 180 / Math.PI, lon: Math.atan2(here.p[1], here.p[0]) * 180 / Math.PI } : here;
+    const cities = trip.world.cities.filter((c) => trip.mode !== "city" || c.id !== trip.city)
+      .map((c) => ({ c, ll: { lat: Math.asin(c.p[2]) * 180 / Math.PI, lon: Math.atan2(c.p[1], c.p[0]) * 180 / Math.PI } }))
+      .sort((a, b) => Globo.distance(a.ll, at) - Globo.distance(b.ll, at));
+    if (!cities.length) return;
+    cv.title = `La bussola: punta verso ${cities[0].c.name}`;
+    // sedici direzioni: l'ago resta netto, in pixel
+    const angle = Math.round(bearing(at, cities[0].ll) / 22.5) % 16 * 22.5;
+    if (angle === compassAngle) return;
+    compassAngle = angle;
+    const g = cv.getContext("2d");
+    const N = cv.width, c = (N - 1) / 2;
+    g.clearRect(0, 0, N, N);
+    const dot = (x, y, col) => { g.fillStyle = col; g.fillRect(Math.round(x), Math.round(y), 1, 1); };
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const d = Math.hypot(x - c, y - c);
+      if (d > 10.6) continue;
+      dot(x, y, d > 9.6 ? "#3a2412" : d > 8.4 ? ((x + y) % 3 ? "#c8902e" : "#f0c050") : d > 7.6 ? "#6a4418" : "#efe2bc");
+    }
+    // i punti cardinali: il nord in rosso, gli altri a trattini
+    for (const [dx, dy, col] of [[0, -1, "#b3262a"], [1, 0, "#8a7050"], [0, 1, "#8a7050"], [-1, 0, "#8a7050"]]) {
+      dot(c + dx * 7, c + dy * 7, col);
+      dot(c + dx * 6 + (dy ? 0 : 0), c + dy * 6, col);
+    }
+    // l'ago: la punta rossa verso la città, la coda chiara dall'altra parte
+    const rad = angle * Math.PI / 180, sx = Math.sin(rad), sy = -Math.cos(rad);
+    // a losanga: largo vicino al perno, appuntito in cima
+    const px = -sy, py = sx;
+    for (let k = 0; k <= 7; k += 0.25) {
+      const w = k < 3 ? 1 : k < 5 ? 0.5 : 0;
+      for (let q = -w; q <= w; q += 0.5) dot(c + sx * k + px * q, c + sy * k + py * q, "#b3262a");
+    }
+    for (let k = 0.5; k <= 5; k += 0.25) {
+      const w = k < 2.5 ? 1 : k < 4 ? 0.5 : 0;
+      for (let q = -w; q <= w; q += 0.5) dot(c - sx * k + px * q, c - sy * k + py * q, "#4a5a68");
+    }
+    dot(c, c, "#f0c050");
+    dot(c + 0.5, c + 0.5, "#3a2412");
   }
 
   // --- Comandi ---
