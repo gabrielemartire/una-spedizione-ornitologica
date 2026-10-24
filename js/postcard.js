@@ -574,6 +574,56 @@ const Cartolina = (() => {
     if (zone.city === "porto") { drawPorto(); return buf; }
     if (zone.cityView) { drawCityView(zone.cityView); return buf; }
 
+    // Il pesce gatto della nebbia: la nebbia grigia, rossastra in alto a sinistra; la sagoma enorme con le spine,
+    // la bocca spalancata piena di denti, l'antenna ad arco con la lucina accesa, e la nave piccola davanti
+    const drawAngler = () => {
+      for (let y = 0; y < PH; y++) for (let x = 0; x < PW; x++) {
+        const warm = Math.max(0, 1 - Math.hypot(x / PW, y / PH) * 1.4);
+        px(x, y, mix(mix("#7c7c7a", "#6a5a54", warm, x, y), "#5c5e5e", y / PH * 0.6, x, y));
+      }
+      const body = "#28282c", jaw = "#202024", dark = "#0b0b0d";
+      const fade = (x, y, col) => (x < 6 ? mix(col, "#6e6460", (6 - x) / 7, x, y) : col);
+      // le spine sulla schiena, a raggiera
+      for (const [a, len] of [[-1.25, 30], [-1.55, 40], [-1.85, 46], [-2.15, 48], [-2.45, 46], [-2.75, 40], [-3.05, 34], [2.85, 30], [2.5, 26]]) {
+        for (let k = 0; k < len; k++) {
+          const w = Math.max(0, 3.2 * (1 - k / len));
+          const bx = 34 + Math.cos(a) * (22 + k), by = 40 + Math.sin(a) * (20 + k * 0.9);
+          for (let q = -w; q <= w; q += 0.5) px(bx + Math.sin(a) * q, by - Math.cos(a) * q, fade(Math.round(bx), Math.round(by), body));
+        }
+      }
+      ellipse(34, 40, 38, 30, (x, y) => fade(x, y, y < 22 ? "#323236" : body));
+      ellipse(66, 63, 32, 11, (x, y) => fade(x, y, jaw));                       // la mascella sotto, che sporge
+      ellipse(73, 50, 22, 12, () => dark);                                      // la bocca
+      // i denti: lunghi e storti sopra, dritti sotto, due zanne enormi davanti
+      for (let x = 54; x <= 92; x += 4) {
+        const top = 50 - 12 * Math.sqrt(Math.max(0, 1 - ((x - 73) / 22) ** 2));
+        const len = 4 + ((x * 7) % 5);
+        for (let k = 0; k < len; k++) { px(x + k * 0.25, top + k, k < len - 2 ? "#d8d4c8" : "#a8a49a"); if (k < 2) px(x + 1, top + k, "#a8a49a"); }
+        const bot = 50 + 12 * Math.sqrt(Math.max(0, 1 - ((x - 73) / 22) ** 2));
+        for (let k = 0; k < len - 1; k++) px(x + 2, bot - k, "#c8c4b8");
+      }
+      for (const [fx, h] of [[90, 16], [95, 12]]) for (let k = 0; k < h; k++) { px(fx - k * 0.35, 66 - k, "#e0dcd0"); px(fx + 1 - k * 0.35, 66 - k, "#b8b4a8"); }
+      // l'occhio, piccolo e spento
+      ellipse(53, 31, 1.6, 1.6, () => "#8a8a8a");
+      px(53, 31, "#1a1a1a");
+      // l'antenna: un arco dalla testa fin davanti alla bocca, con la lucina
+      let lx = 0, ly = 0;
+      for (let t = 0; t <= 1; t += 0.01) {
+        const x = (1 - t) ** 2 * 44 + 2 * (1 - t) * t * 84 + t * t * 104, y = (1 - t) ** 2 * 14 + 2 * (1 - t) * t * -8 + t * t * 26;
+        px(x, y, body); if (t < 0.5) px(x, y + 1, body);
+        lx = x; ly = y;
+      }
+      ellipse(lx, ly + 3, 9, 9, (x, y) => mix(get(x, y), "#fff6dc", Math.max(0, 1 - Math.hypot(x - lx, y - ly - 3) / 9) * 1.2, x, y));
+      ellipse(lx, ly + 3, 2.6, 2.6, () => "#ffffff");
+      // la nave, piccola, davanti alla bocca, con la lanterna accesa
+      const sx = 108, sy = 44;
+      for (let k = -4; k <= 4; k++) px(sx + k, sy, "#2a2018");
+      for (let k = -3; k <= 3; k++) px(sx + k, sy + 1, "#2a2018");
+      for (let k = 1; k <= 6; k++) px(sx, sy - k, "#2a2018");
+      for (let k = 1; k <= 4; k++) for (let q = 0; q < 3; q++) px(sx + 1 + q, sy - k - 1, "#4a4440");
+      px(sx - 4, sy - 1, "#ffb040"); px(sx - 5, sy - 1, "#ff8a20");
+    };
+
     // Dal ponte della nave: solo mare fino all'orizzonte
     if (zone.sea) {
       for (let y = HY; y < PH; y++) {
@@ -617,20 +667,8 @@ const Cartolina = (() => {
       // La nebbia del pesce gatto: fitta, grigia; e se ti ha sentito, una lucina che si accende
       if (zone.fog) {
         for (let y = 0; y < PH; y++) for (let x = 0; x < PW; x++) px(x, y, mix(get(x, y), y < HY ? "#4a525a" : "#3a4248", 0.72, x, y));
-        if (zone.catfish) {
-          // il pesce gatto: una testa enorme che esce dalla nebbia, la bocca aperta piena di denti
-          const cx = PW / 2, cy = PH - 30;
-          ellipse(cx, cy, 54, 30, (x, y) => (y < cy - 20 ? "#2a3038" : "#161a20"));
-          ellipse(cx, cy + 4, 40, 13, () => "#05070a");
-          for (let x = cx - 36; x < cx + 36; x += 4) {
-            const up = Math.round(Math.sqrt(Math.max(0, 1 - ((x - cx) / 40) ** 2)) * 13);
-            px(x, cy + 4 - up, "#e8e4d0"); px(x + 1, cy + 5 - up, "#e8e4d0"); px(x + 1, cy + 6 - up, "#c8c4b0");
-            px(x + 2, cy + 3 + up, "#e8e4d0"); px(x + 2, cy + 2 + up, "#c8c4b0");
-          }
-          for (const ex of [cx - 30, cx + 30]) { px(ex, cy - 16, "#8a96a0"); px(ex + 1, cy - 16, "#5a6670"); }
-          for (let k = 0; k < 18; k++) px(cx + Math.sin(k / 5) * 6, cy - 30 - k, "#2a3038");
-          ellipse(cx + Math.sin(18 / 5) * 6, cy - 49, 2.5, 2.5, () => "#fff6c0");
-        } else if (zone.lure) {
+        if (zone.catfish) { drawAngler(); return buf; }
+        if (zone.lure) {
           const lx = 30 + r() * 60, ly = HY + 4 + r() * 8;
           ellipse(lx, ly, 3, 3, (x, y) => mix(get(x, y), "#a8a070", 0.6, x, y));
           px(lx, ly, "#fff6c0"); px(lx + 1, ly, "#fff6c0");

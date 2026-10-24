@@ -744,9 +744,9 @@ const Gioco = (() => {
     world.fogs = [];
     for (const clear of [14, 11, 9]) {
       for (let tries = 0; world.fogs.length < 3 && tries < 600; tries++) {
-        const at = { lat: -62 + rf() * 124, lon: -180 + rf() * 360, rad: 5 + rf() * 2.5 };
+        const at = { lat: -62 + rf() * 124, lon: -180 + rf() * 360, rad: 9 + rf() * 3 };
         if (!Globo.isWater(world, at.lat, at.lon) || Globo.nearestCoast(world, at.lat, at.lon, clear)) continue;
-        if (Globo.distance(at, world.start) < at.rad + 8 || world.fogs.some((f) => Globo.distance(f, at) < 30)) continue;
+        if (Globo.distance(at, world.start) < at.rad + 8 || world.fogs.some((f) => Globo.distance(f, at) < f.rad + at.rad + 12)) continue;
         world.fogs.push(at);
       }
       if (world.fogs.length >= 2) break;

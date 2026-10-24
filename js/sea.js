@@ -12,9 +12,10 @@ const Mare = (() => {
   const SCOPE_RANGE = 12;     // gradi: abbastanza vicino per il binocolo
   const CITY_RANGE = 4;
   const BIG_RES = 200;
-  // La nebbia, di notte: oltre una vela il pesce gatto ti sente; hai un attimo per ammainare
+  // La nebbia, di notte: oltre una vela il pesce gatto ti sente, e 0,8 secondi dopo ti mangia. Ti ha sentito: uscire
+  // dalla nebbia non basta, si salva solo chi ammaina in tempo
   const FOG_SAILS = 1;
-  const FOG_GRACE = 1.5;      // secondi
+  const FOG_GRACE = 0.8;      // secondi
   // Il Kraken: andando al largo (fuori dalla portata del binocolo) una volta su 8 arriva, poco dopo
   const KRAKEN_CHANCE = 1 / 8;
   const KRAKEN_DELAY = [3, 7]; // secondi
@@ -156,8 +157,8 @@ const Mare = (() => {
     const fogNow = time === "notte" && trip.world.fogs.some((f) => Globo.distance(f, ship) < f.rad);
     if (fogNow && !inFog) Gioco.toast("Nebbia fitta. Qualcosa nuota qui sotto, e sente ogni rumore: al massimo una vela.");
     inFog = fogNow;
-    if (inFog && ship.sails > FOG_SAILS) {
-      if (!fogDanger) { Suoni.play("campana"); Gioco.toast("Una lucina si accende nella nebbia, davanti alla prua. Ammaina!"); }
+    if ((inFog || fogDanger > 0) && ship.sails > FOG_SAILS) {
+      if (!fogDanger) { Suoni.play("campana"); Gioco.toast("Una lucina si accende nella nebbia, davanti alla prua."); }
       fogDanger += dt;
       if (fogDanger >= FOG_GRACE) {
         running = false;

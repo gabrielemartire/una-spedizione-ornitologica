@@ -2,6 +2,12 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.10 · 24 ottobre 2026
+
+- **La nebbia è molto più ampia** (prima la si attraversava di corsa prima che il pesce gatto facesse in tempo).
+- **Il pesce gatto ti mangia 0,8 secondi dopo che acceleri** oltre una vela nella nebbia. Una volta che ti ha sentito, uscire dalla nebbia non basta: si salva solo chi ammaina subito.
+- **La cartolina del pesce gatto** è rifatta: nella nebbia grigia, rossastra in alto, la sagoma enorme con le spine a raggiera, la bocca spalancata piena di denti, l'antenna ad arco con la lucina accesa, e la tua nave piccola davanti.
+
 ## 0.12.9 · 24 ottobre 2026
 
 - **Il Kraken ferma la nave**: quando arriva, le vele vanno a zero. Nell'acqua nera si può alzare al massimo una vela, e la nave va a un terzo della velocità: per uscirne ci vogliono cinque o sei secondi. Uscendo passa sempre un momento.
