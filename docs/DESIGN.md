@@ -208,7 +208,9 @@ Una griglia fitta (**40 × 24 caselle**) generata dallo stesso seed della cartol
 
 **La nave resta ferma** dove l'hai ormeggiata: per ripartire o aspettare a bordo si torna da lei a piedi. Le zone sulla costa raggiunte a piedi hanno il mare ma non la nave; le zone interne sono tutta terra e si entra dal passaggio. La mappa di una zona è sempre la stessa, comunque ci si arrivi.
 
-### 9.1 Rumore e visione
+#**Il lato del mare** (0.11.4): sulla battlemap il mare sta dove sta sul globo (la media delle rive della zona, vista dal suo centro), col **nord sempre in alto**. La zona si genera sempre col mare a ovest e poi si specchia (mare a est) o si gira (mare a nord o a sud, generata su una mappa in piedi 24×40). I passaggi non stanno mai sul lato del mare. In basso a destra nella colonna di lato c'è **la bussola**, fissa col nord in alto come il globo.
+
+## 9.1 Rumore e visione
 Un unico sistema regola uccelli e mostri.
 
 | Azione | Rumore (raggio in caselle) |

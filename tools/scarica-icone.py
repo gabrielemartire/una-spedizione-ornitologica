@@ -125,7 +125,7 @@ ICONS = {
     "cannedfish": "delapouite/canned-fish",
     "trap": "lorc/wolf-trap",
     "shovel": "lorc/spade",
-    "bottle": "delapouite/water-bottle",
+    "bottle": "lorc/square-bottle",
     "hole": "delapouite/hole",
     # I bucanieri: chi ha la spada e chi il fucile, la carne affumicata, l'immondizia rumorosa
     "buccaneer": "delapouite/pirate-captain",

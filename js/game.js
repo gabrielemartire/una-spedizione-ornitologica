@@ -4,8 +4,10 @@
 // La giornata è divisa in tre momenti: ripartire ne costa due, aspettare a bordo uno.
 // Espone l'oggetto globale `Gioco`.
 const Gioco = (() => {
-  const W = 40;
-  const H = 24;
+  // La battlemap: 40 per 24. Durante la generazione di una zona col mare a nord o a sud diventa per un
+  // momento 24 per 40 (vedi generate)
+  let W = 40;
+  let H = 24;
   const FLEE = 1.5;           // più vicino di così l'uccello scappa
   const OBSERVE = 3.5;        // portata del binocolo
   const BIRD_LEAVE = 0.35;    // probabilità che, spaventato, lasci la zona invece di spostarsi
@@ -232,13 +234,44 @@ const Gioco = (() => {
 
   const biomeOf = (tags) => Object.keys(BIOMI).find((b) => tags.has(b)) || "foresta";
 
-  // shape = { coastal, passes: [{ x, y, to }] }: la zona tocca il mare (a ovest, con l'ormeggio) o è interna;
-  // i passaggi a piedi verso le zone vicine stanno sui bordi. La mappa è sempre la stessa, comunque ci arrivi
+  // Da che parte sta il mare: la zona si genera sempre col mare a ovest, poi si gira o si specchia perché il
+  // mare stia dove sta sul globo, col nord in alto. Col mare a nord o a sud si genera su una mappa in piedi
+  // (24 per 40) e poi la si gira. to: dalla mappa generata a quella vera; back: il contrario
+  const SEA_SIDES = {
+    ovest: { dims: [40, 24], to: (c) => ({ x: c.x, y: c.y }), back: (c) => ({ x: c.x, y: c.y }) },
+    est: { dims: [40, 24], to: (c) => ({ x: 39 - c.x, y: c.y }), back: (c) => ({ x: 39 - c.x, y: c.y }) },
+    nord: { dims: [24, 40], to: (c) => ({ x: c.y, y: c.x }), back: (c) => ({ x: c.y, y: c.x }) },
+    sud: { dims: [24, 40], to: (c) => ({ x: c.y, y: 23 - c.x }), back: (c) => ({ x: 23 - c.y, y: c.x }) },
+  };
+
+  // shape = { coastal, sea, passes: [{ x, y, to }] }: la zona tocca il mare (dal lato sea, con l'ormeggio) o è
+  // interna; i passaggi a piedi verso le zone vicine stanno sui bordi. La mappa è sempre la stessa, comunque ci arrivi
   function generate(seed, tags, bird, shape = { coastal: true, passes: [] }) {
-    for (let attempt = 0; ; attempt++) {
-      const zone = tryGenerate(rng(seed + attempt * 7919), tags, bird, attempt > 40, shape, attempt > 60);
-      if (zone) return zone;
+    const side = SEA_SIDES[shape.coastal && shape.sea ? shape.sea : "ovest"];
+    const inner = { ...shape, passes: shape.passes.map((ps) => ({ ...ps, ...side.back(ps) })) };
+    const final = [W, H];
+    [W, H] = side.dims;
+    let zone = null;
+    try {
+      for (let attempt = 0; !zone; attempt++) zone = tryGenerate(rng(seed + attempt * 7919), tags, bird, attempt > 40, inner, attempt > 60);
+    } finally {
+      [W, H] = final;
     }
+    return turn(zone, side.to, side.dims);
+  }
+
+  // La zona generata, girata: la mappa e tutte le caselle che ricorda
+  function turn(g, to, [w, h]) {
+    const map = Array.from({ length: H }, () => Array(W).fill("grass"));
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const c = to({ x, y }); map[c.y][c.x] = g.map[y][x]; }
+    const pt = (c) => (c ? { ...c, ...to(c) } : c);
+    return {
+      ...g, map, start: pt(g.start), bird: pt(g.bird), ship: pt(g.ship),
+      lair: g.lair.map(pt), free: g.free.map(pt), tower: g.tower && g.tower.map(pt),
+      ruin: g.ruin && { interior: new Set([...g.ruin.interior].map((k) => key(to(unkey(k))))) },
+      camp: g.camp && { fire: pt(g.camp.fire), marsh: pt(g.camp.marsh) },
+      pirates: g.pirates && { treasure: pt(g.pirates.treasure), boucan: pt(g.pirates.boucan), men: g.pirates.men.map(pt) },
+    };
   }
 
   function tryGenerate(r, tags, birdInfo, relaxed, shape, force = false) {
@@ -615,6 +648,7 @@ const Gioco = (() => {
     const kinds = Object.keys(OGGETTI);
     world.merchants = wild.filter((z) => !z.tags.has("bucanieri")).sort(() => rm() - 0.5).slice(0, MERCHANTS)
       .map((z) => ({ zone: z.id, wants: kinds[Math.floor(rm() * kinds.length)] }));
+    world.seaSide = seaSides(world);
     world.paths = makePaths(world, seed);
     // le nebbie del pesce gatto: due o tre, in mare aperto, lontano dalle coste e dalla partenza
     const rf = rng(seed ^ 0xf06f15);
@@ -629,6 +663,21 @@ const Gioco = (() => {
       if (world.fogs.length >= 2) break;
     }
     return world;
+  }
+
+  // Da che parte guarda il mare ogni zona sulla costa: la media delle sue rive, viste dal suo centro
+  function seaSides(world) {
+    const sum = {};
+    for (const c of world.coast) {
+      const z = world.zones[c.zone];
+      const lat = Math.asin(c.p[2]) * 180 / Math.PI, lon = Math.atan2(c.p[1], c.p[0]) * 180 / Math.PI;
+      const v = (sum[c.zone] ||= [0, 0]);
+      v[0] += (((lon - z.lon + 540) % 360) - 180) * Math.cos(z.lat * Math.PI / 180);
+      v[1] += lat - z.lat;
+    }
+    const sides = {};
+    for (const [id, [east, north]] of Object.entries(sum)) sides[id] = Math.abs(east) > Math.abs(north) ? (east > 0 ? "est" : "ovest") : north > 0 ? "nord" : "sud";
+    return sides;
   }
 
   // I passaggi a piedi tra le zone confinanti della stessa isola (mai la zona di una città).
@@ -670,7 +719,8 @@ const Gioco = (() => {
         const dLat = B.lat - A.lat, dLon = ((B.lon - A.lon + 540) % 360) - 180;
         const east = dLon * Math.cos(A.lat * Math.PI / 180);
         let side = Math.abs(east) > Math.abs(dLat) ? (east > 0 ? "est" : "ovest") : dLat > 0 ? "nord" : "sud";
-        if (side === "ovest" && world.coastal[from]) side = dLat > 0 ? "nord" : "sud";
+        // dove c'è il mare non c'è un passaggio: si prende l'altro asse
+        if (world.coastal[from] && side === world.seaSide[from]) side = ["est", "ovest"].includes(side) ? (dLat > 0 ? "nord" : "sud") : east > 0 ? "est" : "ovest";
         (paths[from] ||= []).push({ to, side, pos: rng(A.seed ^ B.seed)() });
       }
     }
@@ -689,7 +739,7 @@ const Gioco = (() => {
       const cell = side === "nord" ? { x, y: 0 } : side === "sud" ? { x, y: H - 1 } : side === "est" ? { x: W - 1, y } : { x: 0, y };
       return { ...cell, to };
     });
-    return { coastal: !!trip.world.coastal[zone.id], passes };
+    return { coastal: !!trip.world.coastal[zone.id], sea: trip.world.seaSide[zone.id], passes };
   }
 
   function start(name) {
@@ -887,7 +937,7 @@ const Gioco = (() => {
       towerMet: false,
       fire: gen.camp ? gen.camp.fire : null,
       marsh: gen.camp && !trip.marshTaken ? gen.camp.marsh : null,
-      traps: new Set(memory.traps || []),
+      traps: new Set((memory.traps || []).filter((k) => { const c = unkey(k); return tile(gen.map, c.x, c.y).walk; })),
       bottle: bottleOf(zone, gen, memory),
       holes: new Set(),
       pirates: gen.pirates ? gen.pirates.men.map((c, i) => ({ ...c, home: { ...c }, gun: i < 2, reload: 0, energy: 0, rest: 0,
@@ -921,14 +971,18 @@ const Gioco = (() => {
   // porta a una casella dove scavare: si sceglie prima l'arrivo (calpestabile, non acqua), poi da due a quattro
   // tratti dritti dalla bottiglia fin lì. Conta dove arrivi, non da dove passi: l'indovinello è sempre giusto
   function bottleOf(zone, gen, memory) {
+    // una bottiglia di prima della 0.11.4, quando il mare stava sempre a ovest, può essere finita in mare
+    const b0 = memory.bottle;
+    if (b0 && !b0.taken && (!tile(gen.map, b0.x, b0.y).walk || !tile(gen.map, b0.dest.x, b0.dest.y).walk)) memory.bottle = undefined;
     if (memory.bottle === undefined) {
       memory.bottle = null;
       const r = rng(zone.seed ^ 0xb0771e);
       if (zone.biome === "tropicale" && trip.world.coastal[zone.id] && r() < BOTTLE_CHANCE) {
         const firstRow = [];
-        for (let y = 1; y < H - 1; y++) {
-          const x = gen.map[y].findIndex((t) => t !== "sea" && t !== "ship");
-          if (x > 0 && tile(gen.map, x, y).walk && Math.abs(y - gen.start.y) > 1) firstRow.push({ x, y });
+        for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+          const c = { x, y };
+          if (tile(gen.map, x, y).walk && gen.map[y][x] !== "ship" && dist(c, gen.start) > 2
+            && DIRS.some(([dx, dy]) => gen.map[y + dy][x + dx] === "sea")) firstRow.push(c);
         }
         const ok = (c) => tile(gen.map, c.x, c.y).walk && !["water", "deep", "ice", "pass", "ship"].includes(gen.map[c.y][c.x]);
         const at = firstRow.length ? firstRow[Math.floor(r() * firstRow.length)] : null;

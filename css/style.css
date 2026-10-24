@@ -899,3 +899,15 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
   50% { transform: translate(8%, -6%); opacity: 0.75; }
 }
 @media (prefers-reduced-motion: reduce) { .cell.t-sea .ic { animation: none; } }
+
+/* La bussola, in basso a destra nella sidebar: il nord è sempre in alto, come sul globo */
+.panel-b { position: relative; }
+.compass { position: absolute; right: 10px; bottom: 10px; width: 92px; height: 92px; overflow: visible; }
+.compass .cp-ring { fill: rgba(15, 26, 18, 0.6); stroke: var(--mid); stroke-width: 2; }
+.compass .cp-ring2 { fill: none; stroke: var(--dark); stroke-width: 1; stroke-dasharray: 2 4; }
+.compass .cp-n { fill: #b3262a; }
+.compass .cp-s { fill: var(--paper); }
+.compass .cp-ew { fill: var(--mid); opacity: 0.6; }
+.compass .cp-pin { fill: #f2c230; }
+.compass .cp-letter { fill: var(--mid); font-size: 12px; text-anchor: middle; font-family: inherit; }
+.compass .cp-letter.is-n { fill: #f2c230; font-size: 14px; }
