@@ -941,3 +941,9 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .e-priest { color: #e8e0f0; filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 1px #000); }
 .e-guest { filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000); }
 .e-guest.is-0 { color: #d8a070; } .e-guest.is-1 { color: #8ab0e0; } .e-guest.is-2 { color: #a0d080; } .e-guest.is-3 { color: #e0a0c0; }
+
+/* Lo zaino: le cose che si usano hanno il numero e cosa fanno */
+.book-items li.is-usable { cursor: pointer; }
+.book-items li.is-usable:hover { color: #6a2a18; }
+.book-items .use { margin-left: auto; font-size: 16px; color: #6a4a2c; }
+.book-items .use kbd { font: inherit; font-style: normal; border: 1px solid #8a6a40; padding: 0 5px; margin-right: 3px; }

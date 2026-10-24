@@ -188,6 +188,17 @@ const Diario = (() => {
 
   const isOpen = () => current !== null;
 
+  // Le cose dello zaino che si usano, e cosa si fa
+  const USE = { cibo: "mangia", marshmallow: "mangia", tagliola: "posa", semi: "spargi" };
+  const usables = () => trip().pack.filter((it) => USE[it.kind]).slice(0, 9);
+
+  function use(n) {
+    const it = usables()[n];
+    if (!it) return;
+    close();
+    Gioco.useItem(it.kind);
+  }
+
   const PAGES = {
     note() {
       return `<p class="pen-note">viaggio n. ${trip().voyage || 1}</p><ul class="book-notes">${trip().notes.map((n) => `<li>${when(n)} ${n.msg}</li>`).join("")}</ul>`;
@@ -226,11 +237,16 @@ const Diario = (() => {
         <table class="ledger"><caption>entrate e uscite</caption>${rows.join("")}</table>`;
     },
 
+    // lo zaino: le cose che si usano hanno un numero e cosa fanno; il numero (o un clic) le usa
     zaino() {
-      // l'uovo dice quanto manca; la chiave resta per tutta la spedizione
       const extra = (it) => it.kind === "uovo" ? " <small>(potrebbe schiudersi)</small>"
         : it.kind === "marshmallow" ? ` <small>(${["bianco", "ancora bianco", "dorato", "bruciato"][it.cook || 0]})</small>` : "";
-      return `<ul class="book-items"><li>${icon("binoculars")}Binocolo</li><li>${icon("shovel")}Pala</li>${trip().pack.map((it) => `<li>${icon(OGGETTI_SPECIALI[it.kind].icona)}${OGGETTI_SPECIALI[it.kind].nome}${extra(it)}</li>`).join("")}</ul>`;
+      const usable = usables();
+      return `<ul class="book-items"><li>${icon("binoculars")}Binocolo</li><li>${icon("shovel")}Pala</li>${trip().pack.map((it) => {
+        const n = usable.findIndex((u) => u === it);
+        const use = n >= 0 ? ` <span class="use"><kbd>${n + 1}</kbd> ${USE[it.kind]}</span>` : "";
+        return `<li${n >= 0 ? ` class="is-usable" data-use="${n}"` : ""}>${icon(OGGETTI_SPECIALI[it.kind].icona)}${OGGETTI_SPECIALI[it.kind].nome}${extra(it)}${use}</li>`;
+      }).join("")}</ul>`;
     },
 
     stiva() {
@@ -561,6 +577,8 @@ const Diario = (() => {
       return;
     }
     if (e.target.id === "diary-popup") { close(); return; }
+    const usable = e.target.closest("[data-use]");
+    if (usable && isOpen()) { use(+usable.dataset.use); return; }
     // un clic sulla pagina di sinistra torna indietro, su quella di destra va avanti
     const book = e.target.closest(".book");
     if (book && isOpen()) {
@@ -581,6 +599,8 @@ const Diario = (() => {
       isOpen() ? close() : open("note");
     } else if (isOpen() && e.key === "Escape") {
       close();
+    } else if (isOpen() && current === "zaino" && /^[1-9]$/.test(e.key)) {
+      use(+e.key - 1);
     } else if (isOpen() && ARROWS[e.key]) {
       e.preventDefault();
       ARROWS[e.key]();

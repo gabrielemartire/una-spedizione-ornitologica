@@ -2,6 +2,11 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.4 · 24 ottobre 2026
+
+- **Sotto la battlemap** solo: *␣ osserva · Z attendi · X scava · Tab diario*.
+- **Si usa tutto dallo zaino**: nel taccuino (Tab), capitolo *Zaino*, le cose che si usano hanno un numero e cosa fanno: *pesce in scatola: mangia*, *marshmallow: mangia*, *tagliola: posa*, *semi: spargi*. Premi il numero (o clicchi la riga): il taccuino si chiude e lo usi. Solo a terra.
+
 ## 0.12.3 · 24 ottobre 2026
 
 - **I tasti sotto la battlemap** sono solo l'essenziale: *␣ osserva · Z attendi · X scava · T tagliola · E semi · Tab diario · Esc menu*. Muoversi con le frecce o WASD non serve scriverlo.

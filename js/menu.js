@@ -198,7 +198,7 @@ function showWelcome() {
         <dl><dt>In mare</dt>
           <dd><kbd>← →</kbd> rotta</dd><dd><kbd>↑ ↓</kbd> vele</dd><dd><kbd>T</kbd> binocolo</dd><dd><kbd>Invio</kbd> sbarca, entra in porto</dd></dl>
         <dl><dt>A terra</dt>
-          <dd><kbd>frecce</kbd> muoviti (tenere premuto è correre)</dd><dd><kbd>␣</kbd> osserva</dd><dd><kbd>Z</kbd> attendi</dd><dd><kbd>X</kbd> scava · <kbd>T</kbd> tagliola · <kbd>M</kbd> mangia</dd></dl>
+          <dd><kbd>frecce</kbd> muoviti (tenere premuto è correre)</dd><dd><kbd>␣</kbd> osserva</dd><dd><kbd>Z</kbd> attendi</dd><dd><kbd>X</kbd> scava · il resto si usa dallo zaino</dd></dl>
       </div>
       <ul>
         <li>Ogni uccello si fa vedere solo in certi momenti: alba, pomeriggio o notte. Per osservarlo serve vista libera, né troppo vicino né troppo lontano.</li>

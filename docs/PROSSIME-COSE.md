@@ -21,6 +21,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **La casa degli sposi**: dopo le nozze, in città una casa nuova da visitare, la tua (da sviluppare).
 
 ## Fatto di recente
+- [x] **Versione 0.12.4**: si usa tutto dallo zaino (numero o clic); sotto la battlemap solo ␣ osserva · Z attendi · X scava · Tab diario.
 - [x] **Versione 0.12.3**: tasti sotto la battlemap ridotti all'essenziale; Z attendi.
 - [x] **Versione 0.12.2**: i tesori del castello non ricompaiono; chiuso per nozze; la sala del trono come una chiesa; la chiave della sala del trono resta nella porta.
 - [x] **Versione 0.12.1**: il castello è un labirinto di cunicoli con porte nel muro, tutto buio finché non ci passi; alla festa solo gente.

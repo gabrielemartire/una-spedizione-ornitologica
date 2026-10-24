@@ -1476,6 +1476,14 @@ const Gioco = (() => {
     leaveMerchant();
   }
 
+  // Dallo zaino (il taccuino, capitolo Zaino): mangiare, posare una tagliola, spargere i semi. Solo a terra
+  function useItem(kind) {
+    if (trip.mode !== "land" || !s || s.over) { toast("Lo zaino si apre a terra."); return; }
+    if (kind === "cibo" || kind === "marshmallow") eat(kind);
+    else if (kind === "tagliola") act("trap");
+    else if (kind === "semi") sowSeeds();
+  }
+
   // M: si mangia quello che c'è nello zaino; se c'è più di una cosa, si sceglie
   function food() {
     const foods = ["cibo", "marshmallow"].filter(hasPack);
@@ -1615,9 +1623,9 @@ const Gioco = (() => {
   // I semi: si spargono dove l'uccello è volato via per sempre; aspettato un momento, torna nella zona
   function sowSeeds() {
     const memory = trip.zones[s.zone.id];
-    if (!hasPack("semi")) { toast("Non hai semi. Li vende l'emporio."); return; }
-    if (!memory.gone) { toast(memory.done ? "L'uccello di qui è già nel taccuino." : "I semi servono a far tornare un uccello volato via."); return; }
-    if (memory.seededAt != null) { toast("I semi sono già sparsi. Aspetta un momento."); return; }
+    if (!hasPack("semi")) { log("Non hai semi. Li vende l'emporio."); return; }
+    if (!memory.gone) { log(memory.done ? "L'uccello di qui è già nel taccuino: i semi non servono." : "I semi servono a far tornare un uccello volato via: qui non ce n'è bisogno."); return; }
+    if (memory.seededAt != null) { log("I semi sono già sparsi. Aspetta un momento."); return; }
     trip.pack.splice(trip.pack.findIndex((it) => it.kind === "semi"), 1);
     memory.seededAt = trip.third;
     Suoni.play("cespuglio");
@@ -2502,7 +2510,7 @@ const Gioco = (() => {
   }
 
   const KEYS_HELP = {
-    land: "␣ osserva · Z attendi · X scava · T tagliola · E semi · Tab diario · Esc menu",
+    land: "␣ osserva · Z attendi · X scava · Tab diario",
     city: "frecce/WASD muovi · → entra nelle botteghe · torna alla nave per ripartire · Tab diario · Esc menu",
     sea: "← → rotta · ↑ ↓ vele · T binocolo · Invio sbarca o attracca · Tab diario · Esc menu",
   };
@@ -2851,7 +2859,7 @@ const Gioco = (() => {
   // Quello che serve alla navigazione (js/sea.js) e al diario (js/diario.js)
   return {
     start, resume, save, setNotebook: (data) => { notebook = data; }, code, hasSave: () => !!loadSave(), clearSave, loadNotebook, depart, landAt, rumor, pay, earn, visitCity, maxHp, EGG_DAYS,
-    wantedPoster, acceptWanted, bountyState, earnStamp, victory, sunk, STAMPS, advance, renderStatus, note, log, toast, timeOf, now, day, showView, iconHtml, fitMap,
+    useItem, wantedPoster, acceptWanted, bountyState, earnStamp, victory, sunk, STAMPS, advance, renderStatus, note, log, toast, timeOf, now, day, showView, iconHtml, fitMap,
     get trip() { return trip; },
     get zoneState() { return s; },   // la battlemap in corso: per le prove automatiche
     get el() { return el; },
