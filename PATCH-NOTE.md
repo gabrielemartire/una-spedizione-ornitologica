@@ -2,6 +2,10 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.5 · 24 ottobre 2026
+
+- Sotto la battlemap e in *Come si gioca* c'è scritto **spazio osserva**, per esteso, invece del simbolo.
+
 ## 0.12.4 · 24 ottobre 2026
 
 - **Sotto la battlemap** solo: *␣ osserva · Z attendi · X scava · Tab diario*.

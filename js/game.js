@@ -2510,7 +2510,7 @@ const Gioco = (() => {
   }
 
   const KEYS_HELP = {
-    land: "␣ osserva · Z attendi · X scava · Tab diario",
+    land: "spazio osserva · Z attendi · X scava · Tab diario",
     city: "frecce/WASD muovi · → entra nelle botteghe · torna alla nave per ripartire · Tab diario · Esc menu",
     sea: "← → rotta · ↑ ↓ vele · T binocolo · Invio sbarca o attracca · Tab diario · Esc menu",
   };
