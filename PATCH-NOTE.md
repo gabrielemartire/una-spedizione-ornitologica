@@ -2,6 +2,12 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.11.3 · 24 ottobre 2026
+
+- **La bottiglia sulla riva è nera**, col bordo chiaro: sulla sabbia prima non si vedeva.
+- **Le onde si muovono**: ogni casella di mare va e viene, sfalsata dalle vicine.
+- **La spiaggia caraibica è più larga**: cinque file di sabbia dal mare, poi sabbia ed erba che si diradano, poi erba con chiazze di sabbia.
+
 ## 0.11.2 · 24 ottobre 2026
 
 - **Come si gioca**: il riquadro d'inizio è riscritto, più asciutto. I tasti in due colonne (in mare, a terra) e cinque regole brevi. Si riapre da *Spedizione → Istruzioni*.

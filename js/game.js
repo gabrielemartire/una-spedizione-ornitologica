@@ -342,17 +342,17 @@ const Gioco = (() => {
     blob("bush", look.bushes, 0, 1);
     blob(hot ? "basalt" : "rock", look.rocks, 0, 1);
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (map[y][x] === "glade") map[y][x] = "grass";
-    // Le coste caraibiche: sabbia per tre file dal mare, poi sabbia ed erba, poi erba con chiazze di sabbia
+    // Le coste caraibiche: sabbia per cinque file dal mare, poi sabbia ed erba, poi erba con chiazze di sabbia
     const beach = shape.coastal && biomeOf(tags) === "tropicale";
     if (beach) {
       for (let y = 0; y < H; y++) {
         const x0 = map[y].findIndex((t) => t !== "sea" && t !== "ship");
-        for (let x = x0; x < x0 + 6 && x < W; x++) {
+        for (let x = x0; x < x0 + 9 && x < W; x++) {
           if (["water", "deep", "rock", "pass"].includes(map[y][x])) continue;
-          if (x < x0 + 3 || (x < x0 + 5 && r() < 0.55)) map[y][x] = "sand";
+          if (x < x0 + 5 || (x < x0 + 9 && r() < 0.7 - (x - x0 - 5) * 0.15)) map[y][x] = "sand";
         }
       }
-      blob("sand", 7, 1, 0.6);
+      blob("sand", 9, 1, 0.6);
     }
 
     // Spazio libero allo sbarco
@@ -2184,6 +2184,7 @@ const Gioco = (() => {
         let ch = t.ch || "";
         // Dove si passa le icone sono più trasparenti; quello che blocca è pieno
         let cls = `cell ${t.cls} ${t.walk ? "walk" : "block"}`;
+        if (t === TILES.sea) cls += ` wave${(x * 2 + y * 3) % 5}`;
 
         if (roofed.has(k)) {
           icon = k === roofCenter ? "ruins" : null;
@@ -2195,7 +2196,7 @@ const Gioco = (() => {
         if (s.chest && s.chest.x === x && s.chest.y === y) { icon = "chest"; cls += " chest"; }
         if (s.marsh && s.marsh.x === x && s.marsh.y === y) { icon = "marshmallow"; cls += " marsh"; }
         if (s.loot && s.loot.x === x && s.loot.y === y) { icon = "coins"; cls += " item"; }
-        if (s.bottle && s.bottle.x === x && s.bottle.y === y) { icon = "bottle"; cls += " item"; }
+        if (s.bottle && s.bottle.x === x && s.bottle.y === y) { icon = "bottle"; cls += " bottle"; }
         if (s.holes.has(k) && t.walk) { icon = "hole"; cls += " hole"; }
         if (s.traps.has(k)) { icon = "trap"; cls += " trap"; }
         if (t.tower && s.tower && x === s.tower[0].x + 1 && y === s.tower[0].y) { icon = "woman"; cls += " lady"; }   // alla finestra, lei

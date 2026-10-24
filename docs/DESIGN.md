@@ -439,7 +439,8 @@ Il controllo è un CRC-16: intercetta gli errori di battitura. Nel leggere si pe
 - **Mangiare (M)**: il marshmallow rimette tutta la vita e dà un **cuore viola** che assorbe il primo colpo; il **pesce in scatola** (emporio, 2 m.o., uno alla volta) cura due cuori: costa meno del medico ma cura meno, però si porta dietro.
 - **Tagliole (T, emporio, 3 m.o.)**: si posano dove sei; restano nella zona finché non scattano. Lupo: muore, ma la schiva 3 volte su 10 (la tagliola scatta comunque). Orso e cinghiale: fermi 15 tuoi passi.
 - **La bottiglia col messaggio**: una zona caraibica sul mare su tre, sulla prima fila di terra. Si sceglie prima l'arrivo (calpestabile, non acqua), poi da 2 a 4 tratti dritti, alternando verticale e orizzontale; conta dove arrivi, non da dove passi. **X scava** con la pala (sempre nello zaino: il tasto S era già il passo in giù): un passo; nel posto giusto 0–9 m.o. e un oggetto se sono meno di 4, altrove *una buca vuota*.
-- **La spiaggia caraibica**: tre file di sabbia dal mare, due di sabbia ed erba, poi erba con chiazze di sabbia.
+- **La spiaggia caraibica**: cinque file di sabbia dal mare, quattro di sabbia ed erba che si diradano, poi erba con chiazze di sabbia. La bottiglia è nera col bordo chiaro, per vedersi sulla sabbia.
+- **Le onde** del mare sulla battlemap si muovono piano, ogni casella sfalsata dalle vicine (ferme con *riduci movimento*).
 - **La voce dei quattro occhi**: in taverna, una volta per viaggio.
 
 ## 15. Stile visivo

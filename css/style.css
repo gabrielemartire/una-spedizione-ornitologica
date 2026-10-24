@@ -209,7 +209,7 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .t-rock  { color: #9a9a86; }
 .t-water { color: var(--f-light); background: var(--f-water); }
 .t-deep  { color: var(--f-water); background: var(--f-deep); }
-.t-sea   { color: #3f6680; background: var(--f-sea); }
+.t-sea   { color: #8ab4cc; background: var(--f-sea); }
 .t-ship  { color: var(--f-light); background: var(--f-sea); }
 .t-fall  { color: #ffffff; background: var(--f-water); }
 .t-wall   { color: #a89f8c; background: #2e2c24; }
@@ -884,3 +884,18 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .welcome-cols dt { color: #f2c230; font-size: 19px; margin-bottom: 2px; }
 .welcome-cols dd { margin: 0; font-size: 17px; line-height: 1.3; }
 .welcome kbd { font: inherit; color: var(--paper); border: 1px solid var(--mid); padding: 0 4px; }
+
+/* La bottiglia sulla riva: nera, col bordo chiaro, si vede bene sulla sabbia */
+.cell.bottle .ic { opacity: 1; fill: #120e0a; color: #120e0a; filter: drop-shadow(0 0 1px #f4ecd0) drop-shadow(0 0 1px #f4ecd0); }
+
+/* Le onde: ogni casella di mare va e viene, sfalsata dalle vicine */
+.cell.t-sea .ic { animation: wave 3.2s ease-in-out infinite; }
+.cell.wave1 .ic { animation-delay: -0.6s; }
+.cell.wave2 .ic { animation-delay: -1.3s; }
+.cell.wave3 .ic { animation-delay: -1.9s; }
+.cell.wave4 .ic { animation-delay: -2.6s; }
+@keyframes wave {
+  0%, 100% { transform: translate(-8%, 0); opacity: 0.25; }
+  50% { transform: translate(8%, -6%); opacity: 0.75; }
+}
+@media (prefers-reduced-motion: reduce) { .cell.t-sea .ic { animation: none; } }
