@@ -62,7 +62,7 @@ const Castello = (() => {
     for (let i = 0; i < 9; i++) place(pick([3, 5, 5, 7]), pick([3, 3, 5]), "room");
     const normal = rooms.filter((rm) => rm.kind === "room" || rm.kind === "hall");
     if (normal.length < 6) return null;
-    for (const rm of rooms) for (const c of rm.cells) map[c.y][c.x] = rm.kind === "throne" ? "carpet" : "rfloor";
+    for (const rm of rooms) for (const c of rm.cells) map[c.y][c.x] = "rfloor";
     // il labirinto: su tutte le caselle dispari fuori dalle stanze e dai loro muri
     const blocked = new Set();
     for (const rm of rooms) for (let y = rm.y - 1; y <= rm.y + rm.h; y++) for (let x = rm.x - 1; x <= rm.x + rm.w; x++) blocked.add(`${x},${y}`);
@@ -102,9 +102,13 @@ const Castello = (() => {
       return out.sort(() => r() - 0.5);
     };
     const doors = {};
+    // la sala del trono è una chiesa: la porta in fondo, al centro, sotto la navata
+    const aisle = throne.x + 4;
+    const nave = { x: aisle, y: throne.y + throne.h, out: { x: aisle, y: throne.y + throne.h + 1 } };
+    if (map[nave.out.y][nave.out.x] !== "cfloor") return null;
     for (const rm of rooms) {
       if (rm.kind === "hall") continue;
-      const cand = doorsOf(rm);
+      const cand = rm === throne ? [nave] : doorsOf(rm);
       if (!cand.length) return null;
       const n = rm.kind === "room" ? 1 + (r() < 0.5 ? 1 : 0) : 1;
       doors[rooms.indexOf(rm)] = cand.slice(0, n);
@@ -148,13 +152,19 @@ const Castello = (() => {
     const lockDoor = doors[rooms.indexOf(throne)][0], crackDoor = doors[rooms.indexOf(secret)][0];
     if (!open.has(key(lockDoor.out)) || !open.has(key(crackDoor.out))) return null;
 
-    // la sala del trono addobbata a nozze: il trono in fondo, le rose lungo i muri, lei accanto al trono
-    const seat = { x: Math.floor(throne.cx), y: throne.y };
-    map[seat.y][seat.x] = "throne";
-    const lady = { x: seat.x + 1, y: seat.y };
-    for (const c of throne.cells) {
-      const edge = c.x === throne.x || c.x === throne.x + throne.w - 1 || c.y === throne.y + throne.h - 1;
-      if (edge && (c.x + c.y) % 2 === 0 && Math.abs(c.x - lockDoor.x) + Math.abs(c.y - lockDoor.y) > 2) map[c.y][c.x] = "rose";
+    // la sala del trono addobbata a nozze, come una chiesa: in fondo il prete, davanti a lui la sposa, la navata
+    // col tappeto rosso fino alla porta, gli invitati ai due lati, le rose agli angoli
+    //   |      A      |   A il prete
+    //   |      B      |   B la sposa
+    //   | inv  V  inv |   V il tappeto
+    const priest = { x: aisle, y: throne.y };
+    const lady = { x: aisle, y: throne.y + 1 };
+    const seat = priest;
+    for (let y = throne.y + 2; y < throne.y + throne.h; y++) map[y][aisle] = "carpet";
+    for (const [x, y] of [[throne.x, throne.y], [throne.x + throne.w - 1, throne.y]]) map[y][x] = "rose";
+    const guests = [];
+    for (let y = throne.y + 2; y < throne.y + throne.h; y++) for (let x = throne.x; x < throne.x + throne.w; x++) {
+      if (Math.abs(x - aisle) >= 2 && r() < 0.75) guests.push({ x, y, look: Math.floor(r() * 4) });
     }
 
     // dentro le stanze: la chiave, le monete, una cosa da vendere, i mostri; il tesoro dietro il muro che cede
@@ -173,7 +183,7 @@ const Castello = (() => {
       }
     });
     return {
-      map, exit, start, lady, seat, lock: lockDoor, crack: crackDoor, loot, monsters,
+      map, exit, start, lady, seat, priest, guests, lock: lockDoor, crack: crackDoor, loot, monsters,
       rooms: rooms.map((rm) => ({ kind: rm.kind, keys: rm.keys })),
     };
   }

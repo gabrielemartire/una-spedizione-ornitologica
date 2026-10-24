@@ -1325,7 +1325,7 @@ const Gioco = (() => {
   }
 
   function occupied(c) {
-    return s.npcs.some((o) => same(o, c)) || (!!s.bouncers && s.bouncers.some((o) => same(o, c))) || (!!s.lady && same(s.lady, c)) || s.pirates.some((o) => same(o, c)) || (!!s.chest && same(s.chest, c)) || s.beasts.some((o) => same(o, c)) || (birdActive() && same(s.bird, c)) || (!!s.merchant && (same(s.merchant, c) || same(s.merchant.cart, c))) || (!!s.fugitive && same(s.fugitive, c));
+    return (!!s.guests && s.guests.some((o) => same(o, c))) || (!!s.priest && same(s.priest, c)) || s.npcs.some((o) => same(o, c)) || (!!s.bouncers && s.bouncers.some((o) => same(o, c))) || (!!s.lady && same(s.lady, c)) || s.pirates.some((o) => same(o, c)) || (!!s.chest && same(s.chest, c)) || s.beasts.some((o) => same(o, c)) || (birdActive() && same(s.bird, c)) || (!!s.merchant && (same(s.merchant, c) || same(s.merchant.cart, c))) || (!!s.fugitive && same(s.fugitive, c));
   }
 
   // Tenere premuto è correre: ogni tre passi di fila il rumore sale di uno, fino a tre
@@ -1341,6 +1341,8 @@ const Gioco = (() => {
     if (t.locked) { openLock(n); return false; }
     if (t.secret) { crackWall(n); return false; }
     if (s.lady && same(s.lady, n)) { meetBride(); return false; }
+    if (s.priest && same(s.priest, n)) { log("Il prete sfoglia il messale: «Siamo qui riuniti… manca solo lo sposo.»"); return false; }
+    if (s.guests && s.guests.some((o) => same(o, n))) { log(pickRandom(["«Che bella sposa!»", "«Speriamo che lo sposo arrivi.»", "«Shh, sta per cominciare.»", "«Io porto il riso.»"])); return false; }
     const monster = s.bouncers && s.bouncers.find((o) => same(o, n));
     if (monster) { bitten(monster); return true; }
     const folk = s.npcs.find((o) => same(o, n));
@@ -1901,10 +1903,12 @@ const Gioco = (() => {
 
   function enterCastle() {
     const zone = s.zone;
-    const plan = Castello.generate(zone.seed);
-    if (!plan) return;
     const memory = trip.zones[zone.id];
     const cm = (memory.castle ||= { seen: [], taken: [], unlocked: false, cracked: false, married: false });
+    // dopo le nozze il castello è chiuso
+    if (cm.married) { log("Il portone è sbarrato. Sopra c'è un cartello: «Chiuso per nozze»."); return; }
+    const plan = Castello.generate(zone.seed);
+    if (!plan) return;
     trip.hp = s.player.hp;
     const map = plan.map.map((row) => row.slice());
     cm.lit ||= [];
@@ -1920,7 +1924,10 @@ const Gioco = (() => {
       bird: { x: -9, y: -9, info: null, present: false, observed: false, gone: false },
       beasts: [], pirates: [], npcs: [], item: null, merchant: null, fugitive: null, chest: null, tower: null, towerMet: false,
       fire: null, marsh: null, traps: new Set(), bottle: null, holes: new Set(), loot: null, cup: null,
-      treasures: plan.loot.filter((l) => !cm.taken.includes(key(l))),
+      // quello che hai preso si ricorda per cosa è (la chiave, le monete della prima stanza…), non per dov'era
+      treasures: plan.loot.map((l, i) => ({ ...l, id: `#${i}` })).filter((l) => !cm.taken.includes(l.id)),
+      priest: plan.priest,
+      guests: plan.guests,
       bouncers: plan.monsters.map((m) => ({ ...m })),
       lady: cm.married ? null : plan.lady,
       run: 0, ticks: 0, noise: 0, heard: [], lastAct: 0, lastMove: [0, 0], over: false,
@@ -1952,7 +1959,7 @@ const Gioco = (() => {
       rm.seen = true;
       s.cm.seen.push(i);
       for (const k of rm.keys) { const q = unkey(k); for (let y = q.y - 1; y <= q.y + 1; y++) for (let x = q.x - 1; x <= q.x + 1; x++) if (inside(x, y)) add({ x, y }); }
-      if (rm.kind === "throne") log("La sala del trono è addobbata a nozze: rose bianche, il tappeto rosso, le candele accese.");
+      if (rm.kind === "throne") log("La sala del trono è addobbata a nozze, come una chiesa: gli invitati ai lati, il tappeto rosso, il prete in fondo.");
     });
   }
 
@@ -1962,19 +1969,20 @@ const Gioco = (() => {
     const i = s.treasures.findIndex((l) => same(l, c));
     if (i < 0) return;
     const l = s.treasures.splice(i, 1)[0];
-    s.cm.taken.push(key(l));
+    s.cm.taken.push(l.id);
     Suoni.play("monete");
     if (l.kind === "coins") { earn("castello", l.amount); log(`Per terra, monete dimenticate: ${l.amount} m.o.`); }
-    else if (l.kind === "key") { trip.pack.push({ kind: "ottone" }); log("Una chiave d'ottone, grande, lavorata: nello zaino."); }
+    else if (l.kind === "key") { trip.pack.push({ kind: "ottone" }); log("La chiave della sala del trono, grande e lavorata: nello zaino."); }
     else { const kind = oggettoACaso(Math.random, true); trip.hold.push({ kind }); log(`${OGGETTI[kind].nome}: in stiva.`); }
   }
 
   function openLock(c) {
-    if (!hasPack("ottone")) { log("Una porta pesante, chiusa a chiave."); return; }
+    if (!hasPack("ottone")) { log("Una porta pesante, chiusa a chiave: la sala del trono."); return; }
     s.map[c.y][c.x] = "cfloor";
     s.cm.unlocked = true;
+    trip.pack.splice(trip.pack.findIndex((it) => it.kind === "ottone"), 1);   // la chiave resta nella porta
     Suoni.play("legno");
-    log("La chiave d'ottone gira. La porta si apre.");
+    log("La chiave gira e resta nella toppa. La porta della sala del trono si apre.");
     render();
   }
 
@@ -2018,7 +2026,7 @@ const Gioco = (() => {
 
   function meetBride() {
     s.over = true;
-    showOverlay("La dama del castello", "Accanto al trono, una dama in abito bianco col velo. Tutto è pronto per le nozze: mancava solo lo sposo. Ti guarda, sorride. «Volete sposarmi?»", [
+    showOverlay("La dama del castello", "Davanti al prete, una dama in abito bianco col velo. Gli invitati si girano tutti. Tutto è pronto per le nozze: mancava solo lo sposo. Ti guarda, sorride. «Volete sposarmi?»", [
       ["marry", "Sì, lo voglio"],
       ["leave-merchant", "No"],
     ]);
@@ -2557,6 +2565,8 @@ const Gioco = (() => {
     for (const o of s.npcs) { o.el = pawn(`e-folk e-${o.kind}`, o.kind); o.slideEnd = 0; place(o.el, o); }
     for (const o of s.bouncers || []) { o.el = pawn(`e-beast e-${o.kind}`, o.kind); o.slideEnd = 0; place(o.el, o); }
     if (s.lady) { el.ents.lady = pawn("e-bride", "woman"); place(el.ents.lady, s.lady); }
+    if (s.priest) { el.ents.priest = pawn("e-priest", "priest"); place(el.ents.priest, s.priest); }
+    for (const o of s.guests || []) { o.el = pawn(`e-guest is-${o.look}`, "person"); place(o.el, o); }
     fitMap();
     requestAnimationFrame(() => el.map.querySelectorAll(".entity").forEach((e) => e.classList.remove("no-slide")));
   }
@@ -2671,6 +2681,8 @@ const Gioco = (() => {
       o.el.hidden = unseen(o);
     }
     if (el.ents.lady) el.ents.lady.hidden = !s.lady || unseen(s.lady);
+    if (el.ents.priest) el.ents.priest.hidden = unseen(s.priest);
+    for (const o of s.guests || []) o.el.hidden = unseen(o);
     for (const o of s.pirates) {
       if (performance.now() >= o.slideEnd) place(o.el, o);
       const intent = o.mode === "sleep" ? "z" : o.mode === "hunt" ? "!" : null;

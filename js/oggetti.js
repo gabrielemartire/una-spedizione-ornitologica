@@ -35,7 +35,7 @@ const OGGETTI_SPECIALI = {
   // il marshmallow della radura del falò: si cuoce, si mangia
   marshmallow: { nome: "Marshmallow", icona: "marshmallow" },
   // il castello abbandonato: la chiave della sala del trono, e la fede delle nozze
-  ottone: { nome: "Chiave d'ottone", icona: "brasskey" },
+  ottone: { nome: "Chiave della sala del trono", icona: "brasskey" },
   fede: { nome: "Fede nuziale", icona: "ring" },
 };
 const OGGETTI_SPECIALI_IDS = ["lettera", "chiave", "uovo"];   // quelli che regala lo sconosciuto

@@ -323,9 +323,14 @@ Il ponte levatoio: ci vai contro e sei dentro; il tempo non passa né entrando n
 - **La pianta** (0.12.1): un **labirinto di cunicoli** larghi una casella (labirinto perfetto sulle caselle dispari, più il 10% di muri in meno per gli anelli), con le stanze incastonate (lati dispari) e **porte nel muro** (una o due per stanza). L'atrio in basso col portone.
 - **Il buio**: quello che non hai visto è nero, senza forme (anche passandoci col mouse dice solo *Buio*). Si accende quello che hai intorno, due caselle, non dietro i muri; entrando in una stanza si accende tutta, muri compresi. Resta acceso per tutto il viaggio.
 - **I mostri**: pipistrelli e fantasmi (rossi), uno o due in quattro o cinque stanze, mai nell'atrio. Vanno in diagonale e **rimbalzano sui muri della loro stanza** senza uscirne; i fantasmi a metà velocità. Toccarli costa un cuore.
-- **Le cose**: monete (4–9 m.o.) in due stanze, una cosa da vendere in una terza; la **chiave d'ottone** in una stanza qualunque apre la **porta chiusa** della sala del trono; un **muro che cede** (sembra un muro: ci vai contro e si apre) porta alla stanza del tesoro (20–25 m.o.). Quello che prendi resta preso per tutto il viaggio.
-- **La sala del trono**, in alto, addobbata a nozze: tappeto rosso, rose, il trono; accanto, **la dama in bianco**: «Volete sposarmi?»
-- **Sì**: auguri (riquadro), il buio, **la festa** (una scena in pixel art: la tavolata, gli invitati coi boccali, gli sposi, il suonatore di liuto e l'oste, i coriandoli; quattro battute con Invio; solo gente, niente creature del labirinto), il buio. Ti risvegli **all'alba** in un cespuglio accanto alla nave, con la **fede nuziale** nello zaino e il timbro dell'anello. La dama non è più nel castello. **No**: lei resta lì.
+- **Le cose**: monete (4–9 m.o.) in due stanze, una cosa da vendere in una terza; la **chiave della sala del trono** in una stanza qualunque apre la **porta chiusa** della sala (e resta nella toppa: esce dallo zaino); un **muro che cede** (sembra un muro: ci vai contro e si apre) porta alla stanza del tesoro (20–25 m.o.). Quello che prendi resta preso per tutto il viaggio: si ricorda per cosa è, non per dov'era.
+- **La sala del trono**, in alto, addobbata a nozze **come una chiesa** (0.12.2): in fondo il **prete**, davanti a lui **la dama in bianco**, la **navata** col tappeto rosso fino alla porta (in fondo, al centro), gli **invitati** ai due lati, rose agli angoli. Andando contro la dama: «Volete sposarmi?»
+  ```
+  |      A      |   A il prete
+  |      B      |   B la sposa
+  | inv  V  inv |   V il tappeto
+  ```
+- **Sì**: auguri (riquadro), il buio, **la festa** (una scena in pixel art: la tavolata, gli invitati coi boccali, gli sposi, il suonatore di liuto e l'oste, i coriandoli; quattro battute con Invio; solo gente, niente creature del labirinto), il buio. Ti risvegli **all'alba** in un cespuglio accanto alla nave, con la **fede nuziale** nello zaino e il timbro dell'anello. Da lì il castello è **chiuso per nozze** (il portone sbarrato, col cartello). **No**: lei resta lì.
 - **Poi** (da fare): in città una casa nuova, la tua.
 
 **I passaggi** hanno l'icona del cartello (non più del ponte, che si confondeva col ponte del castello) e non stanno mai sul lato del castello.

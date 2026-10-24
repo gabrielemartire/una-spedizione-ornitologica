@@ -936,3 +936,8 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 
 /* Il buio del castello: nero e basta, senza forme */
 .cell.t-dark { background: #050605; }
+
+/* La sala del trono come una chiesa: il prete in fondo, gli invitati ai lati della navata */
+.e-priest { color: #e8e0f0; filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 1px #000); }
+.e-guest { filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000); }
+.e-guest.is-0 { color: #d8a070; } .e-guest.is-1 { color: #8ab0e0; } .e-guest.is-2 { color: #a0d080; } .e-guest.is-3 { color: #e0a0c0; }

@@ -148,6 +148,7 @@ ICONS = {
     "bat": "delapouite/bat",
     "ghost": "lorc/ghost",
     "throne": "delapouite/throne-king",
+    "priest": "delapouite/monk-face",
     "rose": "lorc/rose",
     "ring": "delapouite/ring",
     "cheers": "delapouite/glass-celebration",

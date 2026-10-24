@@ -2,6 +2,13 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.2 · 24 ottobre 2026
+
+- **I tesori del castello non ricompaiono più.** Il gioco ricordava i tesori presi da dov'erano: cambiando la pianta del castello (nella 0.12.1) tornavano tutti. Ora si ricordano per quello che sono.
+- **Dopo le nozze il castello è chiuso**: il portone è sbarrato, con un cartello: *«Chiuso per nozze»*.
+- **La sala del trono è una chiesa**: in fondo il prete, davanti a lui la sposa, la navata col tappeto rosso fino alla porta, gli invitati ai due lati. La porta è in fondo alla navata.
+- **La chiave d'ottone** si chiama *chiave della sala del trono*, e quando apri la porta resta nella toppa: non è più nello zaino.
+
 ## 0.12.1 · 24 ottobre 2026
 
 - **Il castello è un labirinto.** Dentro, cunicoli larghi una casella che girano, si incrociano e finiscono in vicoli ciechi; le stanze sono incastonate nel labirinto e ci si entra da **porte nel muro**.
