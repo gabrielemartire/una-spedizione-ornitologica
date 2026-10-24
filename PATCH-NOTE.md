@@ -2,6 +2,11 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.7 · 24 ottobre 2026
+
+- **Gli animali non sanno dove sei** finché non ti vedono, sentono o fiutano. Prima, vagando, lupi e orso andavano comunque verso di te più di una volta su due. Ora ognuno ha **la sua tana**, dove compare, e ci gira intorno (entro sei caselle) da una meta all'altra; i lupi hanno la tana vicina e restano in branco. L'orso non fa più il giro intorno a te.
+- **Sul globo** non ci sono più i vulcani (si scoprono andandoci); c'è invece **il castello**, un torrione coi merli.
+
 ## 0.12.6 · 24 ottobre 2026
 
 - **I tasti sotto la mappa sono disegnati come tasti**: un riquadrino col nome del tasto, poi cosa fa (**[spazio]** osserva · **[Z]** attendi · **[X]** scava · **[Tab]** diario). Così anche in mare (**[← →]** rotta · **[↑ ↓]** vele · **[T]** binocolo · **[Invio]** sbarca · **[Tab]** diario) e in città.

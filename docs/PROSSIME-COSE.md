@@ -21,6 +21,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **La casa degli sposi**: dopo le nozze, in città una casa nuova da visitare, la tua (da sviluppare).
 
 ## Fatto di recente
+- [x] **Versione 0.12.7**: gli animali vagano intorno alla tana e non sanno dove sei; sul globo il castello, non più i vulcani.
 - [x] **Versione 0.12.6**: i tasti sotto la mappa disegnati come tasti.
 - [x] **Versione 0.12.5**: «spazio osserva» per esteso.
 - [x] **Versione 0.12.4**: si usa tutto dallo zaino (numero o clic); sotto la battlemap solo spazio osserva · Z attendi · X scava · Tab diario.

@@ -120,6 +120,8 @@ Così il ciclo tipico (sbarco, esplorazione, ripartenza) costa due terzi di gior
 
 **Il Kraken**: ogni volta che la nave va **al largo** (nessuna costa alla portata del binocolo) si tira 1 su 8; se esce, **3–7 secondi dopo** il mare intorno diventa nero d'inchiostro (macchia di 3,5° con sei tentacoli sul globo; dal ponte acqua nera e tentacoli). Dentro, al massimo una vela; uscendo passa un momento. Diario: *«Acqua nera a babordo. Nessuno vuole parlarne.»* Una volta per viaggio. Il timbro del Kraken per ora non si prende.
 
+**Sul globo** (0.12.7) si vedono le città e il castello (un torrione coi merli); i vulcani no, si scoprono andandoci.
+
 ## 7. Zone, biomi e caratteristiche
 
 Ogni zona ha **un bioma** e **0–3 caratteristiche**. Insieme formano i **tag** della zona.
@@ -239,6 +241,8 @@ Basta **un'azione di osservazione** dalla fascia tra i due anelli, con l'uccello
 Comportamenti possibili: *timido* (fuga ampia), *curioso* (si avvicina se stai fermo), *nomade* (cambia posatoio), *notturno*, *mattiniero*, *ghiotto* (attirato dai semi).
 
 ### 9.3 Creature
+**Vagando gli animali non sanno dove sei** (0.12.7): ognuno ha la sua tana (dove compare) e ci gira intorno, entro 6 caselle, da una meta a caso all'altra; ti vengono addosso solo se ti vedono, sentono o fiutano. I lupi hanno la tana vicina: restano in branco.
+
 **Tutti i nemici** (animali, ricercato, bucanieri) hanno **lo stesso rosso scuro** (`--enemy`), così si riconoscono a colpo d'occhio; li distingue l'icona.
 
 Ogni creatura mostra il suo stato (`!` ti insegue o carica, `?` ti cerca, `z` si riposa o è stordita) e la sua portata: non si viene mai colpiti a sorpresa.

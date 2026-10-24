@@ -413,15 +413,21 @@ const Globo = (() => {
       }
     }
 
-    // Il vulcano: un cono scuro con la bocca rossa, visibile da lontano
+    // Il castello: un torrione grigio coi merli e la porta, visibile da lontano (il vulcano invece no: si scopre)
     if (opts.markers) {
+      const CASTLE = ["#.#.#", "#####", "#####", "##.##"];
       for (const z of world.zones) {
-        if (!z.tags.has("vulcano")) continue;
+        if (!z.tags.has("castello")) continue;
         const s = project(z.lat, z.lon);
         if (!s) continue;
-        [[-1, 1], [0, 1], [1, 1], [-2, 2], [-1, 2], [0, 2], [1, 2], [2, 2], [0, 0]].forEach(([dx, dy]) => put(s.x + dx, s.y + dy, [46, 36, 34]));
-        put(s.x, s.y - 1, [240, 96, 40]);
-        put(s.x, s.y, [255, 150, 60]);
+        CASTLE.forEach((row, dy) => [...row].forEach((ch, dx) => {
+          const x = s.x + dx - 2, y = s.y + dy - 3;
+          if (ch === "#") put(x, y, dy === 0 ? [230, 224, 210] : [196, 190, 176]);
+          else if (dy === 3) put(x, y, [40, 30, 26]);
+        }));
+        // il bordo scuro, perché si stacchi dal verde
+        for (let dx = -3; dx <= 3; dx++) put(s.x + dx, s.y + 1, [40, 30, 26]);
+        for (let dy = -3; dy <= 0; dy++) { put(s.x - 3, s.y + dy, [40, 30, 26]); put(s.x + 3, s.y + dy, [40, 30, 26]); }
       }
     }
 

@@ -128,11 +128,11 @@ const Gioco = (() => {
   // Gli animali: l'orso di giorno, i lupi di notte, il cinghiale all'alba. L'orso colpisce forte (quattro
   // cuori) ma poi è sazio: dopo il fermo torna a vagare e ti riattacca solo se lo provochi da vicino.
   // L'orso è appena più veloce di te (in campo aperto ti prende in 6–7 passi) e ha il fiuto corto: rompendo la
-  // vista, nascondendoti o passando dall'acqua lo puoi seminare. Vagando ti
-  // gira intorno, ma ogni tanto se ne va di cinque o sei caselle (roam) e poi torna.
+  // vista, nascondendoti o passando dall'acqua lo puoi seminare. Finché non ti vede, sente o fiuta, vaga intorno
+  // alla sua tana (wanderGoal) e non sa dove sei.
   // speed = passi per ogni tuo passo (l'acqua ne costa 2); il cinghiale invece carica in linea retta
   const KINDS = {
-    bear: { name: "Orso", icon: "bear", speed: { hunt: 1.15, search: 1, wander: 0.5 }, sight: 9, nightSight: 6, smell: 3, roam: true, hearing: 2, damage: 8, rest: 3, sated: true, sound: "orso", step: "passoOrso",
+    bear: { name: "Orso", icon: "bear", speed: { hunt: 1.15, search: 1, wander: 0.5 }, sight: 9, nightSight: 6, smell: 3, hearing: 2, damage: 8, rest: 3, sated: true, sound: "orso", step: "passoOrso",
       verb: "L'orso ti raggiunge e ti colpisce!", death: "Sbranato", deathText: "L'orso ha avuto la meglio" },
     wolf: { name: "Lupo", icon: "wolf", speed: { hunt: 1, search: 1, wander: 0.5 }, sight: 8, nightSight: 8, smell: 5, hearing: 3, damage: 2, rest: 2, sound: "lupo", step: null,
       verb: "Un lupo ti azzanna!", death: "Azzannato", deathText: "Il branco ha avuto la meglio" },
@@ -666,7 +666,7 @@ const Gioco = (() => {
     const out = [];
     const add = (kind) => {
       const at = spots.shift();
-      if (at) out.push({ kind, ...at, mode: "wander", last: null, searchLeft: 0, rest: 0, energy: 0, next: null, dir: null, run: 0 });
+      if (at) out.push({ kind, ...at, home: { ...at }, mode: "wander", last: null, searchLeft: 0, rest: 0, energy: 0, next: null, dir: null, run: 0 });
     };
     if (time === "pomeriggio") add("bear");
     if (time === "notte") {
@@ -2237,14 +2237,13 @@ const Gioco = (() => {
     o.energy += k.speed[o.mode];
     const { prev } = beastPaths(o);
     let target = o.mode === "hunt" ? p : o.mode === "search" ? o.last : null;
-    // Vagando, tende comunque a fiutare la tua direzione
+    // Vagando non sa dove sei: gira intorno alla sua tana, da una meta all'altra
     if (!target) {
       const around = DIRS.map(([dx, dy]) => ({ x: o.x + dx, y: o.y + dy }))
         .filter((c) => inside(c.x, c.y) && beastCost(c) < Infinity && !same(c, p));
       // sazio e ancora vicino a te, se ne va dall'altra parte
       if (o.sated && dist(o, p) < 8) target = around.sort((a, b) => dist(b, p) - dist(a, p))[0];
-      else if (k.roam) target = roamTarget(o, p) || pickRandom(around);
-      else target = !o.sated && Math.random() < 0.6 ? p : pickRandom(around);
+      else target = wanderGoal(o);
     }
     const path = (target && pathFrom(prev, o, target)) || [];
 
@@ -2270,18 +2269,18 @@ const Gioco = (() => {
     o.next = o.mode === "wander" ? null : (pathFrom(beastPaths(o).prev, o, o.mode === "hunt" ? p : o.last) || [])[0] || null;
   }
 
-  // L'orso che vaga: per un po' ti si avvicina, poi sceglie un posto a cinque o sei caselle da te
-  // e ci va, poi torna ad avvicinarsi
-  function roamTarget(o, p) {
-    o.roamLeft = (o.roamLeft ?? 8 + Math.floor(Math.random() * 6)) - 1;
-    if (o.roamLeft <= 0) {
-      const far = s.free.filter((c) => { const d = dist(c, o); return d >= 5 && d <= 6.5 && dist(c, p) > dist(o, p); });
-      o.away = far.length ? pickRandom(far) : null;
-      o.roamLeft = 14 + Math.floor(Math.random() * 8);
+  // La meta di un animale che vaga: un posto a caso entro WANDER caselle dalla sua tana; arrivato (o se ci
+  // mette troppo), ne sceglie un'altra. I lupi del branco hanno la tana vicina: restano insieme
+  const WANDER = 6;
+  function wanderGoal(o) {
+    o.goalLeft = (o.goalLeft ?? 0) - 1;
+    if (!o.goal || same(o, o.goal) || o.goalLeft <= 0) {
+      const home = o.home || o;
+      const spots = s.free.filter((c) => dist(c, home) <= WANDER && !same(c, s.player));
+      o.goal = spots.length ? pickRandom(spots) : null;
+      o.goalLeft = 30;
     }
-    if (o.away && (same(o, o.away) || o.roamLeft < 6)) o.away = null;
-    if (o.away) return o.away;
-    return Math.random() < 0.6 ? p : null;
+    return o.goal;
   }
 
   // --- Il cinghiale: non sa curvare ---
