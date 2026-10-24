@@ -18,6 +18,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 
 ## In arrivo (chiesto il 23 ottobre)
 - [ ] **I timbri dei tarocchi e del Kraken**: l'Appeso, la Morte, il Sole, la Luna, il Kraken sono nel taccuino ma non si prendono ancora.
+- [ ] **Il circo**: un circo itinerante da qualche parte nell'arcipelago (tendone, giocolieri, acrobati, animali), con le icone della categoria *circus* di game-icons (https://game-icons.net/tags/circus.html). Da pensare insieme: dove compare, cosa ci si fa.
 - [ ] **La protesta in piazza**: una missione secondaria che parte dai quattro che protestano al Forte (da pensare).
 - [ ] **La casa degli sposi**: dopo le nozze, in città una casa nuova da visitare, la tua (da sviluppare).
 
