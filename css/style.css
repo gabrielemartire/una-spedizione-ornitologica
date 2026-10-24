@@ -933,3 +933,6 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .scene.is-party canvas { display: block; }
 .scene p { margin: 0; color: var(--paper); font-size: 24px; max-width: 680px; }
 .scene small { color: var(--mid); font-size: 16px; }
+
+/* Il buio del castello: nero e basta, senza forme */
+.cell.t-dark { background: #050605; }

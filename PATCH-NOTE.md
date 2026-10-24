@@ -2,6 +2,12 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.1 · 24 ottobre 2026
+
+- **Il castello è un labirinto.** Dentro, cunicoli larghi una casella che girano, si incrociano e finiscono in vicoli ciechi; le stanze sono incastonate nel labirinto e ci si entra da **porte nel muro**.
+- **Il buio**: tutto quello che non hai ancora visto è nero, senza forme. Camminando si accende quello che hai intorno (due caselle, ma non dietro i muri): il cunicolo, i muri, le porte. Entrando da una porta si accende tutta la stanza. Quello che hai visto resta acceso, anche tornandoci.
+- **Alla festa delle nozze c'è gente**: l'unicorno e il mostro del labirinto restano nel loro labirinto. Ci sono un suonatore di liuto e l'oste con la brocca, e lo zio della sposa racconta sempre la stessa storia.
+
 ## 0.12 · 24 ottobre 2026
 
 - **Il labirinto di siepi.** In un'isola, una zona di foresta è tutta un labirinto: la cartolina lo mostra dall'alto, col centro che brilla. Dentro, corridoi tra siepi alte, **trappole tra le foglie** (si vedono appena: un cuore ciascuna) e nessun animale. Ci girano **un unicorno** e **un mostro con le corna**, gentilissimi e garbati: ti salutano, e se ci vai contro si scansano scambiandosi di posto con te. Al centro, nello slargo, c'è l'uccello della zona e la **Coppa dei Tre Maghi**, che al mercato vale 11 m.o. Ma attento: **uscire dal labirinto costa un giorno intero**.

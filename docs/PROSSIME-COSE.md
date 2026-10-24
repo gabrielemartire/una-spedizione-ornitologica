@@ -21,6 +21,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **La casa degli sposi**: dopo le nozze, in città una casa nuova da visitare, la tua (da sviluppare).
 
 ## Fatto di recente
+- [x] **Versione 0.12.1**: il castello è un labirinto di cunicoli con porte nel muro, tutto buio finché non ci passi; alla festa solo gente.
 - [x] **Versione 0.12**: il labirinto di siepi (unicorno, mostro gentile, trappole, Coppa dei Tre Maghi, un giorno per uscirne); il castello abbandonato (stanze buie, mostri che rimbalzano, chiave, muro che cede, la dama e le nozze); timbro dell'anello; i passaggi col cartello.
 - [x] **Versione 0.11.7**: la bussola in pixel art sul diario, l'ago verso la città più vicina.
 - [x] **Versione 0.11.6**: nel diario *sembra un cinguettio* invece di *c'era un uccello*.

@@ -119,6 +119,7 @@ const Gioco = (() => {
     rfloor: { name: "Pavimento",        ch: "·",            cls: "t-cfloor", walk: true,  sight: true, noise: 1, sound: "passoErba" },
     carpet: { name: "Tappeto rosso",    cls: "t-carpet", walk: true,  sight: true, noise: 0, sound: "passoErba" },
     ldoor:  { name: "Porta chiusa a chiave", icon: "lockeddoor", cls: "t-door", walk: false, sight: false, locked: true },
+    door:   { name: "Porta",            icon: "door",       cls: "t-door",   walk: true,  sight: false, noise: 1, sound: "macerie" },
     exit:   { name: "Il portone",       icon: "drawbridge", cls: "t-door",   walk: true,  sight: true, noise: 0, exit: true },
     throne: { name: "Il trono",         icon: "throne",     cls: "t-throne", walk: false, sight: true },
     rose:   { name: "Rose bianche",     icon: "rose",       cls: "t-rose",   walk: false, sight: true },
@@ -1906,13 +1907,15 @@ const Gioco = (() => {
     const cm = (memory.castle ||= { seen: [], taken: [], unlocked: false, cracked: false, married: false });
     trip.hp = s.player.hp;
     const map = plan.map.map((row) => row.slice());
+    cm.lit ||= [];
     if (cm.unlocked) map[plan.lock.y][plan.lock.x] = "cfloor";
     if (cm.cracked) map[plan.crack.y][plan.crack.x] = "cfloor";
     const outside = { zone, at: s.gateAt };
     s = {
       zone, seed: zone.seed, tags: zone.tags, time: s.time, map, free: [], ruin: null,
       castle: plan, cm, outside,
-      rooms: plan.rooms.map((rm, i) => ({ ...rm, seen: rm.kind === "hall" || cm.seen.includes(i) })),
+      rooms: plan.rooms.map((rm, i) => ({ ...rm, seen: cm.seen.includes(i) })),
+      lit: new Set(cm.lit),
       startPos: plan.start, player: { ...plan.start, hp: trip.hp }, passes: [],
       bird: { x: -9, y: -9, info: null, present: false, observed: false, gone: false },
       beasts: [], pirates: [], npcs: [], item: null, merchant: null, fugitive: null, chest: null, tower: null, towerMet: false,
@@ -1923,6 +1926,7 @@ const Gioco = (() => {
       run: 0, ticks: 0, noise: 0, heard: [], lastAct: 0, lastMove: [0, 0], over: false,
     };
     Suoni.play("legno");
+    castleStep(s.player);
     buildDom();
     render();
     log("Il ponte levatoio cigola: sei dentro il castello. Fa freddo, e c'è odore di cera.");
@@ -1935,14 +1939,26 @@ const Gioco = (() => {
     log("Fuori dal castello, di nuovo all'aria aperta.");
   }
 
-  // Ogni passo dentro: la stanza in cui entri si scopre, e quello che c'è per terra si raccoglie
-  function castleStep(c) {
+  // Il buio del castello: si accende quello che hai intorno (due caselle, non dietro i muri), e tutta la stanza
+  // quando ci entri, muri compresi. Quello che hai visto resta acceso
+  const LIGHT = 2;
+  function light(c) {
+    const add = (q) => { if (!s.lit.has(key(q))) { s.lit.add(key(q)); s.cm.lit.push(key(q)); } };
+    for (let y = c.y - LIGHT; y <= c.y + LIGHT; y++) for (let x = c.x - LIGHT; x <= c.x + LIGHT; x++) {
+      if (inside(x, y) && los(s.map, c, { x, y })) add({ x, y });
+    }
     s.rooms.forEach((rm, i) => {
       if (rm.seen || !rm.keys.has(key(c))) return;
       rm.seen = true;
       s.cm.seen.push(i);
+      for (const k of rm.keys) { const q = unkey(k); for (let y = q.y - 1; y <= q.y + 1; y++) for (let x = q.x - 1; x <= q.x + 1; x++) if (inside(x, y)) add({ x, y }); }
       if (rm.kind === "throne") log("La sala del trono è addobbata a nozze: rose bianche, il tappeto rosso, le candele accese.");
     });
+  }
+
+  // Ogni passo dentro: si accende il buio intorno, e quello che c'è per terra si raccoglie
+  function castleStep(c) {
+    light(c);
     const i = s.treasures.findIndex((l) => same(l, c));
     if (i < 0) return;
     const l = s.treasures.splice(i, 1)[0];
@@ -2013,7 +2029,7 @@ const Gioco = (() => {
     ["dark", "Le campane del castello suonano a festa."],
     ["party", "«Viva gli sposi!» Cin cin!"],
     ["party", "Birra per la ciurma, vino per gli invitati, grog per chi ha perso una scommessa."],
-    ["party", "Il mostro del labirinto balla sulla tavola, garbatissimo. L'unicorno fa un brindisi in rima."],
+    ["party", "Lo zio della sposa racconta la stessa storia per la terza volta. Il suonatore di liuto conosce solo due canzoni."],
     ["party", "Qualcuno canta. Poi cantano tutti. Poi qualcuno cade sotto la tavola."],
     ["dark", "…"],
   ];
@@ -2572,6 +2588,7 @@ const Gioco = (() => {
     const roofed = s.ruin && !insideRuin() && s.ruin.interior.has(key(c));
     const t = tile(s.map, c.x, c.y);
     if (roofed) { el.tileInfo.textContent = "Rovine · il tetto nasconde l'interno"; return; }
+    if (s.lit && !s.lit.has(key(c))) { el.tileInfo.textContent = "Buio"; return; }
     const parts = [t.name];
     if (t === TILES.ship) parts.push("torni a bordo");
     else if (t.pass) { const ps = s.passes.find((q) => same(q, c)); if (ps) parts[0] = `Passaggio verso ${trip.world.zones[ps.to].name}`; parts.push("un momento a piedi"); }
@@ -2590,8 +2607,9 @@ const Gioco = (() => {
       for (const [k, v] of reachOf(o)) if (v > 0) { reach.set(k, true); if (hunting) danger.add(k); }
       if (o.next) next.add(key(o.next));
     }
-    const roofed = s.rooms ? new Set(s.rooms.filter((rm) => !rm.seen).flatMap((rm) => [...rm.keys]))
-      : s.ruin && !insideRuin() ? s.ruin.interior : new Set(); // il tetto si apre solo se entri
+    // nel castello è buio dove non sei ancora passato; nelle rovine il tetto si apre solo se entri
+    const dark = !!s.lit;
+    const roofed = dark ? null : s.ruin && !insideRuin() ? s.ruin.interior : new Set();
 
     const look = BIOMI[biomeOf(s.tags)].mappa;
     const roofCenter = s.ruin ? [...s.ruin.interior][Math.floor(s.ruin.interior.size / 2)] : null;
@@ -2609,18 +2627,22 @@ const Gioco = (() => {
         let cls = `cell ${t.cls} ${t.walk ? "walk" : "block"}`;
         if (t === TILES.sea) cls += ` wave${(x * 2 + y * 3) % 5}`;
 
-        if (roofed.has(k)) {
+        if (dark && !s.lit.has(k)) {
+          icon = null;
+          ch = "";
+          cls = "cell t-dark block";
+        } else if (!dark && roofed.has(k)) {
           icon = k === roofCenter ? "ruins" : null;
           ch = "";
           cls = "cell t-roof block";
         } else if (band.has(k)) cls += " band";
         if (reach.has(k)) cls += danger.has(k) ? " danger" : " reach";
-        if (s.item && s.item.x === x && s.item.y === y && !roofed.has(k)) { icon = OGGETTI[s.item.kind].icona; cls += " item"; }
+        if (s.item && s.item.x === x && s.item.y === y && !(roofed && roofed.has(k))) { icon = OGGETTI[s.item.kind].icona; cls += " item"; }
         if (s.chest && s.chest.x === x && s.chest.y === y) { icon = "chest"; cls += " chest"; }
         if (s.marsh && s.marsh.x === x && s.marsh.y === y) { icon = "marshmallow"; cls += " marsh"; }
         if (s.loot && s.loot.x === x && s.loot.y === y) { icon = "coins"; cls += " item"; }
         if (s.cup && s.cup.x === x && s.cup.y === y) { icon = "cup"; cls += " item"; }
-        if (s.treasures && !roofed.has(k)) { const l = s.treasures.find((q) => q.x === x && q.y === y); if (l) { icon = l.kind === "key" ? "brasskey" : l.kind === "coins" ? "coins" : "chalice"; cls += " item"; } }
+        if (s.treasures && s.lit && s.lit.has(k)) { const l = s.treasures.find((q) => q.x === x && q.y === y); if (l) { icon = l.kind === "key" ? "brasskey" : l.kind === "coins" ? "coins" : "chalice"; cls += " item"; } }
         if (s.bottle && s.bottle.x === x && s.bottle.y === y) { icon = "bottle"; cls += " bottle"; }
         if (s.holes.has(k) && t.walk) { icon = "hole"; cls += " hole"; }
         if (s.traps.has(k)) { icon = "trap"; cls += " trap"; }
@@ -2643,11 +2665,12 @@ const Gioco = (() => {
       if (intent) o.el.dataset.intent = intent;
       else delete o.el.dataset.intent;
     }
+    const unseen = (c) => (dark ? !s.lit.has(key(c)) : roofed.has(key(c)));
     for (const o of [...s.npcs, ...(s.bouncers || [])]) {
       if (performance.now() >= o.slideEnd) place(o.el, o);
-      o.el.hidden = roofed.has(key(o));
+      o.el.hidden = unseen(o);
     }
-    if (el.ents.lady) el.ents.lady.hidden = !s.lady || roofed.has(key(s.lady));
+    if (el.ents.lady) el.ents.lady.hidden = !s.lady || unseen(s.lady);
     for (const o of s.pirates) {
       if (performance.now() >= o.slideEnd) place(o.el, o);
       const intent = o.mode === "sleep" ? "z" : o.mode === "hunt" ? "!" : null;
@@ -2659,7 +2682,7 @@ const Gioco = (() => {
       if (performance.now() >= f.slideEnd) place(f.el, f);
       if (f.mode === "flee") f.el.dataset.intent = "!";
     }
-    el.ents.bird.hidden = !b.present || b.gone || roofed.has(key(b));
+    el.ents.bird.hidden = !b.present || b.gone || unseen(b);
     el.ents.bird.classList.toggle("is-observed", b.observed);
     place(el.ents.bird, b);
 

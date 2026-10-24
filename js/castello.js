@@ -1,5 +1,5 @@
-// Il castello abbandonato: dentro, una battlemap a parte. Stanze sparse nella pietra, legate da corridoi
-// con qualche vicolo cieco; le stanze sono buie finché non ci entri. In alcune stanze mostri (pipistrelli e
+// Il castello abbandonato: dentro, una battlemap a parte. Un labirinto di cunicoli nella pietra, con stanze
+// incastonate e porte nel muro; è tutto buio finché non ci passi. In alcune stanze mostri (pipistrelli e
 // fantasmi) che rimbalzano da un muro all'altro senza uscire mai; qua e là monete e cose da vendere; una
 // chiave d'ottone apre la sala del trono, e un muro che cede nasconde la stanza del tesoro. Nella sala del
 // trono, addobbata a nozze, una dama aspetta lo sposo. Qui anche la festa delle nozze, in pixel art.
@@ -31,137 +31,140 @@ const Castello = (() => {
     return null;
   }
 
+  // La pianta: le stanze incastonate in un labirinto di cunicoli larghi una casella (caselle dispari), con
+  // anelli e vicoli ciechi; nelle stanze si entra da porte nel muro. La sala del trono ha una porta chiusa a
+  // chiave, la stanza del tesoro un muro che cede
   function tryGenerate(r) {
     const map = Array.from({ length: H }, () => Array(W).fill("cwall"));
     const pick = (arr) => arr[Math.floor(r() * arr.length)];
-    // le stanze: rettangoli di pavimento con almeno un muro intorno e fra l'una e l'altra
+    const odd = (n) => n % 2 === 1;
+    // le stanze: interni con lati dispari che partono da caselle dispari, così i muri cadono sulla griglia del labirinto
     const rooms = [];
     const room = (x, y, w, h, kind) => {
       const cells = [];
       for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) cells.push({ x: xx, y: yy });
-      const rm = { x, y, w, h, kind, cells, keys: new Set(cells.map(key)), cx: Math.floor(x + w / 2), cy: Math.floor(y + h / 2) };
+      const rm = { x, y, w, h, kind, cells, keys: new Set(cells.map(key)), cx: x + (w - 1) / 2, cy: y + (h - 1) / 2 };
       rooms.push(rm);
       return rm;
     };
-    const free = (x, y, w, h) => x >= 1 && y >= 1 && x + w <= W - 1 && y + h <= H - 1
+    const fits = (x, y, w, h) => x >= 1 && y >= 1 && x + w <= W - 1 && y + h <= H - 1
       && rooms.every((o) => x + w + 1 < o.x || o.x + o.w + 1 < x || y + h + 1 < o.y || o.y + o.h + 1 < y);
-    // l'atrio, in basso al centro, con la porta per uscire
-    const hall = room(16, 18, 7, 4, "hall");
+    const place = (w, h, kind, where = () => [1 + 2 * Math.floor(r() * ((W - w - 1) / 2)), 1 + 2 * Math.floor(r() * ((H - h - 1) / 2))]) => {
+      for (let i = 0; i < 300; i++) { const [x, y] = where(); if (odd(x) && odd(y) && fits(x, y, w, h)) return room(x, y, w, h, kind); }
+      return null;
+    };
+    // l'atrio in basso al centro, col portone; la sala del trono in alto; la stanza del tesoro piccola, ovunque
+    const hall = room(17, 19, 5, 3, "hall");
     const exit = { x: 19, y: H - 1 };
-    // la sala del trono, grande, il più lontano possibile dall'atrio: in alto, a un lato
-    const tw = 10, th = 6, tx = r() < 0.5 ? 2 + Math.floor(r() * 4) : W - tw - 2 - Math.floor(r() * 4);
-    const throne = room(tx, 1, tw, th, "throne");
-    // la stanza del tesoro, piccola, nascosta dietro un muro che cede
-    let secret = null;
-    for (let i = 0; i < 200 && !secret; i++) {
-      const w = 4, h = 3, x = 1 + Math.floor(r() * (W - w - 2)), y = 1 + Math.floor(r() * (H - h - 2));
-      if (free(x, y, w, h)) secret = room(x, y, w, h, "secret");
-    }
-    if (!secret) return null;
-    for (let i = 0; i < 600 && rooms.length < 12; i++) {
-      const w = 4 + Math.floor(r() * 5), h = 3 + Math.floor(r() * 3);
-      const x = 1 + Math.floor(r() * (W - w - 2)), y = 1 + Math.floor(r() * (H - h - 2));
-      if (free(x, y, w, h)) room(x, y, w, h, "room");
-    }
+    const throne = place(9, 5, "throne", () => [r() < 0.5 ? 1 + 2 * Math.floor(r() * 3) : W - 10 - 2 * Math.floor(r() * 3), 1]);
+    const secret = place(3, 3, "secret");
+    if (!throne || !secret) return null;
+    for (let i = 0; i < 9; i++) place(pick([3, 5, 5, 7]), pick([3, 3, 5]), "room");
     const normal = rooms.filter((rm) => rm.kind === "room" || rm.kind === "hall");
-    if (normal.length < 7) return null;
+    if (normal.length < 6) return null;
     for (const rm of rooms) for (const c of rm.cells) map[c.y][c.x] = rm.kind === "throne" ? "carpet" : "rfloor";
+    // il labirinto: su tutte le caselle dispari fuori dalle stanze e dai loro muri
+    const blocked = new Set();
+    for (const rm of rooms) for (let y = rm.y - 1; y <= rm.y + rm.h; y++) for (let x = rm.x - 1; x <= rm.x + rm.w; x++) blocked.add(`${x},${y}`);
+    const nodes = [];
+    for (let y = 1; y < H - 1; y += 2) for (let x = 1; x < W - 1; x += 2) if (!blocked.has(`${x},${y}`)) nodes.push({ x, y });
+    const seen = new Set();
+    for (const startNode of nodes.slice().sort(() => r() - 0.5)) {
+      if (seen.has(key(startNode))) continue;
+      const stack = [startNode];
+      seen.add(key(startNode));
+      map[startNode.y][startNode.x] = "cfloor";
+      while (stack.length) {
+        const c = stack[stack.length - 1];
+        const next = DIRS.map(([dx, dy]) => ({ x: c.x + 2 * dx, y: c.y + 2 * dy, wx: c.x + dx, wy: c.y + dy }))
+          .filter((n) => n.x >= 1 && n.y >= 1 && n.x < W - 1 && n.y < H - 1 && !blocked.has(key(n)) && !seen.has(key(n)));
+        if (!next.length) { stack.pop(); continue; }
+        const n = pick(next);
+        map[n.wy][n.wx] = "cfloor";
+        map[n.y][n.x] = "cfloor";
+        seen.add(key(n));
+        stack.push({ x: n.x, y: n.y });
+      }
+    }
+    // anelli: qualche muro in meno tra due cunicoli
+    for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+      if (map[y][x] !== "cwall" || blocked.has(`${x},${y}`) || r() > 0.1) continue;
+      const h = map[y][x - 1] === "cfloor" && map[y][x + 1] === "cfloor", v = map[y - 1]?.[x] === "cfloor" && map[y + 1]?.[x] === "cfloor";
+      if (h !== v) map[y][x] = "cfloor";
+    }
+    // le porte: caselle del muro di una stanza che danno su un cunicolo
+    const doorsOf = (rm) => {
+      const out = [];
+      for (const c of rm.cells) for (const [dx, dy] of DIRS) {
+        const d = { x: c.x + dx, y: c.y + dy }, o = { x: c.x + 2 * dx, y: c.y + 2 * dy };
+        if (!rm.keys.has(key(d)) && map[o.y]?.[o.x] === "cfloor" && map[d.y][d.x] === "cwall") out.push({ ...d, out: o });
+      }
+      return out.sort(() => r() - 0.5);
+    };
+    const doors = {};
+    for (const rm of rooms) {
+      if (rm.kind === "hall") continue;
+      const cand = doorsOf(rm);
+      if (!cand.length) return null;
+      const n = rm.kind === "room" ? 1 + (r() < 0.5 ? 1 : 0) : 1;
+      doors[rooms.indexOf(rm)] = cand.slice(0, n);
+      for (const d of cand.slice(0, n)) map[d.y][d.x] = rm.kind === "throne" ? "ldoor" : rm.kind === "secret" ? "swall" : "door";
+    }
+    // l'atrio: il portone sotto, e un'apertura verso i cunicoli sopra
     map[exit.y][exit.x] = "exit";
-    map[exit.y - 1][exit.x] = "cfloor";
+    map[exit.y - 1][exit.x] = "rfloor";
+    for (const d of doorsOf(hall).filter((d) => d.y < hall.y).slice(0, 2)) map[d.y][d.x] = "door";
+    if (!doorsOf(hall).length && ![...hall.cells].some((c) => map[c.y - 1]?.[c.x] === "door")) return null;
 
-    // i corridoi: la via più corta nella pietra, senza toccare la sala del trono e la stanza del tesoro
-    const ring = (rm) => { const s = new Set(); for (let y = rm.y - 1; y <= rm.y + rm.h; y++) for (let x = rm.x - 1; x <= rm.x + rm.w; x++) s.add(`${x},${y}`); return s; };
-    const closed = new Set([...ring(throne), ...ring(secret)]);
-    const dig = (from, to, allowed) => {
-      const prev = new Map([[key(from), null]]);
-      const queue = [from];
-      while (queue.length) {
-        const c = queue.shift();
-        if (c.x === to.x && c.y === to.y) break;
-        for (const [dx, dy] of DIRS.slice().sort(() => r() - 0.5)) {
+    // tutto deve essere raggiungibile dall'atrio senza passare dalla porta chiusa né dal muro che cede
+    const start = { x: exit.x, y: exit.y - 1 };
+    const reach = (pass) => {
+      const seenR = new Set([key(start)]);
+      const q = [start];
+      while (q.length) {
+        const c = q.shift();
+        for (const [dx, dy] of DIRS) {
           const n = { x: c.x + dx, y: c.y + dy };
-          if (n.x < 1 || n.y < 1 || n.x > W - 2 || n.y > H - 2 || prev.has(key(n)) || !allowed(n)) continue;
-          prev.set(key(n), c);
-          queue.push(n);
+          if (!inside(n.x, n.y) || seenR.has(key(n)) || !pass(map[n.y][n.x])) continue;
+          seenR.add(key(n));
+          q.push(n);
         }
       }
-      if (!prev.has(key(to))) return null;
-      const path = [];
-      for (let c = to; c; c = prev.get(key(c))) path.unshift(c);
-      return path;
+      return seenR;
     };
-    // un albero di corridoi fra le stanze normali, dall'atrio verso le più vicine, più un paio di anelli
-    const linked = [hall];
-    const rest = normal.filter((rm) => rm !== hall);
-    while (rest.length) {
-      let best = null;
-      for (const a of linked) for (const b of rest) {
-        const d = Math.abs(a.cx - b.cx) + Math.abs(a.cy - b.cy);
-        if (!best || d < best.d) best = { a, b, d };
-      }
-      const path = dig({ x: best.a.cx, y: best.a.cy }, { x: best.b.cx, y: best.b.cy }, (n) => !closed.has(key(n)));
-      if (!path) return null;
-      for (const c of path) if (map[c.y][c.x] === "cwall") map[c.y][c.x] = "cfloor";
-      linked.push(best.b);
-      rest.splice(rest.indexOf(best.b), 1);
+    const walk = ["cfloor", "rfloor", "door", "carpet", "exit"];
+    // se un pezzo di labirinto è isolato, si apre un muro verso il resto, finché non è tutto unito
+    for (let guard = 0; guard < 200; guard++) {
+      const got = reach((t) => walk.includes(t));
+      const lost = [];
+      for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) if (map[y][x] === "cfloor" && !got.has(`${x},${y}`)) lost.push({ x, y });
+      if (!lost.length) break;
+      const bridge = lost.flatMap((c) => DIRS.map(([dx, dy]) => ({ w: { x: c.x + dx, y: c.y + dy }, o: { x: c.x + 2 * dx, y: c.y + 2 * dy } })))
+        .find(({ w, o }) => inside(o.x, o.y) && map[w.y][w.x] === "cwall" && !blocked.has(key(w)) && got.has(key(o)));
+      if (!bridge) return null;
+      map[bridge.w.y][bridge.w.x] = "cfloor";
     }
-    for (let i = 0; i < 2; i++) {
-      const a = pick(normal), b = pick(normal);
-      const path = a !== b && dig({ x: a.cx, y: a.cy }, { x: b.cx, y: b.cy }, (n) => !closed.has(key(n)));
-      if (path) for (const c of path) if (map[c.y][c.x] === "cwall") map[c.y][c.x] = "cfloor";
-    }
-    // i vicoli ciechi: un po' di labirinto
-    const corridor = () => { const cs = []; for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) if (map[y][x] === "cfloor") cs.push({ x, y }); return cs; };
-    for (let i = 0; i < 7; i++) {
-      let c = pick(corridor());
-      const [dx, dy] = pick(DIRS);
-      for (let k = 0, len = 3 + Math.floor(r() * 6); k < len; k++) {
-        const n = { x: c.x + dx, y: c.y + dy };
-        if (n.x < 1 || n.y < 1 || n.x > W - 2 || n.y > H - 2 || map[n.y][n.x] !== "cwall" || closed.has(key(n))) break;
-        // un vicolo non deve aprire un'altra stanza o toccare un altro corridoio di fianco
-        if (DIRS.some(([ax, ay]) => (ax !== -dx || ay !== -dy) && inside(n.x + ax, n.y + ay) && map[n.y + ay][n.x + ax] !== "cwall")) break;
-        map[n.y][n.x] = "cfloor";
-        c = n;
-      }
-    }
-    // la sala del trono: un corridoio dalla stanza più vicina, chiuso da una porta a chiave
-    const toDoor = (target, tile) => {
-      const near = normal.slice().sort((a, b) => (Math.abs(a.cx - target.cx) + Math.abs(a.cy - target.cy)) - (Math.abs(b.cx - target.cx) + Math.abs(b.cy - target.cy)))[0];
-      const mine = ring(target);
-      const others = new Set([...closed].filter((k) => !mine.has(k)));
-      const path = dig({ x: near.cx, y: near.cy }, { x: target.cx, y: target.cy }, (n) => !others.has(key(n)));
-      if (!path) return null;
-      const door = path.find((c) => mine.has(key(c)) && !target.keys.has(key(c)));
-      for (const c of path) if (map[c.y][c.x] === "cwall" && !mine.has(key(c))) map[c.y][c.x] = "cfloor";
-      map[door.y][door.x] = tile;
-      return door;
-    };
-    const lock = toDoor(throne, "ldoor");
-    const crack = toDoor(secret, "swall");
-    if (!lock || !crack) return null;
+    const open = reach((t) => walk.includes(t));
+    const lockDoor = doors[rooms.indexOf(throne)][0], crackDoor = doors[rooms.indexOf(secret)][0];
+    if (!open.has(key(lockDoor.out)) || !open.has(key(crackDoor.out))) return null;
 
-    // la sala del trono addobbata a nozze: il tappeto rosso, le rose lungo i muri, il trono in fondo, lei accanto
-    const seat = { x: throne.cx, y: throne.y };
+    // la sala del trono addobbata a nozze: il trono in fondo, le rose lungo i muri, lei accanto al trono
+    const seat = { x: Math.floor(throne.cx), y: throne.y };
     map[seat.y][seat.x] = "throne";
     const lady = { x: seat.x + 1, y: seat.y };
     for (const c of throne.cells) {
       const edge = c.x === throne.x || c.x === throne.x + throne.w - 1 || c.y === throne.y + throne.h - 1;
-      if (edge && (c.x + c.y) % 2 === 0 && Math.abs(c.x - lock.x) + Math.abs(c.y - lock.y) > 2) map[c.y][c.x] = "rose";
+      if (edge && (c.x + c.y) % 2 === 0 && Math.abs(c.x - lockDoor.x) + Math.abs(c.y - lockDoor.y) > 2) map[c.y][c.x] = "rose";
     }
-    for (let y = seat.y + 1; y < throne.y + throne.h; y++) if (map[y][seat.x] === "carpet") map[y][seat.x] = "carpet";
 
-    // dentro le stanze: mostri, monete, una cosa da vendere, la chiave; il tesoro dietro il muro che cede
+    // dentro le stanze: la chiave, le monete, una cosa da vendere, i mostri; il tesoro dietro il muro che cede
     const spots = (rm) => rm.cells.filter((c) => map[c.y][c.x] === "rfloor").sort(() => r() - 0.5);
-    const loot = [];
-    const monsters = [];
-    const plain = normal.filter((rm) => rm !== hall).sort(() => r() - 0.5);
-    const keyRoom = plain[0];
-    const brass = spots(keyRoom)[0];
-    loot.push({ ...brass, kind: "key" });
+    const plain = rooms.filter((rm) => rm.kind === "room" && open.has(key(rm.cells[0]))).sort(() => r() - 0.5);
+    if (plain.length < 4) return null;
+    const loot = [{ ...spots(plain[0])[0], kind: "key" }];
     plain.slice(1, 4).forEach((rm, i) => { const c = spots(rm)[0]; loot.push(i === 2 ? { ...c, kind: "relic" } : { ...c, kind: "coins", amount: 4 + Math.floor(r() * 6) }); });
-    const treasure = spots(secret)[0];
-    loot.push({ ...treasure, kind: "coins", amount: 20 + Math.floor(r() * 6) });
-    // i mostri: in quattro stanze, mai nell'atrio; uno o due, in diagonale
+    loot.push({ ...spots(secret)[0], kind: "coins", amount: 20 + Math.floor(r() * 6) });
+    const monsters = [];
     plain.slice(0, 5).forEach((rm, i) => {
       if (i === 0 && r() < 0.5) return;
       const n = rm.w * rm.h > 20 ? 2 : 1;
@@ -170,7 +173,7 @@ const Castello = (() => {
       }
     });
     return {
-      map, exit, start: { x: exit.x, y: exit.y - 1 }, lady, seat, lock, crack, loot, monsters,
+      map, exit, start, lady, seat, lock: lockDoor, crack: crackDoor, loot, monsters,
       rooms: rooms.map((rm) => ({ kind: rm.kind, keys: rm.keys })),
     };
   }
@@ -205,10 +208,9 @@ const Castello = (() => {
       if (i % 3 === 0) rect(x, 38 + sway, 7, 2, "#2a1a10");
       if ((i + beat) % 3 === 0) { rect(x + 6, 36 + sway, 2, 4, "#f2c230"); px(x + 6, 35 + sway, "#fff6d0"); }   // il boccale alzato: cin cin!
     }
-    // in fondo alla tavola, gli invitati del labirinto: l'unicorno (col corno d'oro) e il mostro gentile (con le corna)
-    rect(2, 44, 9, 12, "#f4f0ff"); rect(3, 37, 7, 7, "#f4f0ff"); rect(9, 33, 1, 4, "#f2c230"); rect(3, 37, 2, 6, "#c8a0f0");
-    rect(148, 42, 10, 14, "#8a5a3a"); rect(149, 35, 8, 7, "#8a5a3a"); px(148, 34, "#e8e0c8"); px(147, 33, "#e8e0c8"); px(157, 34, "#e8e0c8"); px(158, 33, "#e8e0c8");
-    rect(150, 38, 1, 1, "#000"); rect(155, 38, 1, 1, "#000");
+    // in piedi ai lati, chi non ha trovato posto: un suonatore di liuto, l'oste con la brocca
+    rect(1, 44, 7, 14, "#6a3a8a"); rect(2, 38, 5, 5, "#f0c8a0"); rect(6, 46, 4, 3, "#c8a050"); px(9, 44, "#c8a050");
+    rect(151, 44, 8, 14, "#e8e0d0"); rect(152, 38, 6, 5, "#c8906a"); rect(151, 47, 2, 4, "#8a6a4a");
     // gli sposi al centro, lei in bianco col velo, tu col cappello da esploratore
     rect(74, 44, 8, 12, "#f4f0e8"); rect(75, 38, 6, 6, "#f0c8a0"); rect(73, 36, 10, 3, "#e8e8f0");
     rect(84, 44, 8, 12, "#2a3a5a"); rect(85, 38, 6, 6, "#f0c8a0"); rect(83, 36, 10, 2, "#6a4a2a");
