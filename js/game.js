@@ -2509,18 +2509,20 @@ const Gioco = (() => {
     Diario.renderStrip();
   }
 
+  // I tasti sotto la mappa: il tasto disegnato come un tasto, poi cosa fa
   const KEYS_HELP = {
-    land: "spazio osserva · Z attendi · X scava · Tab diario",
-    city: "frecce/WASD muovi · → entra nelle botteghe · torna alla nave per ripartire · Tab diario · Esc menu",
-    sea: "← → rotta · ↑ ↓ vele · T binocolo · Invio sbarca o attracca · Tab diario · Esc menu",
+    land: [["spazio", "osserva"], ["Z", "attendi"], ["X", "scava"], ["Tab", "diario"]],
+    city: [["Tab", "diario"], [null, "nelle botteghe si entra dalla porta"]],
+    sea: [["← →", "rotta"], ["↑ ↓", "vele"], ["T", "binocolo"], ["Invio", "sbarca"], ["Tab", "diario"]],
   };
+  const keysHtml = (list) => list.map(([k, what]) => (k ? `<kbd>${k}</kbd> ${what}` : what)).join('<span class="keys-sep">·</span>');
 
   // A terra il riquadro A è la battlemap, in mare è il globo
   function showView(mode) {
     const land = mode === "land" || mode === "city";
     el.mapWrap.hidden = !land;
     el.sea.hidden = land;
-    el.keys.textContent = KEYS_HELP[mode];
+    el.keys.innerHTML = keysHtml(KEYS_HELP[mode]);
     document.getElementById("screen-game").classList.toggle("in-city", mode === "city");
     if (mode !== "city") Citta.leave();
     el.tileInfo.textContent = "";

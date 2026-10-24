@@ -2,6 +2,10 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.6 · 24 ottobre 2026
+
+- **I tasti sotto la mappa sono disegnati come tasti**: un riquadrino col nome del tasto, poi cosa fa (**[spazio]** osserva · **[Z]** attendi · **[X]** scava · **[Tab]** diario). Così anche in mare (**[← →]** rotta · **[↑ ↓]** vele · **[T]** binocolo · **[Invio]** sbarca · **[Tab]** diario) e in città.
+
 ## 0.12.5 · 24 ottobre 2026
 
 - Sotto la battlemap e in *Come si gioca* c'è scritto **spazio osserva**, per esteso, invece del simbolo.

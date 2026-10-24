@@ -414,7 +414,7 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .status b { font-weight: normal; }
 .hearts { color: var(--danger); letter-spacing: 1px; }
 
-.keys { color: var(--dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.keys { color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Il diario: carta vecchia, macchiata ai bordi, con le linguette rosse biforcute */
 .paper {
@@ -947,3 +947,7 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .book-items li.is-usable:hover { color: #6a2a18; }
 .book-items .use { margin-left: auto; font-size: 16px; color: #6a4a2c; }
 .book-items .use kbd { font: inherit; font-style: normal; border: 1px solid #8a6a40; padding: 0 5px; margin-right: 3px; }
+
+/* I tasti sotto la mappa, disegnati come tasti */
+.keys kbd { font: inherit; color: var(--paper); border: 1px solid var(--mid); border-bottom-width: 2px; border-radius: 2px; padding: 0 5px; margin-right: 2px; }
+.keys .keys-sep { margin: 0 8px; }
