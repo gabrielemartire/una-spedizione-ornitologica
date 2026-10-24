@@ -902,7 +902,7 @@ const Gioco = (() => {
     const present = !!bird && !memory.done && !memory.gone && bird.ore.includes(time);
     // il diario segna solo gli sbarchi: dove, a che ora (lo dice la data della nota) e se l'uccello c'era
     const from = via != null ? ` <small>(a piedi da ${trip.world.zones[via].name})</small>` : "";
-    note(`${zone.name}${from}: ${present ? "c'era un uccello." : memory.done ? "uccello già nel taccuino." : memory.gone ? "l'uccello è volato via." : bird ? "nessun uccello, ora sbagliata." : "nessun uccello."}`, "bird");
+    note(`${zone.name}${from}: ${present ? "sembra un cinguettio." : memory.done ? "uccello già nel taccuino." : memory.gone ? "l'uccello è volato via." : bird ? "nessun uccello, ora sbagliata." : "nessun uccello."}`, "bird");
     // L'oggetto della zona si decide al primo sbarco, e resta lì finché non lo prendi
     const ri = rng(zone.seed ^ 0x17e3);
     if (memory.item === undefined) memory.item = gen.ruin || ri() < ITEM_CHANCE ? { kind: oggettoACaso(ri, !!gen.ruin), taken: false } : null;
