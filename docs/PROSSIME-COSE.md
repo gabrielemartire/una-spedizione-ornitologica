@@ -18,9 +18,11 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 
 ## In arrivo (chiesto il 23 ottobre)
 - [ ] **I timbri dei tarocchi e del Kraken**: l'Appeso, la Morte, il Sole, la Luna, il Kraken sono nel taccuino ma non si prendono ancora.
+- [ ] **La protesta in piazza**: una missione secondaria che parte dai quattro che protestano al Forte (da pensare).
 - [ ] **La casa degli sposi**: dopo le nozze, in città una casa nuova da visitare, la tua (da sviluppare).
 
 ## Fatto di recente
+- [x] **Versione 0.12.11**: la sala del trono è una navata col re, la regina e il pianista; la protesta in piazza al Forte.
 - [x] **Versione 0.12.10**: nebbia più ampia, il pesce gatto mangia 0,8 s dopo che acceleri, la sua cartolina rifatta.
 - [x] **Versione 0.12.9**: il Kraken ferma la nave e uscirne è lento.
 - [x] **Versione 0.12.8**: gli animali gironzolano verso una meta barcollando, annusano, il branco va insieme.

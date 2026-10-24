@@ -122,6 +122,7 @@ const Gioco = (() => {
     door:   { name: "Porta",            icon: "door",       cls: "t-door",   walk: true,  sight: false, noise: 1, sound: "macerie" },
     exit:   { name: "Il portone",       icon: "drawbridge", cls: "t-door",   walk: true,  sight: true, noise: 0, exit: true },
     throne: { name: "Il trono",         icon: "throne",     cls: "t-throne", walk: false, sight: true },
+    chair:  { name: "Sedia vuota",      icon: "chair",      cls: "t-chair",  walk: false, sight: true },
     rose:   { name: "Rose bianche",     icon: "rose",       cls: "t-rose",   walk: false, sight: true },
   };
 
@@ -1342,7 +1343,14 @@ const Gioco = (() => {
     if (t.secret) { crackWall(n); return false; }
     if (s.lady && same(s.lady, n)) { meetBride(); return false; }
     if (s.priest && same(s.priest, n)) { log("Il prete sfoglia il messale: «Siamo qui riuniti… manca solo lo sposo.»"); return false; }
-    if (s.guests && s.guests.some((o) => same(o, n))) { log(pickRandom(["«Che bella sposa!»", "«Speriamo che lo sposo arrivi.»", "«Shh, sta per cominciare.»", "«Io porto il riso.»"])); return false; }
+    const guest = s.guests && s.guests.find((o) => same(o, n));
+    if (guest) {
+      log(guest.kind === "king" ? "Il re annuisce, solenne: «Bella cerimonia. Manca solo lo sposo.»"
+        : guest.kind === "queen" ? "La regina si sventola: «Che caldo. Speriamo che lo sposo arrivi presto.»"
+        : guest.kind === "pianist" ? "Il pianista attacca le prime note della marcia nuziale, poi si ferma: «Non ancora?»"
+        : pickRandom(["«Che bella sposa!»", "«Shh, sta per cominciare.»", "«Io porto il riso.»", "Prega a bassa voce, e non ti guarda."]));
+      return false;
+    }
     const monster = s.bouncers && s.bouncers.find((o) => same(o, n));
     if (monster) { bitten(monster); return true; }
     const folk = s.npcs.find((o) => same(o, n));
@@ -1963,11 +1971,13 @@ const Gioco = (() => {
       if (inside(x, y) && los(s.map, c, { x, y })) add({ x, y });
     }
     s.rooms.forEach((rm, i) => {
-      if (rm.seen || !rm.keys.has(key(c))) return;
+      // entrando si accende tutta la stanza, anche se il gioco crede di averla già vista (una pianta di prima)
+      if (!rm.keys.has(key(c)) || [...rm.keys].every((k) => s.lit.has(k))) return;
+      const first = !rm.seen;
       rm.seen = true;
-      s.cm.seen.push(i);
+      if (first) s.cm.seen.push(i);
       for (const k of rm.keys) { const q = unkey(k); for (let y = q.y - 1; y <= q.y + 1; y++) for (let x = q.x - 1; x <= q.x + 1; x++) if (inside(x, y)) add({ x, y }); }
-      if (rm.kind === "throne") log("La sala del trono è addobbata a nozze, come una chiesa: gli invitati ai lati, il tappeto rosso, il prete in fondo.");
+      if (first && rm.kind === "throne") log("La sala del trono è addobbata a nozze, come una chiesa: gli invitati ai lati, il tappeto rosso, il prete in fondo.");
     });
   }
 
@@ -2591,7 +2601,7 @@ const Gioco = (() => {
     for (const o of s.bouncers || []) { o.el = pawn(`e-beast e-${o.kind}`, o.kind); o.slideEnd = 0; place(o.el, o); }
     if (s.lady) { el.ents.lady = pawn("e-bride", "woman"); place(el.ents.lady, s.lady); }
     if (s.priest) { el.ents.priest = pawn("e-priest", "priest"); place(el.ents.priest, s.priest); }
-    for (const o of s.guests || []) { o.el = pawn(`e-guest is-${o.look}`, "person"); place(o.el, o); }
+    for (const o of s.guests || []) { o.el = pawn(`e-guest e-${o.kind || "kneeling"} is-${o.look ?? 0}`, o.kind === "queen" ? "king" : o.kind || "kneeling"); place(o.el, o); }
     fitMap();
     requestAnimationFrame(() => el.map.querySelectorAll(".entity").forEach((e) => e.classList.remove("no-slide")));
   }

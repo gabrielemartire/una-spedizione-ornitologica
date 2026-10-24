@@ -951,3 +951,10 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 /* I tasti sotto la mappa, disegnati come tasti */
 .keys kbd { font: inherit; color: var(--paper); border: 1px solid var(--mid); border-bottom-width: 2px; border-radius: 2px; padding: 0 5px; margin-right: 2px; }
 .keys .keys-sep { margin: 0 8px; }
+
+.e-king { color: #f2c230; } .e-queen { color: #e890c8; } .e-pianist { color: #e8e0d0; }
+
+/* La protesta in piazza al Forte */
+.e-npc.e-protest { color: #e8b060; }
+.t-chair { color: #a8865a; background: #1c1a17; }
+.cell.t-chair .ic { opacity: 0.85; }

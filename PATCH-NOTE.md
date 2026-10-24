@@ -2,6 +2,12 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.11 · 24 ottobre 2026
+
+- **La sala del trono è una navata**, più lunga che larga. In fondo il prete; davanti a lui **la sposa, a sinistra**, e il tuo posto accanto, in cima al tappeto; nell'angolo **il pianista**. **In prima fila il re e la regina**, poi **file di sedie**, una fila sì e una no, con gente in ginocchio e qualche sedia vuota, fino alla porta.
+- **La sposa si vede sempre**: in un castello già visitato con una versione di prima, la sala poteva restare al buio sotto di lei.
+- **In piazza al Forte**, davanti alla chiesa e alla Società, a volte c'è **una protesta**: quattro persone coi forconi e i cartelli. Protestano. Per cosa, non si capisce bene.
+
 ## 0.12.10 · 24 ottobre 2026
 
 - **La nebbia è molto più ampia** (prima la si attraversava di corsa prima che il pesce gatto facesse in tempo).

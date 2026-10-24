@@ -328,11 +328,14 @@ Il ponte levatoio: ci vai contro e sei dentro; il tempo non passa né entrando n
 - **Il buio**: quello che non hai visto è nero, senza forme (anche passandoci col mouse dice solo *Buio*). Si accende quello che hai intorno, due caselle, non dietro i muri; entrando in una stanza si accende tutta, muri compresi. Resta acceso per tutto il viaggio.
 - **I mostri**: pipistrelli e fantasmi (rossi), uno o due in quattro o cinque stanze, mai nell'atrio. Vanno in diagonale e **rimbalzano sui muri della loro stanza** senza uscirne; i fantasmi a metà velocità. Toccarli costa un cuore.
 - **Le cose**: monete (4–9 m.o.) in due stanze, una cosa da vendere in una terza; la **chiave della sala del trono** in una stanza qualunque apre la **porta chiusa** della sala (e resta nella toppa: esce dallo zaino); un **muro che cede** (sembra un muro: ci vai contro e si apre) porta alla stanza del tesoro (20–25 m.o.). Quello che prendi resta preso per tutto il viaggio: si ricorda per cosa è, non per dov'era.
-- **La sala del trono**, in alto, addobbata a nozze **come una chiesa** (0.12.2): in fondo il **prete**, davanti a lui **la dama in bianco**, la **navata** col tappeto rosso fino alla porta (in fondo, al centro), gli **invitati** ai due lati, rose agli angoli. Andando contro la dama: «Volete sposarmi?»
+- **La sala del trono**, in alto, addobbata a nozze **come una chiesa** (0.12.11: una navata 7×11, più lunga che larga): in fondo il **prete**; davanti a lui **la dama in bianco, a sinistra**, e il tuo posto accanto, in cima al tappeto; nell'angolo **il pianista**; **in prima fila il re e la regina**, poi file di sedie, una fila sì e una no, con gente in ginocchio e qualche sedia vuota; la navata col tappeto rosso fino alla porta (in fondo, al centro); rose agli angoli. Andando contro la dama: «Volete sposarmi?»
   ```
-  |      A      |   A il prete
-  |      B      |   B la sposa
-  | inv  V  inv |   V il tappeto
+  | *   A   ♪ |   A il prete, ♪ il pianista, * le rose
+  |    B▮     |   B la sposa, ▮ il tuo posto
+  |     V     |   V il tappeto
+  | k R V R k |   R il re e la regina, k gente in ginocchio
+  |     V     |
+  | k k V k k |
   ```
 - **Sì**: auguri (riquadro), il buio, **la festa** (una scena in pixel art: la tavolata, gli invitati coi boccali, gli sposi, il suonatore di liuto e l'oste, i coriandoli; quattro battute con Invio; solo gente, niente creature del labirinto), il buio. Ti risvegli **all'alba** in un cespuglio accanto alla nave, con la **fede nuziale** nello zaino e il timbro dell'anello. Da lì il castello è **chiuso per nozze** (il portone sbarrato, col cartello). **No**: lei resta lì.
 - **Poi** (da fare): in città una casa nuova, la tua.
@@ -373,6 +376,8 @@ Le città **sono battlemap cittadine**: la banchina con le altre navi, le strade
 | Bacheca dei ricercati | sì | sì |
 
 **Le voci.** Una voce lega un uccello a **una zona precisa**, segnata sul globo con una **X dorata**. Dice la specie, non quale uccello: chi va a vedere può trovare un raro, o (al porticciolo) restare deluso da uno qualunque. Massimo **2 voci di taverna** a spedizione, più quelle dei mercanti. Finite le voci, in taverna si dorme e basta.
+
+**La protesta** (0.12.11): a ogni visita al Forte, una volta su due, quattro persone coi forconi e i cartelli (icona *uprising*) ferme insieme in piazza, davanti alla chiesa e alla Società. Andandoci contro protestano, senza che si capisca per cosa. Da qui partirà una missione secondaria.
 
 ## 11. Economia
 

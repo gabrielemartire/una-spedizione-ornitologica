@@ -19,6 +19,16 @@ const Citta = (() => {
   const WANTED_CHANCE = 0.6;  // a ogni visita, un avviso nuovo in bacheca (se non ce n'è uno in corso)
   const SOCIETY_PRIZE = 25;   // il premio della Società per ogni specie completata (tutti i comuni)
   const ROB = [2, 4];         // quanto ti può rubare
+  const PROTEST_CHANCE = 0.5; // a volte, in piazza al Forte, quattro che protestano (non si capisce bene per cosa)
+  const PROTESTS = [
+    "«Abbasso! Abbasso… quella cosa lì!»",
+    "«Vogliamo di più! O di meno, dipende!»",
+    "«Giù le mani dal… dal coso! Avete capito!»",
+    "«Non ci fermerete! …Dove stavamo andando?»",
+    "«È uno scandalo! Lo dicono tutti!» «Chi?» «Tutti!»",
+    "«Il Forte deve sapere! Sapere cosa? Lo sapremo!»",
+    "«Più grog per i gabbiani! No, aspetta…»",
+  ];
 
   // walk: ci si cammina; i nomi servono a dire cosa c'è nella casella
   const TILES = {
@@ -485,6 +495,14 @@ const Citta = (() => {
     if (ra() < EVENT_CHANCE && c.npcs.length) c.npcs[0].event = true;
     // la bacheca: un avviso nuovo a volte, mai più di uno ogni qualche giorno
     c.poster = ra() < WANTED_CHANCE ? Gioco.wantedPoster() : null;
+    // a volte, in piazza al Forte, una protesta: quattro persone coi forconi e i cartelli, ferme insieme
+    if (city.id === "forte" && ra() < PROTEST_CHANCE) {
+      const square = [];
+      for (let y = 4; y <= 8; y++) for (let x = 15; x <= 24; x++) if (c.map[y][x] === "square" && !c.npcs.some((n) => same(n, { x, y })) && !inTheWay({ x, y })) square.push({ x, y });
+      const at = square[Math.floor(ra() * square.length)];
+      if (at) square.sort((a, b) => Math.hypot(a.x - at.x, a.y - at.y) - Math.hypot(b.x - at.x, b.y - at.y)).slice(0, 4)
+        .forEach((p) => c.npcs.push({ ...p, home: { ...p }, protest: true }));
+    }
     // il falegname non si muove dal suo posto
     if (plan.carpenter) c.npcs.push({ ...plan.carpenter, carpenter: true });
     Gioco.showView("city");
@@ -543,7 +561,7 @@ const Citta = (() => {
     };
     c.playerEl = pawn("e-player", "binoculars");
     for (const n of c.npcs) {
-      n.el = pawn(n.event ? "e-npc e-event" : n.carpenter ? "e-npc e-carpenter" : "e-npc", n.carpenter ? "hammer" : "person");
+      n.el = pawn(n.event ? "e-npc e-event" : n.carpenter ? "e-npc e-carpenter" : n.protest ? "e-npc e-protest" : "e-npc", n.carpenter ? "hammer" : n.protest ? "uprising" : "person");
       if (n.event) n.el.dataset.intent = "!";
     }
     Gioco.fitMap();
@@ -568,7 +586,7 @@ const Citta = (() => {
   function stroll() {
     if (!c || Gioco.trip.mode !== "city" || !document.body.classList.contains("in-game")) return;
     for (const n of c.npcs) {
-      if (n.event || n.carpenter || Math.random() > NPC_MOVE) continue;
+      if (n.event || n.carpenter || n.protest || Math.random() > NPC_MOVE) continue;
       const [dx, dy] = DIRS[Math.floor(Math.random() * 4)];
       const to = { x: n.x + dx, y: n.y + dy };
       if (!inside(to.x, to.y) || !c.walkable.includes(c.map[to.y][to.x]) || inTheWay(to)) continue;
@@ -599,6 +617,7 @@ const Citta = (() => {
     const npc = c.npcs.find((n) => same(n, to));
     if (npc?.event) { meet(npc); return; }
     if (npc?.carpenter) { hint(null); talkCarpenter(); return; }
+    if (npc?.protest) { dialog("Una protesta", PROTESTS[Math.floor(Math.random() * PROTESTS.length)], [["back", "Annuisci e vai"]]); return; }
     // la gente non chiude mai il passaggio: si scansa e prende il tuo posto
     if (npc) {
       if (Math.random() < 0.3) Gioco.toast(["«Permesso!»", "«Attento a dove metti i piedi.»", "«Ehi, marinaio!»"][Math.floor(Math.random() * 3)]);
