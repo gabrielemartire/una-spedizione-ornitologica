@@ -2502,7 +2502,7 @@ const Gioco = (() => {
   }
 
   const KEYS_HELP = {
-    land: "frecce/WASD muovi (tieni premuto: corri) · spazio osserva · Invio aspetta · X scava · T tagliola · M mangia · E semi · Tab diario · Esc menu",
+    land: "␣ osserva · Z attendi · X scava · T tagliola · E semi · Tab diario · Esc menu",
     city: "frecce/WASD muovi · → entra nelle botteghe · torna alla nave per ripartire · Tab diario · Esc menu",
     sea: "← → rotta · ↑ ↓ vele · T binocolo · Invio sbarca o attracca · Tab diario · Esc menu",
   };
@@ -2799,11 +2799,11 @@ const Gioco = (() => {
   document.addEventListener("keydown", (e) => {
     if (!document.body.classList.contains("in-game") || !trip || trip.mode !== "land" || !s || s.over || Diario.isOpen()) return;
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
-    if (!MOVES[k] && ![" ", "o", "Enter", ".", "e", "x", "t", "m"].includes(k)) return;
+    if (!MOVES[k] && ![" ", "o", "Enter", ".", "z", "e", "x", "t", "m"].includes(k)) return;
     e.preventDefault();
     e.stopImmediatePropagation(); // le frecce muovono l'esploratore, non il menu
     if (MOVES[k]) act("move", ...MOVES[k], e.repeat);
-    else if (k === "Enter" || k === ".") act("wait");
+    else if (k === "z" || k === "Enter" || k === ".") act("wait");
     else if (k === "e") sowSeeds();
     else if (k === "x") act("dig");
     else if (k === "t") act("trap");

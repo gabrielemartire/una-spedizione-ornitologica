@@ -2,6 +2,11 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.3 · 24 ottobre 2026
+
+- **I tasti sotto la battlemap** sono solo l'essenziale: *␣ osserva · Z attendi · X scava · T tagliola · E semi · Tab diario · Esc menu*. Muoversi con le frecce o WASD non serve scriverlo.
+- **Z attendi**: si aspetta un battito anche con Z (Invio va ancora bene).
+
 ## 0.12.2 · 24 ottobre 2026
 
 - **I tesori del castello non ricompaiono più.** Il gioco ricordava i tesori presi da dov'erano: cambiando la pianta del castello (nella 0.12.1) tornavano tutti. Ora si ricordano per quello che sono.
