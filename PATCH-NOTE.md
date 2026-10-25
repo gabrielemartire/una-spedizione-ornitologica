@@ -2,6 +2,12 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.17 · 25 ottobre 2026
+
+- **La nave parte sempre in mare aperto**: a volte nasceva in un'insenatura chiusa, senza uscita. Ora parte solo nel mare grande, quello che porta dappertutto, e lontano da canali stretti. Se una nave è già chiusa in un'insenatura (per esempio in una partita in corso), tornando in mare viene portata nel mare aperto più vicino.
+- **Nel castello non ci sono più gli spuntoni**: non si capiva come evitarli. Restano le lastre che cedono.
+- **Nel diario le ferite si raccontano**, senza contare i cuori: *Un lupo mi azzanna! Fa male.*, *Un pipistrello mi morde! Fa male.* I cuori si vedono nel riquadro della vita.
+
 ## 0.12.16 · 25 ottobre 2026
 
 - **Il diario sono i tuoi appunti**: ogni nota è scritta come la scriverebbe l'esploratore, in prima persona (*Un lupo mi azzanna!*, *Spargo i semi. Ora bisogna aspettare che cambi la luce.*, *Valle Rossa: sento un cinguettio.*).

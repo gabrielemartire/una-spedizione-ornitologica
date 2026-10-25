@@ -215,18 +215,44 @@ const Globo = (() => {
       { id: "porto", name: "Il Porto del fiordo", p: portoSpot.p, zone: portoSpot.zone },
     ];
 
-    // La nave parte in mare, poco fuori dal Forte
-    const start = startAtSea(forteSpot.p, type);
-    return { seed, height, type, biome, zone, border, zones, coast, cities, start, adjacent: adjacent.map((a) => [...a]), coastal, lakeMask: lake, lake: lakeIsle > 0 ? toLatLon(islands[lakeIsle].c) : null };
+    // La nave parte in mare aperto, poco fuori dal Forte
+    const ocean = openSea(type, lake);
+    const start = startAtSea(forteSpot.p, ocean);
+    return { seed, height, type, biome, zone, border, zones, coast, cities, start, ocean, adjacent: adjacent.map((a) => [...a]), coastal, lakeMask: lake, lake: lakeIsle > 0 ? toLatLon(islands[lakeIsle].c) : null };
+  }
+
+  // Il mare aperto: il pezzo di mare più grande, tutto collegato. Le insenature chiuse e le pozze tra le
+  // isole ne restano fuori, così la nave non ci nasce e non ci resta chiusa
+  function openSea(type, lake) {
+    const water = (i) => type[i] <= T.SHALLOW && !lake[i];
+    const comp = new Int32Array(TW * TH).fill(-1);
+    let best = -1, bestSize = 0;
+    for (let i = 0, n = 0; i < TW * TH; i++) {
+      if (comp[i] >= 0 || !water(i)) continue;
+      const q = [i];
+      comp[i] = n;
+      for (let k = 0; k < q.length; k++) {
+        const c = q[k], x = c % TW, y = Math.floor(c / TW);
+        for (const m of [y * TW + (x + 1) % TW, y * TW + (x + TW - 1) % TW, y > 0 ? c - TW : -1, y < TH - 1 ? c + TW : -1]) {
+          if (m >= 0 && comp[m] < 0 && water(m)) { comp[m] = n; q.push(m); }
+        }
+      }
+      if (q.length > bestSize) { bestSize = q.length; best = n; }
+      n++;
+    }
+    const ocean = new Uint8Array(TW * TH);
+    for (let i = 0; i < TW * TH; i++) if (comp[i] === best) ocean[i] = 1;
+    return ocean;
   }
 
   // Cerca un punto di mare aperto vicino alla città di partenza
-  function startAtSea(p, type) {
+  function startAtSea(p, ocean) {
     const { lat, lon } = toLatLon(p);
     for (let d = 2; d < 20; d++) {
       for (let a = 0; a < 360; a += 15) {
         const la = lat + Math.sin(a * DEG) * d, lo = lon + Math.cos(a * DEG) * d;
-        if (type[texel(la, lo)] <= T.SHALLOW && type[texel(la + 1, lo)] <= T.SHALLOW && type[texel(la - 1, lo)] <= T.SHALLOW) {
+        // tutt'intorno mare aperto, due gradi per parte: niente canali stretti da cui uscire a fatica
+        if ([-2, -1, 0, 1, 2].every((dy) => [-2, -1, 0, 1, 2].every((dx) => ocean[texel(la + dy, lo + dx)]))) {
           // a è misurato da est; la rotta da nord, in senso orario: la prua guarda lontano dalla città
           return { lat: la, lon: lo, heading: (90 - a + 360) % 360 };
         }
@@ -252,13 +278,14 @@ const Globo = (() => {
     return isWater(world, from.lat, to.lon) || isWater(world, to.lat, from.lon);
   }
 
-  // Il mare navigabile più vicino a un punto (per una nave finita dove non deve stare)
+  // Il mare aperto più vicino a un punto (per una nave finita dove non deve stare, o chiusa in un'insenatura)
   function nearestSea(world, lat, lon) {
-    if (isWater(world, lat, lon)) return { lat, lon };
+    const open = (la, lo) => world.ocean[texel(la, lo)] === 1;
+    if (open(lat, lon)) return { lat, lon };
     for (let d = 1; d < 40; d++) {
       for (let a = 0; a < 360; a += 10) {
         const la = Math.max(-89, Math.min(89, lat + Math.sin(a * DEG) * d)), lo = lon + Math.cos(a * DEG) * d;
-        if (isWater(world, la, lo) && isWater(world, la + 1, lo) && isWater(world, la - 1, lo)) return { lat: la, lon: lo };
+        if (open(la, lo) && open(la + 1, lo) && open(la - 1, lo)) return { lat: la, lon: lo };
       }
     }
     return { lat: world.start.lat, lon: world.start.lon };

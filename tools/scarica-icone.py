@@ -155,7 +155,7 @@ ICONS = {
     "uprising": "delapouite/uprising",
     "chair": "delapouite/wooden-chair",
     "rose": "lorc/rose",
-    # Il castello arredato: l'atrio, la biblioteca, i mobili delle stanze, gli spuntoni
+    # Il castello arredato: l'atrio, la biblioteca, i mobili delle stanze
     "armor": "delapouite/black-knight-helm",
     "banner": "delapouite/knight-banner",
     "fireplace": "delapouite/fireplace",
@@ -164,8 +164,6 @@ ICONS = {
     "table": "delapouite/table",
     "swords": "lorc/crossed-swords",
     "cauldron": "lorc/cauldron",
-    "spikesup": "sbed/spikes-full",
-    "spikesdown": "sbed/spikes-init",
     "ring": "delapouite/ring",
     "cheers": "delapouite/glass-celebration",
     "wine": "lorc/wine-glass",

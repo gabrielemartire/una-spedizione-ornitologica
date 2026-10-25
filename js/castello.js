@@ -3,7 +3,7 @@
 // fantasmi) che rimbalzano da un muro all'altro senza uscire mai; qua e là monete e cose da vendere; una
 // chiave d'ottone apre la sala del trono, e un muro che cede nasconde la stanza del tesoro. Nella sala del
 // trono, addobbata a nozze, una dama aspetta lo sposo. L'atrio con le armature, la biblioteca, due mobili in
-// ogni stanza; nei cunicoli spuntoni a tempo e lastre che cedono. Qui anche la festa delle nozze, in pixel art.
+// ogni stanza; nei cunicoli qualche lastra che cede. Qui anche la festa delle nozze, in pixel art.
 // Espone l'oggetto globale `Castello`.
 const Castello = (() => {
   const W = 40;
@@ -233,17 +233,14 @@ const Castello = (() => {
     for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) if (straight({ x, y }) && far({ x, y }) && open.has(`${x},${y}`)) corridor.push({ x, y });
     corridor.sort(() => r() - 0.5);
     const near = (a, list) => list.some((b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) < 4);
-    // gli spuntoni escono e rientrano ogni due battiti, non tutti insieme
-    const spikes = [];
-    for (const c of corridor) { if (spikes.length >= 4) break; if (!near(c, spikes)) { spikes.push({ ...c, phase: Math.floor(r() * 2) }); map[c.y][c.x] = "cspike"; } }
     // la lastra che cede: solo dove, una volta crollata, si arriva lo stesso dappertutto
     const cracks = [];
-    const count = reach((t) => walk.includes(t) || t === "cspike").size;
+    const count = reach((t) => walk.includes(t)).size;
     for (const c of corridor) {
       if (cracks.length >= 2) break;
-      if (map[c.y][c.x] !== "cfloor" || near(c, [...spikes, ...cracks])) continue;
+      if (map[c.y][c.x] !== "cfloor" || near(c, cracks)) continue;
       map[c.y][c.x] = "cwall";
-      const rest = reach((t) => walk.includes(t) || t === "cspike");
+      const rest = reach((t) => walk.includes(t));
       map[c.y][c.x] = "cfloor";
       if (rest.size === count - 1 && rest.has(key(lockDoor.out)) && rest.has(key(crackDoor.out))) { cracks.push(c); map[c.y][c.x] = "crack"; }
     }
@@ -262,7 +259,7 @@ const Castello = (() => {
       }
     });
     return {
-      map, exit, start, lady, seat, priest, guests, lock: lockDoor, crack: crackDoor, loot, monsters, spikes, cracks,
+      map, exit, start, lady, seat, priest, guests, lock: lockDoor, crack: crackDoor, loot, monsters, cracks,
       rooms: rooms.map((rm) => ({ kind: rm.kind, keys: rm.keys })),
     };
   }

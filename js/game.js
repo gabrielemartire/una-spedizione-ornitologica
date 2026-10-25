@@ -45,7 +45,6 @@ const Gioco = (() => {
   // Il labirinto di siepi: uscirne costa un giorno intero
   const MAZE_DAY = 3;
   // Il castello: i mostri che rimbalzano tolgono un cuore
-  const CASTLE_SPIKE = 1;    // gli spuntoni del castello: mezzo cuore
   const CASTLE_FALL = 2;     // la lastra che cede: un cuore
   const CASTLE = { damage: 2, death: "Perso nel castello", deathText: "I mostri del castello abbandonato non perdonano" };
   // Il fuggitivo: ti vede come un animale, spara da vicino ogni `reload` battiti, scappa dal bordo
@@ -139,8 +138,7 @@ const Gioco = (() => {
     table:     { name: "Tavolo",            icon: "table",      cls: "t-decor", walk: false, sight: true },
     swords:    { name: "Spade incrociate",  icon: "swords",     cls: "t-decor", walk: false, sight: true },
     cauldron:  { name: "Paiolo",            icon: "cauldron",   cls: "t-decor", walk: false, sight: true },
-    // le trappole dei cunicoli: gli spuntoni escono e rientrano ogni due battiti; la lastra incrinata cede
-    cspike:    { name: "Spuntoni",          icon: "spikesdown", cls: "t-cspike", walk: true, sight: true, noise: 1, sound: "macerie", cspike: true },
+    // la trappola dei cunicoli: la lastra incrinata cede
     crack:     { name: "Lastra incrinata",  ch: "⁖",            cls: "t-cfloor t-crack", walk: true, sight: true, noise: 1, sound: "macerie", crack: true },
     chole:     { name: "Buco nel pavimento", icon: "hole",      cls: "t-chole", walk: false, sight: true },
   };
@@ -1407,7 +1405,6 @@ const Gioco = (() => {
     if (s.cup && same(s.cup, n)) takeCup();
     if (t.exit) { leaveCastle(); return true; }
     if (s.castle) castleStep(n);
-    if (t.cspike && spikesUp(n)) spiked();
     if (t.crack) { fallThrough(n); return true; }
     if (t.junk && s.pirates.some((o) => o.mode === "sleep") && Math.random() < PIRATE_WAKE) wakePirates(`${t.name} sotto i piedi: un rumore tremendo. I bucanieri si svegliano!`);
     if (s.bottle && same(s.bottle, n)) takeBottle();
@@ -1502,10 +1499,10 @@ const Gioco = (() => {
     if (kind === "marshmallow") {
       p.hp = Math.max(p.hp, maxHp());
       trip.violet = VIOLET;
-      log(`Mangio il marshmallow ${MARSH_LOOK[m.cook]}. Mi sento benissimo: un cuore viola in più.`);
+      log(`Mangio il marshmallow ${MARSH_LOOK[m.cook]}. Mi sento benissimo, più forte di prima.`);
     } else {
       p.hp = Math.min(Math.max(p.hp, maxHp()), p.hp + FISH_HEAL);
-      log("Apro la scatola e mangio il pesce. Mi rimette in piedi: due cuori.");
+      log("Apro la scatola e mangio il pesce. Mi rimette in piedi.");
     }
     Suoni.play("osservato");
     leaveMerchant();
@@ -1742,8 +1739,6 @@ const Gioco = (() => {
       if (s.over) return;
       bounce(o);
     }
-    // gli spuntoni che escono proprio adesso, sotto i tuoi piedi
-    if (s.spikes && s.spikes.has(key(s.player)) && spikesUp(s.player) && !spikesUp(s.player, s.ticks - 1)) spiked();
     if (s.over) return;
     for (const o of s.beasts) {
       if (s.over) return;
@@ -1841,7 +1836,7 @@ const Gioco = (() => {
       el.map.classList.remove("is-hit");
       void el.map.offsetWidth;
       el.map.classList.add("is-hit");
-      log(`Il ricercato mi spara! ${lostHearts(OUTLAW.damage)}.`);
+      log(`Il ricercato mi spara! ${wound(OUTLAW.damage)}.`);
       if (!p.hp) die("fugitive");
       return;
     }
@@ -1974,7 +1969,6 @@ const Gioco = (() => {
       priest: plan.priest,
       guests: plan.guests,
       bouncers: plan.monsters.map((m) => ({ ...m })),
-      spikes: new Map((plan.spikes || []).map((c) => [key(c), c.phase])),
       lady: cm.married ? null : plan.lady,
       run: 0, ticks: 0, noise: 0, heard: [], lastAct: 0, lastMove: [0, 0], over: false,
     };
@@ -2034,19 +2028,6 @@ const Gioco = (() => {
     render();
   }
 
-  // Gli spuntoni: due battiti fuori, due dentro, ognuno col suo passo
-  const spikesUp = (c, ticks = s.ticks) => Math.floor(ticks / 2 + s.spikes.get(key(c))) % 2 === 0;
-  function spiked() {
-    hurt(CASTLE_SPIKE);
-    trip.stats.hits++;
-    Suoni.play("tagliola");
-    el.map.classList.remove("is-hit");
-    void el.map.offsetWidth;
-    el.map.classList.add("is-hit");
-    log(`Spuntoni dal pavimento, proprio sotto i piedi! ${lostHearts(CASTLE_SPIKE)}.`);
-    if (!s.player.hp) die("castle");
-  }
-
   // La lastra incrinata cede: si cade nelle cantine e si risale dall'atrio. Al suo posto resta un buco
   function fallThrough(c) {
     s.map[c.y][c.x] = "chole";
@@ -2054,7 +2035,7 @@ const Gioco = (() => {
     hurt(CASTLE_FALL);
     trip.stats.hits++;
     Suoni.play("macerie");
-    log(`La lastra cede sotto i piedi! Cado nelle cantine e risalgo dall'atrio, dolorante. ${lostHearts(CASTLE_FALL)}.`);
+    log(`La lastra cede sotto i piedi! Cado nelle cantine e risalgo dall'atrio, dolorante.`);
     if (!s.player.hp) { die("castle"); return; }
     Object.assign(s.player, s.castle.start);
     light(s.player);
@@ -2096,7 +2077,7 @@ const Gioco = (() => {
     el.map.classList.remove("is-hit");
     void el.map.offsetWidth;
     el.map.classList.add("is-hit");
-    log(`${o.kind === "bat" ? "Un pipistrello mi morde" : "Un fantasma mi passa attraverso, gelido"}! ${lostHearts(CASTLE.damage)}.`);
+    log(`${o.kind === "bat" ? "Un pipistrello mi morde" : "Un fantasma mi passa attraverso, gelido"}! ${wound(CASTLE.damage)}.`);
     if (!s.player.hp) die("castle");
   }
 
@@ -2203,7 +2184,7 @@ const Gioco = (() => {
       el.map.classList.remove("is-hit");
       void el.map.offsetWidth;
       el.map.classList.add("is-hit");
-      log(`Un bucaniere mi spara! ${lostHearts(PIRATE.gun)}.`);
+      log(`Un bucaniere mi spara! ${wound(PIRATE.gun)}.`);
       if (!p.hp) die("pirate");
       return;
     }
@@ -2227,7 +2208,7 @@ const Gioco = (() => {
       el.map.classList.remove("is-hit");
       void el.map.offsetWidth;
       el.map.classList.add("is-hit");
-      log(`Un bucaniere mi colpisce con la spada! ${lostHearts(PIRATE.sword)}.`);
+      log(`Un bucaniere mi colpisce con la spada! ${wound(PIRATE.sword)}.`);
       if (!p.hp) die("pirate");
       return;
     }
@@ -2446,10 +2427,9 @@ const Gioco = (() => {
   }
 
   // il danno detto in cuori: ogni cuore vale due punti di vita
-  function lostHearts(d) {
-    const whole = Math.floor(d / 2), half = d % 2;
-    if (!whole) return "−mezzo cuore";
-    return `−${whole} ${whole === 1 ? "cuore" : "cuori"}${half ? " e mezzo" : ""}`;
+  // Nel diario la ferita si racconta, non si conta: i cuori sono già nel riquadro B
+  function wound(d) {
+    return d <= 1 ? "Un graffio" : d <= 2 ? "Fa male" : d <= 3 ? "Fa molto male" : "Una brutta ferita";
   }
 
   function attack(o) {
@@ -2466,7 +2446,7 @@ const Gioco = (() => {
     el.map.classList.remove("is-hit");
     void el.map.offsetWidth; // fa ripartire l'animazione
     el.map.classList.add("is-hit");
-    log(`${k.verb} ${lostHearts(k.damage)}.${k.sated && p.hp ? " Poi si siede, sazio." : ""}`);
+    log(`${k.verb} ${wound(k.damage)}.${k.sated && p.hp ? " Poi si siede, sazio." : ""}`);
     if (!p.hp) die(o.kind);
     else render();
   }
@@ -2737,7 +2717,6 @@ const Gioco = (() => {
         // Dove si passa le icone sono più trasparenti; quello che blocca è pieno
         let cls = `cell ${t.cls} ${t.walk ? "walk" : "block"}`;
         if (t === TILES.sea) cls += ` wave${(x * 2 + y * 3) % 5}`;
-        if (t.cspike && spikesUp({ x, y })) { icon = "spikesup"; cls += " is-up"; }
 
         if (dark && !s.lit.has(k)) {
           icon = null;
