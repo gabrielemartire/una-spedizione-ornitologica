@@ -4,7 +4,7 @@
 // Vicino a una costa si può guardare col binocolo o sbarcare, gratis.
 // Espone l'oggetto globale `Mare`.
 const Mare = (() => {
-  const SEA_LEG = 60;         // gradi di traversata che fanno passare un terzo di giornata
+  const SEA_LEG = 120;        // gradi di traversata che fanno passare un terzo di giornata
   const MAX_SAILS = 4;
   const SAIL_SPEED = 1.8;     // gradi al secondo per ogni livello di vela
   const TURN_RATE = 100;      // gradi di rotta al secondo
@@ -12,10 +12,12 @@ const Mare = (() => {
   const SCOPE_RANGE = 12;     // gradi: abbastanza vicino per il binocolo
   const CITY_RANGE = 4;
   const BIG_RES = 200;
-  // La nebbia, di notte: oltre una vela il pesce gatto ti sente, e 0,8 secondi dopo ti mangia. Ti ha sentito: uscire
-  // dalla nebbia non basta, si salva solo chi ammaina in tempo
+  // La nebbia, di notte: dentro c'è una lucina, l'esca del pesce gatto. Chi le va incontro con più di una vela
+  // la fa muovere: ti viene incontro finché non ammaini, e se ti raggiunge è finita. Nella nebbia il tempo non passa
   const FOG_SAILS = 1;
-  const FOG_GRACE = 0.8;      // secondi
+  const LURE_CONE = 30;       // gradi: quanto la prua deve puntare verso la lucina
+  const LURE_SPEED = 4;       // gradi al secondo, quando ti viene incontro
+  const LURE_BITE = 0.8;      // gradi: ti ha raggiunto
   // Il Kraken: andando al largo (fuori dalla portata del binocolo) una volta su 8 arriva, poco dopo
   const KRAKEN_CHANCE = 1 / 8;
   const KRAKEN_DELAY = [3, 7]; // secondi
@@ -34,7 +36,7 @@ const Mare = (() => {
   let scope = null;           // la zona che si sta guardando
   let seaTime = null;         // quello che è disegnato nella cartolina del mare (momento, nebbia, kraken)
   let inFog = false;
-  let fogDanger = 0;          // da quanto corri nella nebbia
+  let lures = [];             // le lucine delle nebbie, dove sono ora: { lat, lon, home, hunting }
   let wasNear = true;
   let kraken = null;          // { lat, lon, rad, spin } quando c'è; krakenIn: tra quanto arriva
   let el = null;
@@ -63,7 +65,7 @@ const Mare = (() => {
     scope = null;
     seaTime = null;
     inFog = false;
-    fogDanger = 0;
+    lures = trip.world.fogs.map((f) => ({ ...f.lure, home: f, hunting: false }));
     wasNear = true;
     kraken = null;
     el.scopeBadge.className = "";
@@ -116,8 +118,8 @@ const Mare = (() => {
           wake.unshift({ lat: ship.lat, lon: ship.lon });
           wake.length = Math.min(wake.length, 24);
         }
-        // Le traversate lunghe costano tempo
-        trip.seaDist += step;
+        // Le traversate lunghe costano tempo, ma non nella nebbia
+        if (!inFog) trip.seaDist += step;
         if (trip.seaDist >= SEA_LEG) {
           trip.seaDist -= SEA_LEG;
           if (!Gioco.advance(1)) return;
@@ -150,24 +152,32 @@ const Mare = (() => {
       tower: trip.towerKnown ? towerZone(trip) : null,
       highlight: scope ? scope.id : canLand ? near.zone.id : null,
       fogs: time === "notte" ? trip.world.fogs : null,
+      lures: time === "notte" ? lures : null,
       ink: kraken,
-      lure: fogDanger > 0 ? { x: Math.sin(ship.heading * Math.PI / 180) * 9, y: -Math.cos(ship.heading * Math.PI / 180) * 9 } : null,
     });
     // La nebbia del pesce gatto, solo di notte
-    const fogNow = time === "notte" && trip.world.fogs.some((f) => Globo.distance(f, ship) < f.rad);
-    if (fogNow && !inFog) Gioco.toast("Nebbia fitta. Qualcosa nuota qui sotto, e sente ogni rumore: al massimo una vela.");
-    inFog = fogNow;
-    if ((inFog || fogDanger > 0) && ship.sails > FOG_SAILS) {
-      if (!fogDanger) { Suoni.play("campana"); Gioco.toast("Una lucina si accende nella nebbia, davanti alla prua."); }
-      fogDanger += dt;
-      if (fogDanger >= FOG_GRACE) {
+    const fog = time === "notte" ? trip.world.fogs.find((f) => Globo.distance(f, ship) < f.rad) : null;
+    if (fog && !inFog) Gioco.toast("Nebbia fitta. Laggiù brilla una lucina: meglio non andarle incontro a vele spiegate.");
+    inFog = !!fog;
+    for (const l of lures) {
+      if (l.home !== fog) {   // fuori dalla sua nebbia la lucina torna al suo posto
+        if (l.hunting) Object.assign(l, l.home.lure, { hunting: false });
+        continue;
+      }
+      const ahead = Math.abs(((Globo.bearing(ship, l) - ship.heading + 540) % 360) - 180) < LURE_CONE;
+      if (ship.sails <= FOG_SAILS) l.hunting = false;
+      else if (ahead && !l.hunting) { l.hunting = true; Suoni.play("campana"); Gioco.toast("La lucina si muove. Ti viene incontro."); }
+      if (!l.hunting) continue;
+      Object.assign(l, Globo.advance(l.lat, l.lon, Globo.bearing(l, ship), LURE_SPEED * dt));
+      if (Globo.distance(l, ship) < LURE_BITE) {
         running = false;
         Cartolina.render({ seed: trip.seed, sea: true, time, tags: new Set(), fog: true, catfish: true }, el.postcard);
         Suoni.play("tonfo");
-        Gioco.sunk();
+        Gioco.swallowed();
         return;
       }
-    } else fogDanger = 0;
+    }
+    const hunted = lures.some((l) => l.hunting);
 
     // Il Kraken: si tira il dado una volta ogni volta che si va al largo; arriva poco dopo, una volta per viaggio
     const far = !near;
@@ -198,7 +208,7 @@ const Mare = (() => {
       }
     }
 
-    const look = `${time}|${inFog}|${fogDanger > 0}|${!!kraken}`;
+    const look = `${time}|${inFog}|${hunted}|${!!kraken}`;
     if (!scoping && seaTime !== look) drawSeaPostcard(time, look);
     renderHud(canLand);
     if (now - lastStatus > 250) { lastStatus = now; Gioco.renderStatus(); }
@@ -248,7 +258,7 @@ const Mare = (() => {
     seaTime = look;
     el.postcard.classList.remove("is-scope");
     // ogni traversata ha il suo mare: a volte il sole, uno scoglio, dei gabbiani
-    Cartolina.render({ seed: trip.seed + trip.departures * 977 + trip.third * 31, sea: true, time, tags: new Set(), fog: inFog, lure: fogDanger > 0, ink: !!kraken }, el.postcard);
+    Cartolina.render({ seed: trip.seed + trip.departures * 977 + trip.third * 31, sea: true, time, tags: new Set(), fog: inFog, lure: inFog, ink: !!kraken }, el.postcard);
   }
 
   // La W del ricercato sta al centro della sua isola, non sulla zona: la zona la dice il fuoco, di notte

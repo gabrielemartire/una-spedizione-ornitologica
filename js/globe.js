@@ -291,6 +291,13 @@ const Globo = (() => {
 
   // Un passo di navigazione lungo un cerchio massimo: si può passare sopra i poli, e la rotta
   // si aggiorna da sola (prima la latitudine era bloccata e la nave si fermava andando a nord)
+  // La rotta (0 = nord, 90 = est) per andare da a verso b
+  function bearing(a, b) {
+    const f1 = a.lat * DEG, f2 = b.lat * DEG, dl = (b.lon - a.lon) * DEG;
+    const y = Math.sin(dl) * Math.cos(f2), x = Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(dl);
+    return (Math.atan2(y, x) / DEG + 360) % 360;
+  }
+
   function advance(lat, lon, heading, deg) {
     const h = heading * DEG, a = deg * DEG;
     const p = vec(lat, lon), { east, north } = basis(lat, lon);
@@ -492,11 +499,13 @@ const Globo = (() => {
         }
       }
     }
-    // La lucina del pesce gatto, nella nebbia accanto alla nave
-    if (opts.lure) {
-      const lx = Math.round(c + opts.lure.x), ly = Math.round(c + opts.lure.y);
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) put(lx + dx, ly + dy, [150, 140, 90]);
-      put(lx, ly, [255, 246, 192]);
+    // Le lucine dei pesci gatto, nella nebbia: pulsano piano
+    for (const l of opts.lures || []) {
+      const s = project(l.lat, l.lon);
+      if (!s) continue;
+      const glow = 0.6 + 0.4 * Math.sin(performance.now() / 300 + l.lon);
+      for (const [dx, dy] of [[1, 1], [-1, 1], [1, -1], [-1, -1], [2, 0], [-2, 0], [0, 2], [0, -2]]) put(s.x + dx, s.y + dy, [130, 120, 70].map((v) => Math.round(v * glow)));
+      for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) put(s.x + dx, s.y + dy, [255, 240, 170].map((v) => Math.round(v * (0.5 + glow / 2))));
     }
 
     // La nave al centro, orientata secondo la rotta
@@ -521,5 +530,5 @@ const Globo = (() => {
   // La distanza in gradi tra due punti del globo
   const distance = (a, b) => angle(vec(a.lat, a.lon), vec(b.lat, b.lon));
 
-  return { createWorld, draw, isWater, canSail, nearestSea, distance, nearestCoast, nearestCity, advance };
+  return { createWorld, draw, isWater, canSail, nearestSea, distance, nearestCoast, nearestCity, advance, bearing };
 })();

@@ -761,6 +761,8 @@ const Gioco = (() => {
       }
       if (world.fogs.length >= 2) break;
     }
+    // in ogni nebbia una lucina: l'esca del pesce gatto
+    for (const f of world.fogs) f.lure = Globo.advance(f.lat, f.lon, rf() * 360, rf() * f.rad * 0.5);
     return world;
   }
 
@@ -2476,9 +2478,16 @@ const Gioco = (() => {
     endTrip({ kind: "victory", title: "Ornitologo esperto", text: `Giorno ${day()}: la Società ornitologica ti consegna l'attestato di Ornitologo esperto. Il taccuino è completo.` });
   }
 
-  // Il pesce gatto della nebbia: cieco, caccia col rumore; una nave che corre la trova e la manda a fondo
+  // Il pesce gatto della nebbia: la sua lucina è un'esca, e chi le va incontro a vele spiegate viene inghiottito.
+  // Prima della fine la cartolina resta lì, con due righe per capire cos'è successo
+  function swallowed() {
+    trip.over = true;   // niente salvataggio: ricaricando non si torna indietro
+    clearSave();
+    showOverlay("Il pesce gatto", "La lucina nella nebbia era la sua esca. Hai puntato la prua dritto su di lei a vele spiegate, e lui ti ha sentito arrivare.", [["sunk", "Continua"]]);
+  }
+
   function sunk() {
-    endTrip({ kind: "death", title: "Inghiottito", text: `Nella nebbia, al giorno ${day()}, ${now()}, una lucina si è accesa davanti alla prua. Il pesce gatto ha sentito la nave.` });
+    endTrip({ kind: "death", title: "Inghiottito", text: `Nella nebbia, al giorno ${day()}, ${now()}, hai puntato la prua su una lucina a vele spiegate. Era l'esca del pesce gatto.` });
   }
 
   function bankrupt() {
@@ -2858,6 +2867,7 @@ const Gioco = (() => {
   document.addEventListener("click", (e) => {
     const action = e.target.closest("[data-game-action]")?.dataset.gameAction;
     if (action === "sail") depart();
+    if (action === "sunk") sunk();
     if (action === "wait") waitAboard();
     if (action === "stay") stay();
     if (action === "trade") trade();
@@ -2895,7 +2905,7 @@ const Gioco = (() => {
   // Quello che serve alla navigazione (js/sea.js) e al diario (js/diario.js)
   return {
     start, resume, save, setNotebook: (data) => { notebook = data; }, code, hasSave: () => !!loadSave(), clearSave, loadNotebook, depart, landAt, rumor, pay, earn, visitCity, maxHp, EGG_DAYS,
-    useItem, wantedPoster, acceptWanted, bountyState, earnStamp, victory, sunk, STAMPS, advance, renderStatus, note, log, toast, timeOf, arrivalTime, now, day, showView, iconHtml, fitMap,
+    useItem, wantedPoster, acceptWanted, bountyState, earnStamp, victory, swallowed, STAMPS, advance, renderStatus, note, log, toast, timeOf, arrivalTime, now, day, showView, iconHtml, fitMap,
     get trip() { return trip; },
     get zoneState() { return s; },   // la battlemap in corso: per le prove automatiche
     get el() { return el; },

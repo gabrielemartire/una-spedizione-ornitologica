@@ -107,7 +107,7 @@ Tutto sta in **una schermata senza scorrere**, anche su un portatile da 13" (cir
 - **Attraccare e camminare a terra non costano niente**: se arrivi di giorno, resta giorno.
 - **Ripartire fa passare due terzi di giornata** (si pensa alla notte di navigazione): parti di pomeriggio e arrivi all'alba; se riattracchi è ancora alba.
 - **Aspettare a bordo fa passare un terzo di giornata**: dalla casella nave puoi aspettare che venga pomeriggio, se l'uccello che cerchi è diurno, e risbarcare nella stessa zona.
-- **In mare l'orologio è fermo**, ma una **traversata lunga** aggiunge un terzo di giornata ogni 60° percorsi (barra *Traversata* nel riquadro B).
+- **In mare l'orologio è fermo**, ma una **traversata lunga** aggiunge un terzo di giornata ogni 120° percorsi (60° fino alla 0.12.12; barra *Traversata* nel riquadro B). **Nella nebbia il tempo non scorre**.
 - A ogni nuova alba suona la campana e si paga la ciurma.
 
 Così il ciclo tipico (sbarco, esplorazione, ripartenza) costa due terzi di giornata, e l'attesa diventa una scelta: *investire tempo per vedere se arriva l'uccello che cerco*.
@@ -116,7 +116,7 @@ Così il ciclo tipico (sbarco, esplorazione, ripartenza) costa due terzi di gior
 
 ### 6.1 La nebbia e il Kraken (0.11)
 
-**La nebbia del pesce gatto**: 2–3 macchie in mare aperto (raggio 9–12° dalla 0.12.10, lontane dalle coste, dalla partenza e fra loro), solo **di notte**, visibili sul globo come macchie grigie e dal ponte come nebbia fitta. Il pesce gatto (come quello di *Outer Wilds*, cieco, con la lucina) caccia col rumore: **oltre una vela** si accende la lucina (sul globo accanto alla nave, dal ponte nella nebbia) e dopo **0,8 secondi** la nave affonda (*Inghiottito*); una volta che ti ha sentito, uscire dalla nebbia non basta, solo ammainare in tempo. Con una vela si passa. La cartolina dell'affondamento: la nebbia grigia rossastra in alto, la sagoma con le spine a raggiera, la bocca coi denti, l'antenna con la lucina, la nave piccola davanti (come il pesce di *Outer Wilds*).
+**La nebbia del pesce gatto**: 2–3 macchie in mare aperto (raggio 9–12° dalla 0.12.10, lontane dalle coste, dalla partenza e fra loro), solo **di notte**, visibili sul globo come macchie grigie e dal ponte come nebbia fitta. Il pesce gatto (come quello di *Outer Wilds*, cieco, con la lucina) caccia con un'esca: in ogni nebbia c'è **una lucina** ferma (dalla 0.12.13), che pulsa sul globo e si vede dal ponte. Se la prua punta verso la lucina (entro 30°) **con più di una vela**, la lucina **ti viene incontro** (4° al secondo) finché non ammaini a una vela; se ti raggiunge la nave affonda. Uscendo dalla nebbia la lucina torna al suo posto. Con una vela, o andando da un'altra parte, si passa. All'affondamento la cartolina resta lì con una finestrella che spiega cos'è successo (*La lucina nella nebbia era la sua esca…*) e il tasto **Continua**; solo dopo la fine (*Inghiottito*). La cartolina dell'affondamento: la nebbia grigia rossastra in alto, la sagoma con le spine a raggiera, la bocca coi denti, l'antenna con la lucina, la nave piccola davanti (come il pesce di *Outer Wilds*).
 
 **Il Kraken**: ogni volta che la nave va **al largo** (nessuna costa alla portata del binocolo) si tira 1 su 8; se esce, **3–7 secondi dopo** il mare intorno diventa nero d'inchiostro (macchia di 3,5° con sei tentacoli sul globo; dal ponte acqua nera e tentacoli). Arrivando **ferma la nave** (vele a zero); dentro al massimo una vela, e la nave va **a un terzo della velocità** (5–6 secondi per uscire); uscendo passa un terzo di giornata. Diario: *«Acqua nera a babordo. Nessuno vuole parlarne.»* Una volta per viaggio. Il timbro del Kraken per ora non si prende.
 
@@ -407,7 +407,7 @@ Il diario è un diario, non un manuale: niente spiegazioni, se un capitolo è vu
 - **Finanze**: in alto a destra, a penna e di sbieco, *ciurma: 8 m.o. al giorno*; sotto il registro delle **entrate e uscite** a tre colonne (cosa · giorno · importo), con le uscite in rosso (ciurma, medico, taverna, rapine) e le entrate in verde (mercato, premi della Società, taglie); le righe vuote si riempiono man mano.
 - **Zaino**: la lista degli oggetti (il binocolo, la pala, gli oggetti magici; l'uovo dice solo *potrebbe schiudersi*). **Da qui si usano le cose** (0.12.4): quelle che si usano hanno un numero e cosa fanno (*mangia*, *posa*, *spargi*); il numero o un clic le usano, solo a terra. Sotto la battlemap i tasti scritti sono solo *spazio osserva · Z attendi · X scava · Tab diario*, disegnati come tasti (riquadrino col nome del tasto, poi l'azione), e così in mare e in città (T, M ed E restano come scorciatoie).
 - **Stiva**: com'è adesso. Gli oggetti, e in basso nella pagina di destra **i ricercati presi e non ancora consegnati**, ognuno in **una cella con le sbarre**; consegnato, sparisce dalla stiva.
-- **Taglie** (l'ultimo capitolo): una pagina per ogni avviso accettato, con l'insegna **WANTED**, il nome, il delitto, la taglia e il giorno; consegnato il ricercato, un timbro rosso bordato **CATTURATO**; se scappa, un timbro grigio *sfuggito*.
+- **I fogli delle taglie** (non sono un capitolo, non hanno linguetta; dalla 0.12.13): in fondo al taccuino, un foglio sciolto, un po' storto, per ogni avviso accettato; senza avvisi non c'è niente. Ognuno con l'insegna **WANTED**, il nome, il delitto, la taglia e il giorno; consegnato il ricercato, un timbro rosso bordato **CATTURATO**; se scappa, un timbro grigio *sfuggito*.
 
 **È un solo libro**: le pagine sono numerate di seguito (Note 1–2, Uccelli dalla 3…) e **ogni capitolo comincia su una pagina di sinistra**. Testo in corsivo d'epoca (IM Fell English), carta in pixel art con grana, macchie, bordi bruniti e la piega; linguette di stoffa vecchia.
 
@@ -468,7 +468,7 @@ Il controllo è un CRC-16: intercetta gli errori di battitura. Nel leggere si pe
 
 **Il taccuino completo** è *tutti* gli uccelli, rari e Pulcino compresi: ci vogliono più viaggi col taccuino ripreso. Appena completo, sul globo in alto a destra (dall'altra parte del binocolo) compare la **busta della Società**; prima non c'è niente, nemmeno un riquadro vuoto. Si apre con L o col clic: la busta col sigillo di ceralacca, Invio rompe il sigillo e la lettera esce. Alla **Società ornitologica** del Forte, con la lettera, si riceve l'attestato di **Ornitologo esperto** e il gioco finisce (resoconto *Ornitologo esperto*, in oro sulla copertina del libretto).
 
-**I timbri**: un capitolo del taccuino, prima delle Taglie, con sei riquadri. Velati finché non li hai, nessuna descrizione. Nel codice, un bit ciascuno, in quest'ordine: marshmallow bruciato (falò), l'anello di fidanzamento (le nozze nel castello; dalla 0.12, al posto dell'Appeso), la Morte, il Sole, la Luna, il Kraken. Per ora si prendono i primi due.
+**I timbri**: l'ultimo capitolo del taccuino, con sei riquadri. Velati finché non li hai, nessuna descrizione. Nel codice, un bit ciascuno, in quest'ordine: marshmallow bruciato (falò), l'anello di fidanzamento (le nozze nel castello; dalla 0.12, al posto dell'Appeso), la Morte, il Sole, la Luna, il Kraken. Per ora si prendono i primi due.
 
 ### 14.2 La radura del falò, il cibo, le tagliole, la bottiglia (0.9)
 
@@ -529,7 +529,7 @@ Idea: **ogni uccello ha il suo verso**, generato dal suo ID. Lo stesso uccello c
 - **Nome del giocatore:** si sceglie all'inizio della partita ("Il registro di bordo"), anche col taccuino ripreso, proponendo quello di prima.
 - **Come si gioca:** alla prima spedizione, un riquadro asciutto, senza retorica: i tasti in due colonne (in mare, a terra) e cinque regole brevi, l'ultima dice che ci sono attività secondarie e qualche segreto. Si riapre da *Spedizione → Istruzioni*.
 - **Il grande lago non si naviga**, e la nave non passa tra due terre che si toccano per un angolo (§ 6).
-- **Tempo in terzi:** attraccare gratis, ripartire due terzi di giornata, aspettare a bordo uno, traversate lunghe uno ogni 60° (§ 6).
+- **Tempo in terzi:** attraccare gratis, ripartire due terzi di giornata, aspettare a bordo uno, traversate lunghe uno ogni 120° (§ 6).
 - **Animali per momento:** alba cinghiale, pomeriggio orso, notte lupi; mai una zona vuota (§ 9.3).
 - **Esplorazione pura:** niente avvisi su uccello e animali, solo «Nessun canto» (§ 9.3).
 - **Ricercati:** bacheca nei due porti, W rossa, fumo, fuggitivo che spara, taglia di 15 m.o. alla gendarmeria del Forte (§ 9.6).

@@ -23,6 +23,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **La casa degli sposi**: dopo le nozze, in città una casa nuova da visitare, la tua (da sviluppare).
 
 ## Fatto di recente
+- [x] **Versione 0.12.13**: la lucina-esca nella nebbia (non andarle incontro a vele spiegate), la morte spiegata prima della fine, nella nebbia il tempo è fermo, traversate lunghe il doppio; le taglie sono fogli sciolti in fondo al taccuino.
 - [x] **Versione 0.12.12**: il tempo si dice a parole (*si farà pomeriggio*, *arriverai all'alba*), niente più "momenti".
 - [x] **Versione 0.12.11**: la sala del trono è una navata col re, la regina e il pianista; la protesta in piazza al Forte.
 - [x] **Versione 0.12.10**: nebbia più ampia, il pesce gatto mangia 0,8 s dopo che acceleri, la sua cartolina rifatta.
@@ -95,7 +96,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Altri biomi**: scogliera, montagna, foresta d'autunno, vulcanica (lava), bosco di cristallo, foresta di funghi.
 - [ ] **Creature per bioma**: orso polare al nord, coccodrillo in palude, scorpione nel deserto…
 - [ ] **Puntatori delle voci** sul globo.
-- [ ] Tarare velocità della nave, lunghezza della traversata che fa passare un terzo di giornata (60°), probabilità degli animali.
+- [ ] Tarare velocità della nave, lunghezza della traversata che fa passare un terzo di giornata (120°), probabilità degli animali.
 
 ## Battlemap
 - [ ] **Altre creature**: serpente nell'erba, pipistrelli nelle rovine; creature diverse per bioma.

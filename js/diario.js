@@ -6,7 +6,7 @@
 const Diario = (() => {
   const TABS = [
     ["note", "Note"], ["uccelli", "Uccelli"], ["voci", "Voci"],
-    ["finanze", "Finanze"], ["zaino", "Zaino"], ["stiva", "Stiva"], ["timbri", "Timbri"], ["taglie", "Taglie"],
+    ["finanze", "Finanze"], ["zaino", "Zaino"], ["stiva", "Stiva"], ["timbri", "Timbri"],
   ];
   const STRIP_NOTES = 3;
   const LEDGER_ROWS = 14;   // le righe del registro dei pagamenti, anche vuote
@@ -98,7 +98,7 @@ const Diario = (() => {
           <nav class="book-tabs"></nav>
           <div class="book-pages" style="background-image:url(${paper()})"></div>
           <div class="book-spread"><div class="book-flow">${TABS.map(([id, label]) =>
-            `<section class="chapter" data-chapter="${id}"><h3>${label}</h3>${PAGES[id]()}</section>`).join("")}<i class="book-end"></i></div></div>
+            `<section class="chapter" data-chapter="${id}"><h3>${label}</h3>${PAGES[id]()}</section>`).join("")}${posters()}<i class="book-end"></i></div></div>
           <span class="book-folio is-left"></span><span class="book-folio is-right"></span>
           <div class="book-cells"></div>
         </div>
@@ -150,7 +150,7 @@ const Diario = (() => {
     current = TABS.filter(([id]) => starts[id] <= spread).pop()[0];
     box.querySelector(".book-tabs").innerHTML = tabsHtml("is-side");
     // i ricercati in stiva, cioè presi e non ancora consegnati: nella doppia pagina della stiva, in basso
-    // a destra, ognuno nella sua cella. Quelli consegnati restano solo nel capitolo delle taglie
+    // a destra, ognuno nella sua cella. Quelli consegnati restano solo nei fogli delle taglie, in fondo
     const caught = (trip().captured || []).filter((p) => !p.delivered);
     const cells = box.querySelector(".book-cells");
     cells.hidden = spread !== starts.stiva || !caught.length;
@@ -258,22 +258,22 @@ const Diario = (() => {
       const have = trip().stamps || [];
       return `<div class="stamps">${Gioco.STAMPS.map((id, n) => `<div class="stamp${have.includes(n) ? " is-got" : ""}">${icon(id)}</div>`).join("")}</div>`;
     },
-
-    // Una pagina per ogni avviso accettato, con l'insegna WANTED; consegnato il ricercato, il timbro CATTURATO
-    taglie() {
-      const list = trip().bounties || [];
-      if (!list.length) return `<p class="book-empty">Nessun avviso accettato. Le bacheche dei ricercati sono sulle banchine.</p>`;
-      const stamp = { delivered: '<span class="poster-stamp">catturato</span>', escaped: '<span class="poster-stamp is-gone">sfuggito</span>' };
-      return list.map((b) => `<div class="poster">
-          <div class="poster-head">${icon("wanted")}<b>Wanted</b></div>
-          <p class="poster-name">${escapeHtml(b.name)}</p>
-          ${b.crime ? `<p class="poster-crime">che ${b.crime}</p>` : ""}
-          <p class="poster-prize">taglia: ${Gioco.BOUNTY} m.o.</p>
-          <p class="poster-day">avviso accettato il giorno ${b.day}${b.state === "caught" ? " · in stiva" : ""}</p>
-          ${stamp[b.state] || ""}
-        </div>`).join("");
-    },
   };
+
+  // Gli avvisi accettati non sono un capitolo: sono fogli infilati in fondo al taccuino, uno per avviso,
+  // con l'insegna WANTED; consegnato il ricercato, il timbro CATTURATO. Senza avvisi non c'è niente
+  function posters() {
+    const list = trip().bounties || [];
+    const stamp = { delivered: '<span class="poster-stamp">catturato</span>', escaped: '<span class="poster-stamp is-gone">sfuggito</span>' };
+    return list.map((b) => `<div class="poster">
+        <div class="poster-head">${icon("wanted")}<b>Wanted</b></div>
+        <p class="poster-name">${escapeHtml(b.name)}</p>
+        ${b.crime ? `<p class="poster-crime">che ${b.crime}</p>` : ""}
+        <p class="poster-prize">taglia: ${Gioco.BOUNTY} m.o.</p>
+        <p class="poster-day">avviso accettato il giorno ${b.day}${b.state === "caught" ? " · in stiva" : ""}</p>
+        ${stamp[b.state] || ""}
+      </div>`).join("");
+  }
 
   // Le righe della scheda: vuote finché non sai niente; incrociato (traccia) il nome e dove e quando
   // vive, senza il disegno; visto, tutto. I rari, visti, hanno una cornice d'oro

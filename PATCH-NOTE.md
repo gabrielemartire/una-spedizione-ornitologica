@@ -2,6 +2,13 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.13 · 25 ottobre 2026
+
+- **La lucina nella nebbia.** In ogni nebbia c'è una lucina che pulsa, sul globo e dal ponte: è l'esca del pesce gatto. Se le punti contro la prua **con più di una vela**, si muove e ti viene incontro; se ti raggiunge, la nave affonda. Ammainando a una vela si ferma. Andando da un'altra parte, anche di corsa, non succede niente.
+- **Prima della fine, la spiegazione**: quando il pesce gatto ti inghiotte, la sua cartolina resta lì con due righe su cos'è successo e il tasto *Continua*.
+- **Nella nebbia il tempo non passa.** E in mare aperto passa la metà più piano: un cambio d'ora ogni 120° di traversata (prima 60°).
+- **Le taglie non sono più un capitolo** del diario: gli avvisi accettati sono fogli sciolti infilati in fondo al taccuino, uno per avviso. Se non ne hai, non c'è niente.
+
 ## 0.12.12 · 25 ottobre 2026
 
 - **Il tempo si dice a parole**, senza contarlo. Non si parla più di "momenti": *Aspetta a bordo (si farà pomeriggio)*, *(calerà la notte)*, *(arriverà l'alba)*; *Riparti (arriverai stanotte)*, *(arriverai all'alba)*, *(arriverai domani pomeriggio)*. Lo stesso per il sentiero dei passaggi (*Il cammino è lungo: arriverai nel pomeriggio*) e per i semi (*bisogna aspettare che cambi la luce*).
