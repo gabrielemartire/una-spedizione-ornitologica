@@ -2,6 +2,10 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.12 · 25 ottobre 2026
+
+- **Il tempo si dice a parole**, senza contarlo. Non si parla più di "momenti": *Aspetta a bordo (si farà pomeriggio)*, *(calerà la notte)*, *(arriverà l'alba)*; *Riparti (arriverai stanotte)*, *(arriverai all'alba)*, *(arriverai domani pomeriggio)*. Lo stesso per il sentiero dei passaggi (*Il cammino è lungo: arriverai nel pomeriggio*) e per i semi (*bisogna aspettare che cambi la luce*).
+
 ## 0.12.11 · 24 ottobre 2026
 
 - **La sala del trono è una navata**, più lunga che larga. In fondo il prete; davanti a lui **la sposa, a sinistra**, e il tuo posto accanto, in cima al tappeto; nell'angolo **il pianista**. **In prima fila il re e la regina**, poi **file di sedie**, una fila sì e una no, con gente in ginocchio e qualche sedia vuota, fino alla porta.

@@ -203,7 +203,7 @@ function showWelcome() {
       <ul>
         <li>Ogni uccello si fa vedere solo in certi momenti: alba, pomeriggio o notte. Per osservarlo serve vista libera, né troppo vicino né troppo lontano.</li>
         <li>Rumore e vicinanza lo fanno volare via, e attirano gli animali (in rosso). Erba alta e cespugli ti nascondono.</li>
-        <li>Ripartire costa due momenti, aspettare a bordo uno. La ciurma va pagata ogni alba.</li>
+        <li>Si naviga di notte: ripartendo di pomeriggio arrivi all'alba. Aspettando a bordo, dall'alba si fa pomeriggio. La ciurma va pagata ogni alba.</li>
         <li><kbd>Tab</kbd> apre il diario. A fine viaggio il taccuino ha un codice per riprenderlo.</li>
         <li>Oltre agli uccelli ci sono attività secondarie e qualche segreto.</li>
       </ul>

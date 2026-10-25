@@ -23,6 +23,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **La casa degli sposi**: dopo le nozze, in città una casa nuova da visitare, la tua (da sviluppare).
 
 ## Fatto di recente
+- [x] **Versione 0.12.12**: il tempo si dice a parole (*si farà pomeriggio*, *arriverai all'alba*), niente più "momenti".
 - [x] **Versione 0.12.11**: la sala del trono è una navata col re, la regina e il pianista; la protesta in piazza al Forte.
 - [x] **Versione 0.12.10**: nebbia più ampia, il pesce gatto mangia 0,8 s dopo che acceleri, la sua cartolina rifatta.
 - [x] **Versione 0.12.9**: il Kraken ferma la nave e uscirne è lento.
@@ -46,7 +47,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [x] **Versione 0.10**: il fuoco notturno del ricercato (solo col binocolo) e la W al centro dell'isola; il campo dei bucanieri; l'orso di nuovo appena più veloce di te.
 - [x] **Versione 0.9**: la lettera della Società e l'Ornitologo esperto; i timbri; la radura del falò col marshmallow e il cuore viola; pesce in scatola e tagliole; bottiglia col messaggio e pala; spiagge caraibiche; il marinaio coi quattro occhi.
 - [x] **Versione 0.8**: la nave non si incaglia nel lago; niente avvisi sopra la battlemap; capitolo Taglie col WANTED e il timbro CATTURATO; voci barrate; la lettera segna la torre; codice col numero dei viaggi; si riparte col taccuino collegato; benvenuto; orso più giusto; ricercato a un cuore; taverna più economica; fiume serpeggiante nella cartolina.
-- [x] **Versione 0.7**: zone interne raggiungibili a piedi dai passaggi (un momento ciascuno), la nave resta ormeggiata; isole più grandi e un'isola col grande lago.
+- [x] **Versione 0.7**: zone interne raggiungibili a piedi dai passaggi (un terzo di giornata ciascuno), la nave resta ormeggiata; isole più grandi e un'isola col grande lago.
 - [x] **Versione 0.6.9**: cornice verde barocca fuori dalla battlemap; il taccuino si reimpagina quando arrivano i caratteri.
 - [x] **Versione 0.6.8**: cornice chiara attorno alla battlemap; cuori di nuovo rossi.
 - [x] **Versione 0.6.7**: il diario segna solo gli sbarchi, con l'ora e se l'uccello c'era.
@@ -70,7 +71,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [x] **Salvataggio automatico** in localStorage: un refresh non cancella più la spedizione; *Continua la spedizione* nel menu. Ricaricare a terra costa un giorno.
 - [x] **Versione 0.2.1**: niente globo a terra; binocolo chiaro in alto a sinistra sul globo (*usa binocolo (T)*); diario su carta vecchia e taccuino come libro aperto a misura fissa, capitoli a sinistra, ← → pagine, ↑ ↓ capitoli; ciurma come registro dei pagamenti; firma in corsivo barocco; si gioca tutto da tastiera.
 - [x] **Versione 0.2**: tutto in una schermata, barra menu in alto, niente titoli sui riquadri, versione nel menu, link a GitHub nei crediti.
-- [x] **Tempo in terzi**: attraccare gratis, ripartire due momenti, aspettare a bordo uno, traversate lunghe uno ogni 60°.
+- [x] **Tempo in terzi**: attraccare gratis, ripartire due terzi di giornata, aspettare a bordo uno, traversate lunghe uno ogni 60°.
 - [x] **Animali per momento**: cinghiale all'alba, orso di pomeriggio (più spesso col fiume), lupi di notte. Di notte ogni passo fa più rumore.
 - [x] **18 uccelli** in 6 specie (un'icona per specie, varianti a colori), un uccello per zona deciso al primo attracco, solo in certi momenti del giorno.
 - [x] **Diario di viaggio** con linguette (note, uccelli, voci, ciurma, zaino, stiva) e avvisi separati dalle note.
@@ -94,7 +95,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Altri biomi**: scogliera, montagna, foresta d'autunno, vulcanica (lava), bosco di cristallo, foresta di funghi.
 - [ ] **Creature per bioma**: orso polare al nord, coccodrillo in palude, scorpione nel deserto…
 - [ ] **Puntatori delle voci** sul globo.
-- [ ] Tarare velocità della nave, lunghezza della traversata che costa un momento (60°), probabilità degli animali.
+- [ ] Tarare velocità della nave, lunghezza della traversata che fa passare un terzo di giornata (60°), probabilità degli animali.
 
 ## Battlemap
 - [ ] **Altre creature**: serpente nell'erba, pipistrelli nelle rovine; creature diverse per bioma.

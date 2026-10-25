@@ -1,7 +1,7 @@
 // La battlemap e la spedizione: una zona, il suo uccello, gli animali del momento del giorno.
 // Il tempo scorre solo quando ti muovi: ogni tua azione è un battito, e in ogni battito
 // gli animali avanzano secondo la loro velocità, scivolando sulla mappa insieme a te.
-// La giornata è divisa in tre momenti: ripartire ne costa due, aspettare a bordo uno.
+// La giornata è divisa in tre (alba, pomeriggio, notte): ripartire ne fa passare due, aspettare a bordo una.
 // Espone l'oggetto globale `Gioco`.
 const Gioco = (() => {
   // La battlemap: 40 per 24. Durante la generazione di una zona col mare a nord o a sud diventa per un
@@ -96,7 +96,7 @@ const Gioco = (() => {
     gate:   { name: "Ponte levatoio",   icon: "drawbridge", cls: "t-gate",   walk: false, sight: false, gate: true },
     bridge: { name: "Ponte",            icon: "bridge",     cls: "t-bridge", walk: true,  sight: true, noise: 1, sound: "macerie" },
     flag:   { name: "Bandiera",         icon: "flag",       cls: "t-flag",   walk: false, sight: true },
-    // Il passaggio a piedi verso una zona vicina della stessa isola: costa un momento
+    // Il passaggio a piedi verso una zona vicina della stessa isola: si arriva all'ora del giorno dopo
     pass:   { name: "Passaggio",        icon: "signpost",   cls: "t-pass",   walk: true,  sight: true, noise: 1, sound: "macerie", pass: true },
     // La torre della donna che aspetta una lettera
     tower:  { name: "Torre",            icon: "tower",      cls: "t-castle", walk: false, sight: false, tower: true },
@@ -687,7 +687,7 @@ const Gioco = (() => {
   // --- Spedizione ---
 
   // La spedizione: il mondo, la nave, il tempo, i soldi, il diario. Dura finché giochi.
-  // trip.third conta i momenti passati: 0 = alba del primo giorno, 1 = pomeriggio, 2 = notte, 3 = alba del secondo…
+  // trip.third conta i terzi di giornata passati: 0 = alba del primo giorno, 1 = pomeriggio, 2 = notte, 3 = alba del secondo…
   let trip = null;
   let explorer = "";
   let notebook = null;   // il taccuino ripreso ({ birds, voyages, stamps }), per la prossima spedizione
@@ -699,6 +699,15 @@ const Gioco = (() => {
   const now = () => timeOf(trip.third);
   const day = () => Math.floor(trip.third / 3) + 1;
   const timeLabel = (t) => ({ alba: "all'alba", pomeriggio: "nel pomeriggio", notte: "di notte" })[t];
+  // Il tempo detto a parole, senza contarlo: cosa succede al cielo aspettando, e quando si arriva
+  const comingTime = (n) => ({ alba: "arriverà l'alba", pomeriggio: "si farà pomeriggio", notte: "calerà la notte" })[timeOf(trip.third + n)];
+  function arrivalTime(n) {
+    const t = timeOf(trip.third + n);
+    const sameDay = Math.floor((trip.third + n) / 3) === Math.floor(trip.third / 3);
+    if (t === "alba") return "arriverai all'alba";
+    if (t === "pomeriggio") return sameDay ? "arriverai nel pomeriggio" : "arriverai domani pomeriggio";
+    return sameDay ? "arriverai stanotte" : "arriverai domani notte";
+  }
 
   // Il globo nasce tutto dal seed: per questo il salvataggio può tenere solo il seed e ricostruirlo
   function makeWorld(seed) {
@@ -941,7 +950,7 @@ const Gioco = (() => {
   window.addEventListener("pagehide", save);
   document.addEventListener("visibilitychange", () => { if (document.hidden) save(); });
 
-  // Far passare uno o più momenti. A ogni nuova alba si paga la ciurma: se non si può, finisce tutto.
+  // Far passare uno o più terzi di giornata. A ogni nuova alba si paga la ciurma: se non si può, finisce tutto.
   function advance(thirds) {
     for (let i = 0; i < thirds; i++) {
       trip.third++;
@@ -951,7 +960,7 @@ const Gioco = (() => {
     return true;
   }
 
-  // Ripartire (da terra o dalla città) costa due momenti: si arriva al momento che precede quello di partenza
+  // Ripartire (da terra o dalla città) fa passare due terzi di giornata: si arriva all'ora che precede quella di partenza
   function depart() {
     if (s) trip.hp = s.player.hp;
     el.overlay.hidden = true;
@@ -990,7 +999,7 @@ const Gioco = (() => {
       trip.stats.islands.add(zone.island);
     }
     if (!waited) trip.stats.landings++;
-    // i semi sparsi: passato almeno un momento, l'uccello volato via torna nella zona (non dove sono i semi)
+    // i semi sparsi: cambiata almeno una volta l'ora del giorno, l'uccello volato via torna nella zona (non dove sono i semi)
     let back = false;
     if (memory.gone && memory.seededAt != null && trip.third > memory.seededAt) {
       memory.gone = false;
@@ -1409,14 +1418,14 @@ const Gioco = (() => {
     log(`Hai trovato: ${it.nome}. Finisce in stiva.`);
   }
 
-  // Il passaggio: si va a piedi nella zona vicina, e ci vuole un momento. La nave resta dov'è
+  // Il passaggio: si va a piedi nella zona vicina, e si arriva all'ora del giorno dopo. La nave resta dov'è
   function offerPass(c) {
     const ps = s.passes.find((q) => same(q, c));
     if (!ps) return;
     const dest = trip.world.zones[ps.to];
     s.over = true;
     s.pendingPass = ps.to;
-    showOverlay("Un passaggio", `Il sentiero porta a <b>${dest.name}</b>. Ci vuole un momento: sarà ${timeOf(trip.third + 1)}. La nave resta dove l'hai ormeggiata.`, [
+    showOverlay("Un passaggio", `Il sentiero porta a <b>${dest.name}</b>. Il cammino è lungo: ${arrivalTime(1)}. La nave resta dove l'hai ormeggiata.`, [
       ["go-pass", "Prendi il sentiero"],
       ["leave-merchant", "Resta qui"],
     ]);
@@ -1628,16 +1637,16 @@ const Gioco = (() => {
     showOverlay("La donna della torre", "Legge la lettera in silenzio, poi ride e piange insieme. Scende di corsa, ti abbraccia e ti dà un bacio. «Grazie!» <br>Hai un cuore in più, rosa, per sempre.", [["leave-lady", "Arrossisci e riparti"]]);
   }
 
-  // I semi: si spargono dove l'uccello è volato via per sempre; aspettato un momento, torna nella zona
+  // I semi: si spargono dove l'uccello è volato via per sempre; quando cambia la luce, torna nella zona
   function sowSeeds() {
     const memory = trip.zones[s.zone.id];
     if (!hasPack("semi")) { log("Non hai semi. Li vende l'emporio."); return; }
     if (!memory.gone) { log(memory.done ? "L'uccello di qui è già nel taccuino: i semi non servono." : "I semi servono a far tornare un uccello volato via: qui non ce n'è bisogno."); return; }
-    if (memory.seededAt != null) { log("I semi sono già sparsi. Aspetta un momento."); return; }
+    if (memory.seededAt != null) { log("I semi sono già sparsi. Bisogna aspettare che cambi la luce."); return; }
     trip.pack.splice(trip.pack.findIndex((it) => it.kind === "semi"), 1);
     memory.seededAt = trip.third;
     Suoni.play("cespuglio");
-    log("Spargi i semi. Ora bisogna aspettare un momento.");
+    log("Spargi i semi. Ora bisogna aspettare che cambi la luce.");
   }
 
   // L'uovo: passati EGG_DAYS giorni da quando l'hai avuto, si schiude e nel taccuino arriva il Pulcino
@@ -2426,14 +2435,14 @@ const Gioco = (() => {
       : b.present ? "Torni a bordo senza averlo osservato."
       : "Nessun uccello, a quest'ora. Forse più tardi?";
     showOverlay("Di nuovo a bordo", `${esito}<br>Giorno ${day()}, ${now()} · ${trip.money} monete · Vita ${s.player.hp}/${maxHp()}`, [
-      ["sail", `Riparti <small>(due momenti: sarà ${timeOf(trip.third + DEPART_COST)})</small>`],
-      ["wait", `Aspetta a bordo <small>(un momento: sarà ${timeOf(trip.third + 1)})</small>`],
+      ["sail", `Riparti <small>(${arrivalTime(DEPART_COST)})</small>`],
+      ["wait", `Aspetta a bordo <small>(${comingTime(1)})</small>`],
       ["stay", "Resta a terra"],
     ]);
     Suoni.play("campana");
   }
 
-  // Aspettare un momento a bordo: la zona resta la stessa, cambiano luce, animali e forse l'uccello
+  // Aspettare a bordo l'ora del giorno dopo: la zona resta la stessa, cambiano luce, animali e forse l'uccello
   function waitAboard() {
     const zone = s.zone;
     trip.hp = s.player.hp;
@@ -2636,7 +2645,7 @@ const Gioco = (() => {
     if (s.lit && !s.lit.has(key(c))) { el.tileInfo.textContent = "Buio"; return; }
     const parts = [t.name];
     if (t === TILES.ship) parts.push("torni a bordo");
-    else if (t.pass) { const ps = s.passes.find((q) => same(q, c)); if (ps) parts[0] = `Passaggio verso ${trip.world.zones[ps.to].name}`; parts.push("un momento a piedi"); }
+    else if (t.pass) { const ps = s.passes.find((q) => same(q, c)); if (ps) parts[0] = `Passaggio verso ${trip.world.zones[ps.to].name}`; parts.push(`a piedi, ${arrivalTime(1)}`); }
     else if (t.gate) parts.push("chiuso");
     else parts.push(t.walk ? "si passa" : t.sight ? "non si passa" : "blocca passo e vista");
     if (t.hide) parts.push("ti nasconde");
@@ -2886,7 +2895,7 @@ const Gioco = (() => {
   // Quello che serve alla navigazione (js/sea.js) e al diario (js/diario.js)
   return {
     start, resume, save, setNotebook: (data) => { notebook = data; }, code, hasSave: () => !!loadSave(), clearSave, loadNotebook, depart, landAt, rumor, pay, earn, visitCity, maxHp, EGG_DAYS,
-    useItem, wantedPoster, acceptWanted, bountyState, earnStamp, victory, sunk, STAMPS, advance, renderStatus, note, log, toast, timeOf, now, day, showView, iconHtml, fitMap,
+    useItem, wantedPoster, acceptWanted, bountyState, earnStamp, victory, sunk, STAMPS, advance, renderStatus, note, log, toast, timeOf, arrivalTime, now, day, showView, iconHtml, fitMap,
     get trip() { return trip; },
     get zoneState() { return s; },   // la battlemap in corso: per le prove automatiche
     get el() { return el; },

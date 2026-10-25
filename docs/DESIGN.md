@@ -75,7 +75,7 @@ Tutto sta in **una schermata senza scorrere**, anche su un portatile da 13" (cir
 | Riquadro | Contenuto | Note |
 |---|---|---|
 | **A** Battlemap | La zona in cui sei sbarcato, a griglia, con icone | In mare mostra il globo grande. Sotto: che cosa c'è nella casella indicata ("Erba alta · si passa · ti nasconde") e i tasti |
-| **B** Stato | Giorno e i tre momenti, monete, vita; a terra rumore e animali, in mare rotta, vele e traversata | |
+| **B** Stato | Giorno e l'ora (alba, pomeriggio, notte), monete, vita; a terra rumore e animali, in mare rotta, vele e traversata | |
 | **C** Diario | Una pagina di carta con le ultime 3 note utili | Una sola linguetta rossa, *Diario*, apre il taccuino intero (§ 12) |
 | **D** Cartolina | Il panorama della zona in pixel art, visto da una persona in piedi | In mare: il mare dal ponte; col binocolo: la costa |
 
@@ -103,11 +103,11 @@ Tutto sta in **una schermata senza scorrere**, anche su un portatile da 13" (cir
 
 **Puntatori.** Le voci comprate in città compaiono sul globo come segni: un cerchio largo per le voci vaghe, una croce precisa per quelle care.
 
-**Tempo: la giornata in tre momenti.** Ogni giorno ha **alba**, **pomeriggio** e **notte**. Il tempo avanza solo a scatti di un momento:
+**Tempo: la giornata in tre.** Ogni giorno ha **alba**, **pomeriggio** e **notte**. Il tempo avanza solo a scatti di un terzo di giornata. Nel gioco non si conta mai: i testi dicono cosa succede al cielo (*si farà pomeriggio*, *calerà la notte*, *arriverai all'alba*, *arriverai domani pomeriggio*).
 - **Attraccare e camminare a terra non costano niente**: se arrivi di giorno, resta giorno.
-- **Ripartire costa due momenti** (si pensa alla notte di navigazione): parti di pomeriggio e arrivi all'alba; se riattracchi è ancora alba.
-- **Aspettare a bordo costa un momento**: dalla casella nave puoi aspettare che venga pomeriggio, se l'uccello che cerchi è diurno, e risbarcare nella stessa zona.
-- **In mare l'orologio è fermo**, ma una **traversata lunga** aggiunge un momento ogni 60° percorsi (barra *Traversata* nel riquadro B).
+- **Ripartire fa passare due terzi di giornata** (si pensa alla notte di navigazione): parti di pomeriggio e arrivi all'alba; se riattracchi è ancora alba.
+- **Aspettare a bordo fa passare un terzo di giornata**: dalla casella nave puoi aspettare che venga pomeriggio, se l'uccello che cerchi è diurno, e risbarcare nella stessa zona.
+- **In mare l'orologio è fermo**, ma una **traversata lunga** aggiunge un terzo di giornata ogni 60° percorsi (barra *Traversata* nel riquadro B).
 - A ogni nuova alba suona la campana e si paga la ciurma.
 
 Così il ciclo tipico (sbarco, esplorazione, ripartenza) costa due terzi di giornata, e l'attesa diventa una scelta: *investire tempo per vedere se arriva l'uccello che cerco*.
@@ -118,7 +118,7 @@ Così il ciclo tipico (sbarco, esplorazione, ripartenza) costa due terzi di gior
 
 **La nebbia del pesce gatto**: 2–3 macchie in mare aperto (raggio 9–12° dalla 0.12.10, lontane dalle coste, dalla partenza e fra loro), solo **di notte**, visibili sul globo come macchie grigie e dal ponte come nebbia fitta. Il pesce gatto (come quello di *Outer Wilds*, cieco, con la lucina) caccia col rumore: **oltre una vela** si accende la lucina (sul globo accanto alla nave, dal ponte nella nebbia) e dopo **0,8 secondi** la nave affonda (*Inghiottito*); una volta che ti ha sentito, uscire dalla nebbia non basta, solo ammainare in tempo. Con una vela si passa. La cartolina dell'affondamento: la nebbia grigia rossastra in alto, la sagoma con le spine a raggiera, la bocca coi denti, l'antenna con la lucina, la nave piccola davanti (come il pesce di *Outer Wilds*).
 
-**Il Kraken**: ogni volta che la nave va **al largo** (nessuna costa alla portata del binocolo) si tira 1 su 8; se esce, **3–7 secondi dopo** il mare intorno diventa nero d'inchiostro (macchia di 3,5° con sei tentacoli sul globo; dal ponte acqua nera e tentacoli). Arrivando **ferma la nave** (vele a zero); dentro al massimo una vela, e la nave va **a un terzo della velocità** (5–6 secondi per uscire); uscendo passa un momento. Diario: *«Acqua nera a babordo. Nessuno vuole parlarne.»* Una volta per viaggio. Il timbro del Kraken per ora non si prende.
+**Il Kraken**: ogni volta che la nave va **al largo** (nessuna costa alla portata del binocolo) si tira 1 su 8; se esce, **3–7 secondi dopo** il mare intorno diventa nero d'inchiostro (macchia di 3,5° con sei tentacoli sul globo; dal ponte acqua nera e tentacoli). Arrivando **ferma la nave** (vele a zero); dentro al massimo una vela, e la nave va **a un terzo della velocità** (5–6 secondi per uscire); uscendo passa un terzo di giornata. Diario: *«Acqua nera a babordo. Nessuno vuole parlarne.»* Una volta per viaggio. Il timbro del Kraken per ora non si prende.
 
 **Sul globo** (0.12.7) si vedono le città e il castello (un torrione coi merli); i vulcani no, si scoprono andandoci.
 
@@ -206,7 +206,7 @@ Una griglia fitta (**40 × 24 caselle**) generata dallo stesso seed della cartol
 
 **Rovine.** Un edificio diroccato di circa 8 × 6 caselle: muri spessi, un varco e un crollo pieno di macerie (rumorose), a volte un pilastro. **Da fuori si vede solo il tetto: l'interno si scopre entrando.** I muri bloccano la vista, l'orso può entrare dai varchi. A volte l'uccello nidifica dentro.
 
-**Le zone interne e i passaggi.** Le isole grandi hanno zone che non toccano il mare. Ogni battlemap ha **uno o due passaggi** (a volte tre, nelle zone di snodo) sul bordo che guarda la zona vicina: a nord, a sud, a est; a ovest solo nelle zone interne, che non hanno il mare. Sono segnati con l'icona del **ponte**. Ognuno porta a una zona confinante della stessa isola (mai alla zona di una città), interna o sulla costa. Passandoci sopra, una finestrella dice dove porta: prendere il sentiero **costa un momento**, e si arriva sul passaggio corrispondente dell'altra zona. I passaggi sono scelti in modo che **ogni zona interna sia collegata a una zona sul mare**; sul globo non si vedono, si scoprono esplorando.
+**Le zone interne e i passaggi.** Le isole grandi hanno zone che non toccano il mare. Ogni battlemap ha **uno o due passaggi** (a volte tre, nelle zone di snodo) sul bordo che guarda la zona vicina: a nord, a sud, a est; a ovest solo nelle zone interne, che non hanno il mare. Sono segnati con l'icona del **ponte**. Ognuno porta a una zona confinante della stessa isola (mai alla zona di una città), interna o sulla costa. Passandoci sopra, una finestrella dice dove porta: prendere il sentiero **fa passare un terzo di giornata** (*arriverai nel pomeriggio*), e si arriva sul passaggio corrispondente dell'altra zona. I passaggi sono scelti in modo che **ogni zona interna sia collegata a una zona sul mare**; sul globo non si vedono, si scoprono esplorando.
 
 **La nave resta ferma** dove l'hai ormeggiata: per ripartire o aspettare a bordo si torna da lei a piedi. Le zone sulla costa raggiunte a piedi hanno il mare ma non la nave; le zone interne sono tutta terra e si entra dal passaggio. La mappa di una zona è sempre la stessa, comunque ci si arrivi.
 
@@ -358,7 +358,7 @@ Due città per globo, sempre presenti. **La città è disegnata in pixel art vis
 | **Chiave arrugginita** | Apre i **forzieri chiusi**: circa una zona su otto (almeno una) ne ha uno, vicino ad alberi o rocce. Senza chiave: «Un forziere chiuso. Serve una chiave.» Dentro: un oggetto rituale e 5–10 m.o. **La chiave resta** per tutta la partita. |
 | **Uovo maculato** | **Tredici giorni** dopo averlo avuto (ovunque tu sia) si schiude: nel taccuino arriva il **Pulcino**, tra gli altri uccelli. Nello zaino si vede quanti giorni mancano. |
 
-**L'emporio.** Entrando, la merce è appoggiata su un **tavolo di legno** e si sceglie con le frecce. Per ora c'è solo il **sacchetto di semi** (5 m.o.): in una zona dove l'uccello è **volato via per sempre**, lo spargi con **E**; aspettato almeno un momento (1/3 di giorno), l'uccello **torna nella zona**, in un punto a caso della battlemap (non dove sono i semi), e si fa vedere nelle sue ore. Un sacchetto, un uccello.
+**L'emporio.** Entrando, la merce è appoggiata su un **tavolo di legno** e si sceglie con le frecce. Per ora c'è solo il **sacchetto di semi** (5 m.o.): in una zona dove l'uccello è **volato via per sempre**, lo spargi con **E**; quando cambia almeno una volta l'ora del giorno (1/3 di giorno), l'uccello **torna nella zona**, in un punto a caso della battlemap (non dove sono i semi), e si fa vedere nelle sue ore. Un sacchetto, un uccello.
 
 Le città **sono battlemap cittadine**: la banchina con le altre navi, le strade, le case, la gente che va e viene (si muove da sola, anche se stai fermo; se le vai addosso brontola). Lungo la strada principale **le botteghe**: la porta ha il simbolo **→** (si entra), ci passi sopra e il padrone ti fa la sua domanda. Per ripartire si torna alla propria nave. In città il tempo non passa, tranne dormendo in taverna.
 
@@ -529,7 +529,7 @@ Idea: **ogni uccello ha il suo verso**, generato dal suo ID. Lo stesso uccello c
 - **Nome del giocatore:** si sceglie all'inizio della partita ("Il registro di bordo"), anche col taccuino ripreso, proponendo quello di prima.
 - **Come si gioca:** alla prima spedizione, un riquadro asciutto, senza retorica: i tasti in due colonne (in mare, a terra) e cinque regole brevi, l'ultima dice che ci sono attività secondarie e qualche segreto. Si riapre da *Spedizione → Istruzioni*.
 - **Il grande lago non si naviga**, e la nave non passa tra due terre che si toccano per un angolo (§ 6).
-- **Tempo in terzi:** attraccare gratis, ripartire due momenti, aspettare a bordo uno, traversate lunghe uno ogni 60° (§ 6).
+- **Tempo in terzi:** attraccare gratis, ripartire due terzi di giornata, aspettare a bordo uno, traversate lunghe uno ogni 60° (§ 6).
 - **Animali per momento:** alba cinghiale, pomeriggio orso, notte lupi; mai una zona vuota (§ 9.3).
 - **Esplorazione pura:** niente avvisi su uccello e animali, solo «Nessun canto» (§ 9.3).
 - **Ricercati:** bacheca nei due porti, W rossa, fumo, fuggitivo che spara, taglia di 15 m.o. alla gendarmeria del Forte (§ 9.6).

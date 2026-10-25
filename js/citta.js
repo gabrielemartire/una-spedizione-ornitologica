@@ -977,7 +977,7 @@ const Citta = (() => {
 
   function aboard() {
     dialog("La tua nave", `Giorno ${Gioco.day()}, ${Gioco.now()} · ${Gioco.trip.money} m.o.`, [
-      ["sail", `Riparti <small>(due momenti: sarà ${Gioco.timeOf(Gioco.trip.third + 2)})</small>`],
+      ["sail", `Riparti <small>(${Gioco.arrivalTime(2)})</small>`],
       ["back", "Resta in città"],
     ], { voice: false });
   }

@@ -1,10 +1,10 @@
 // La navigazione: la nave si guida in tempo reale sul globo.
-// ← → cambiano la rotta, ↑ ↓ le vele. In mare l'orologio è fermo: costa ripartire (due momenti),
-// e una traversata lunga aggiunge un momento ogni SEA_LEG gradi percorsi.
+// ← → cambiano la rotta, ↑ ↓ le vele. In mare l'orologio è fermo: ripartire fa passare due terzi di giornata,
+// e una traversata lunga ne aggiunge uno ogni SEA_LEG gradi percorsi.
 // Vicino a una costa si può guardare col binocolo o sbarcare, gratis.
 // Espone l'oggetto globale `Mare`.
 const Mare = (() => {
-  const SEA_LEG = 60;         // gradi di traversata che costano un momento del giorno
+  const SEA_LEG = 60;         // gradi di traversata che fanno passare un terzo di giornata
   const MAX_SAILS = 4;
   const SAIL_SPEED = 1.8;     // gradi al secondo per ogni livello di vela
   const TURN_RATE = 100;      // gradi di rotta al secondo
@@ -238,7 +238,7 @@ const Mare = (() => {
     return `
       <div>${Gioco.iconHtml("ship")}<span>Rotta</span><b>${Math.round(ship.heading)}° ${compass(ship.heading)}</b></div>
       <div><span>Vele</span><b>${"▰".repeat(ship.sails)}${"▱".repeat(MAX_SAILS - ship.sails)}</b></div>
-      <div title="Ogni ${SEA_LEG}° di traversata passa un momento del giorno">${Gioco.iconHtml("hourglass")}<span>Traversata</span><b>${"▰".repeat(leg)}${"▱".repeat(5 - leg)}</b></div>`;
+      <div title="Ogni ${SEA_LEG}° di traversata il cielo cambia: dall'alba al pomeriggio, dal pomeriggio alla notte">${Gioco.iconHtml("hourglass")}<span>Traversata</span><b>${"▰".repeat(leg)}${"▱".repeat(5 - leg)}</b></div>`;
   }
 
   // --- Cartolina: il mare dal ponte, oppure la costa vista col binocolo ---
