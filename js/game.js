@@ -2023,20 +2023,23 @@ const Gioco = (() => {
     render();
   }
 
-  // I mostri del castello vanno in diagonale e rimbalzano sui muri della loro stanza; i fantasmi ogni due battiti
+  // I mostri del castello vanno in diagonale e rimbalzano sui muri della loro stanza; i fantasmi ogni due battiti,
+  // ma di due caselle alla volta
   function bounce(o) {
     if (o.kind === "ghost" && s.ticks % 2) return;
     const room = s.rooms[o.room];
     const ok = (c) => room.keys.has(key(c)) && tile(s.map, c.x, c.y).walk && !s.bouncers.some((b) => b !== o && same(b, c));
-    for (const [dx, dy] of [[o.dx, o.dy], [-o.dx, o.dy], [o.dx, -o.dy], [-o.dx, -o.dy]]) {
-      const n = { x: o.x + dx, y: o.y + dy };
-      if (!ok(n)) continue;
-      o.dx = dx; o.dy = dy;
-      if (same(n, s.player)) { bitten(o); return; }
+    const path = [];
+    for (let i = 0; i < (o.kind === "ghost" ? 2 : 1); i++) {
+      const d = [[o.dx, o.dy], [-o.dx, o.dy], [o.dx, -o.dy], [-o.dx, -o.dy]].find(([dx, dy]) => ok({ x: o.x + dx, y: o.y + dy }));
+      if (!d) break;
+      [o.dx, o.dy] = d;
+      const n = { x: o.x + d[0], y: o.y + d[1] };
+      if (same(n, s.player)) { slide(o, path); bitten(o); return; }
       o.x = n.x; o.y = n.y;
-      slide(o, [n]);
-      return;
+      path.push(n);
     }
+    slide(o, path);
   }
 
   function bitten(o) {

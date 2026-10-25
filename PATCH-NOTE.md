@@ -2,6 +2,11 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.14 · 25 ottobre 2026
+
+- **Le istruzioni sono riscritte da capo**: lo scopo, come si osserva un uccello, il rumore, le ore, la paga della ciurma, come finisce il viaggio; poi i tasti, in mare, a terra e sempre.
+- **Nel castello i fantasmi si spostano di due caselle alla volta** (sempre ogni due battiti): saltano, e sono più difficili da evitare.
+
 ## 0.12.13 · 25 ottobre 2026
 
 - **La lucina nella nebbia.** In ogni nebbia c'è una lucina che pulsa, sul globo e dal ponte: è l'esca del pesce gatto. Se le punti contro la prua **con più di una vela**, si muove e ti viene incontro; se ti raggiunge, la nave affonda. Ammainando a una vela si ferma. Andando da un'altra parte, anche di corsa, non succede niente.

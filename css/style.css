@@ -881,7 +881,7 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 .e-pirate { color: var(--enemy); filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 1px #000); }
 
 /* Come si gioca: i tasti in due colonne, poi poche regole */
-.welcome-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 4px 0 10px; }
+.welcome-cols { display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; margin: 4px 0 10px; }
 .welcome-cols dl { margin: 0; }
 .welcome-cols dt { color: #f2c230; font-size: 19px; margin-bottom: 2px; }
 .welcome-cols dd { margin: 0; font-size: 17px; line-height: 1.3; }

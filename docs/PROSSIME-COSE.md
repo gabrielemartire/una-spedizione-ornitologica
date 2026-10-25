@@ -23,6 +23,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **La casa degli sposi**: dopo le nozze, in città una casa nuova da visitare, la tua (da sviluppare).
 
 ## Fatto di recente
+- [x] **Versione 0.12.14**: istruzioni riscritte; i fantasmi del castello si spostano di due caselle.
 - [x] **Versione 0.12.13**: la lucina-esca nella nebbia (non andarle incontro a vele spiegate), la morte spiegata prima della fine, nella nebbia il tempo è fermo, traversate lunghe il doppio; le taglie sono fogli sciolti in fondo al taccuino.
 - [x] **Versione 0.12.12**: il tempo si dice a parole (*si farà pomeriggio*, *arriverai all'alba*), niente più "momenti".
 - [x] **Versione 0.12.11**: la sala del trono è una navata col re, la regina e il pianista; la protesta in piazza al Forte.
