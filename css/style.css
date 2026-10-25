@@ -959,4 +959,16 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 /* La protesta in piazza al Forte */
 .e-npc.e-protest { color: #e8b060; }
 .t-chair { color: #a8865a; background: #1c1a17; }
+/* L'arredo del castello, le trappole dei cunicoli */
+.t-decor { color: #b89a6a; background: #1c1a17; }
+.cell.t-decor .ic { opacity: 0.9; }
+.t-decor.t-banner { color: #c8403a; }
+.t-decor.t-gold { color: #e0b850; }
+.t-cspike { color: #6e665a; background: #1c1a17; }
+.cell.t-cspike .ic { opacity: 0.45; }
+.t-cspike.is-up { color: #d8d4cc; background: #2a1c1a; }
+.cell.t-cspike.is-up .ic { opacity: 1; }
+.t-cfloor.t-crack { color: #8a8070; }
+.t-chole { color: #4a4238; background: #0a0908; }
+.cell.t-chole .ic { opacity: 0.8; }
 .cell.t-chair .ic { opacity: 0.85; }

@@ -2,7 +2,8 @@
 // incastonate e porte nel muro; è tutto buio finché non ci passi. In alcune stanze mostri (pipistrelli e
 // fantasmi) che rimbalzano da un muro all'altro senza uscire mai; qua e là monete e cose da vendere; una
 // chiave d'ottone apre la sala del trono, e un muro che cede nasconde la stanza del tesoro. Nella sala del
-// trono, addobbata a nozze, una dama aspetta lo sposo. Qui anche la festa delle nozze, in pixel art.
+// trono, addobbata a nozze, una dama aspetta lo sposo. L'atrio con le armature, la biblioteca, due mobili in
+// ogni stanza; nei cunicoli spuntoni a tempo e lastre che cedono. Qui anche la festa delle nozze, in pixel art.
 // Espone l'oggetto globale `Castello`.
 const Castello = (() => {
   const W = 40;
@@ -53,13 +54,15 @@ const Castello = (() => {
       for (let i = 0; i < 300; i++) { const [x, y] = where(); if (odd(x) && odd(y) && fits(x, y, w, h)) return room(x, y, w, h, kind); }
       return null;
     };
-    // l'atrio in basso al centro, col portone; la sala del trono in alto; la stanza del tesoro piccola, ovunque
-    const hall = room(17, 19, 5, 3, "hall");
+    // l'atrio in basso al centro, col portone; la sala del trono in alto; la stanza del tesoro piccola e la
+    // biblioteca, ovunque
+    const hall = room(15, 17, 9, 5, "hall");
     const exit = { x: 19, y: H - 1 };
     // la sala del trono è una navata: più lunga che larga
     const throne = place(7, 11, "throne", () => [r() < 0.5 ? 1 + 2 * Math.floor(r() * 3) : W - 9 - 2 * Math.floor(r() * 3), 1]);
     const secret = place(3, 3, "secret");
-    if (!throne || !secret) return null;
+    const library = place(7, 3, "library");
+    if (!throne || !secret || !library) return null;
     for (let i = 0; i < 9; i++) place(pick([3, 5, 5, 7]), pick([3, 3, 5]), "room");
     const normal = rooms.filter((rm) => rm.kind === "room" || rm.kind === "hall");
     if (normal.length < 6) return null;
@@ -179,7 +182,73 @@ const Castello = (() => {
 
     // dentro le stanze: la chiave, le monete, una cosa da vendere, i mostri; il tesoro dietro il muro che cede
     const spots = (rm) => rm.cells.filter((c) => map[c.y][c.x] === "rfloor").sort(() => r() - 0.5);
-    const plain = rooms.filter((rm) => rm.kind === "room" && open.has(key(rm.cells[0]))).sort(() => r() - 0.5);
+    // l'arredo: l'atrio e la biblioteca hanno il loro, le altre stanze due mobili a caso contro i muri
+    // accanto a una porta: per una casella di stanza, qualunque passaggio verso fuori; per un cunicolo, una porta
+    const atDoor = (c) => DIRS.some(([dx, dy]) => { const n = { x: c.x + dx, y: c.y + dy }; return map[n.y][n.x] !== "cwall" && !rooms.some((rm) => rm.keys.has(key(n))); });
+    const byDoor = (c) => DIRS.some(([dx, dy]) => ["door", "ldoor", "swall"].includes(map[c.y + dy][c.x + dx]));
+    const floor = (t) => t === "rfloor" || t === "carpet";
+    // un mobile va dove non chiude il passaggio: dentro la stanza si deve poter andare ovunque dalla porta
+    const furnish = (rm, c, kind) => {
+      if (map[c.y][c.x] !== "rfloor" || atDoor(c)) return false;
+      map[c.y][c.x] = kind;
+      const free = rm.cells.filter((q) => floor(map[q.y][q.x]));
+      const from = free.filter(atDoor);
+      const got = new Set(from.map(key));
+      const q = from.slice();
+      while (q.length) {
+        const a = q.shift();
+        for (const [dx, dy] of DIRS) {
+          const n = { x: a.x + dx, y: a.y + dy };
+          if (rm.keys.has(key(n)) && floor(map[n.y][n.x]) && !got.has(key(n))) { got.add(key(n)); q.push(n); }
+        }
+      }
+      if (from.length && got.size === free.length) return true;
+      map[c.y][c.x] = "rfloor";
+      return false;
+    };
+    // l'atrio: il tappeto dal portone, le armature ai lati, gli stendardi negli angoli, il camino e il ritratto del re
+    for (let y = hall.y; y < hall.y + hall.h; y++) map[y][exit.x] = "carpet";
+    map[exit.y - 1][exit.x] = "carpet";
+    const hx = hall.x, hy = hall.y, hr = hall.x + hall.w - 1, hb = hall.y + hall.h - 1;
+    for (const [x, y, kind] of [[exit.x - 1, hb, "armor"], [exit.x + 1, hb, "armor"], [hx, hy, "banner"], [hr, hy, "banner"],
+      [hx, hy + 2, "hearth"], [hr, hy + 2, "portrait"], [hx, hb, "candles"], [hr, hb, "candles"]]) furnish(hall, { x, y }, kind);
+    // la biblioteca: scaffali lungo il muro, il leggio nel mezzo
+    for (const c of library.cells.filter((c) => c.y === library.y || ((c.x === library.x || c.x === library.x + library.w - 1) && c.y === library.y + library.h - 1))) furnish(library, c, "shelf");
+    furnish(library, { x: library.x + (library.w - 1) / 2, y: library.y + 1 }, "lectern");
+    const FURNITURE = ["barrel", "crate", "vasefur", "statuefur", "bedfur", "table", "swords", "cauldron", "candles", "armor"];
+    for (const rm of rooms.filter((rm) => rm.kind === "room")) {
+      const edge = rm.cells.filter((c) => c.x === rm.x || c.y === rm.y || c.x === rm.x + rm.w - 1 || c.y === rm.y + rm.h - 1).sort(() => r() - 0.5);
+      const kinds = FURNITURE.slice().sort(() => r() - 0.5);
+      let placed = 0;
+      for (const c of edge) { if (placed >= 2) break; if (furnish(rm, c, kinds[placed])) placed++; }
+    }
+
+    // le trappole nei cunicoli, lontano dall'atrio: dove il corridoio va dritto (muro ai lati, passaggio davanti e dietro)
+    const straight = (c) => {
+      const w = (dx, dy) => map[c.y + dy]?.[c.x + dx] === "cfloor";
+      return map[c.y][c.x] === "cfloor" && !byDoor(c) && ((w(1, 0) && w(-1, 0) && !w(0, 1) && !w(0, -1)) || (w(0, 1) && w(0, -1) && !w(1, 0) && !w(-1, 0)));
+    };
+    const far = (c) => Math.abs(c.x - start.x) + Math.abs(c.y - start.y) > 8;
+    const corridor = [];
+    for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) if (straight({ x, y }) && far({ x, y }) && open.has(`${x},${y}`)) corridor.push({ x, y });
+    corridor.sort(() => r() - 0.5);
+    const near = (a, list) => list.some((b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) < 4);
+    // gli spuntoni escono e rientrano ogni due battiti, non tutti insieme
+    const spikes = [];
+    for (const c of corridor) { if (spikes.length >= 4) break; if (!near(c, spikes)) { spikes.push({ ...c, phase: Math.floor(r() * 2) }); map[c.y][c.x] = "cspike"; } }
+    // la lastra che cede: solo dove, una volta crollata, si arriva lo stesso dappertutto
+    const cracks = [];
+    const count = reach((t) => walk.includes(t) || t === "cspike").size;
+    for (const c of corridor) {
+      if (cracks.length >= 2) break;
+      if (map[c.y][c.x] !== "cfloor" || near(c, [...spikes, ...cracks])) continue;
+      map[c.y][c.x] = "cwall";
+      const rest = reach((t) => walk.includes(t) || t === "cspike");
+      map[c.y][c.x] = "cfloor";
+      if (rest.size === count - 1 && rest.has(key(lockDoor.out)) && rest.has(key(crackDoor.out))) { cracks.push(c); map[c.y][c.x] = "crack"; }
+    }
+
+    const plain = rooms.filter((rm) => rm.kind === "room" && rm.cells.some((c) => open.has(key(c)))).sort(() => r() - 0.5);
     if (plain.length < 4) return null;
     const loot = [{ ...spots(plain[0])[0], kind: "key" }];
     plain.slice(1, 4).forEach((rm, i) => { const c = spots(rm)[0]; loot.push(i === 2 ? { ...c, kind: "relic" } : { ...c, kind: "coins", amount: 4 + Math.floor(r() * 6) }); });
@@ -193,7 +262,7 @@ const Castello = (() => {
       }
     });
     return {
-      map, exit, start, lady, seat, priest, guests, lock: lockDoor, crack: crackDoor, loot, monsters,
+      map, exit, start, lady, seat, priest, guests, lock: lockDoor, crack: crackDoor, loot, monsters, spikes, cracks,
       rooms: rooms.map((rm) => ({ kind: rm.kind, keys: rm.keys })),
     };
   }

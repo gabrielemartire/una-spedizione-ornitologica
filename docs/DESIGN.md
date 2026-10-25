@@ -107,7 +107,7 @@ Tutto sta in **una schermata senza scorrere**, anche su un portatile da 13" (cir
 - **Attraccare e camminare a terra non costano niente**: se arrivi di giorno, resta giorno.
 - **Ripartire fa passare due terzi di giornata** (si pensa alla notte di navigazione): parti di pomeriggio e arrivi all'alba; se riattracchi è ancora alba.
 - **Aspettare a bordo fa passare un terzo di giornata**: dalla casella nave puoi aspettare che venga pomeriggio, se l'uccello che cerchi è diurno, e risbarcare nella stessa zona.
-- **In mare l'orologio è fermo**, ma una **traversata lunga** aggiunge un terzo di giornata ogni 120° percorsi (60° fino alla 0.12.12; barra *Traversata* nel riquadro B). **Nella nebbia il tempo non scorre**.
+- **In mare l'orologio è fermo**, ma una **traversata lunga** aggiunge un terzo di giornata ogni 200° percorsi (60° fino alla 0.12.12, 120° fino alla 0.12.14; barra *Traversata* nel riquadro B). **Nella nebbia il tempo non scorre**.
 - A ogni nuova alba suona la campana e si paga la ciurma.
 
 Così il ciclo tipico (sbarco, esplorazione, ripartenza) costa due terzi di giornata, e l'attesa diventa una scelta: *investire tempo per vedere se arriva l'uccello che cerco*.
@@ -327,6 +327,10 @@ Il ponte levatoio: ci vai contro e sei dentro; il tempo non passa né entrando n
 - **La pianta** (0.12.1): un **labirinto di cunicoli** larghi una casella (labirinto perfetto sulle caselle dispari, più il 10% di muri in meno per gli anelli), con le stanze incastonate (lati dispari) e **porte nel muro** (una o due per stanza). L'atrio in basso col portone.
 - **Il buio**: quello che non hai visto è nero, senza forme (anche passandoci col mouse dice solo *Buio*). Si accende quello che hai intorno, due caselle, non dietro i muri; entrando in una stanza si accende tutta, muri compresi. Resta acceso per tutto il viaggio.
 - **I mostri**: pipistrelli e fantasmi (rossi), uno o due in quattro o cinque stanze, mai nell'atrio. Vanno in diagonale e **rimbalzano sui muri della loro stanza** senza uscirne; i fantasmi si muovono ogni due battiti, ma di due caselle alla volta (dalla 0.12.14). Toccarli costa un cuore.
+- **L'atrio** (0.12.15): 9×5, il tappeto rosso dal portone, due **armature** ai lati del tappeto, gli **stendardi** rossi negli angoli in alto, il **camino spento** a sinistra, il **ritratto del re** a destra, due **candelabri** in basso. Un mobile non va mai accanto a una porta.
+- **La biblioteca** (0.12.15): una stanza 7×3 sempre presente, con gli **scaffali** lungo il muro e un **leggio** col libro aperto. Solo arredo, nessun effetto.
+- **L'arredo**: ogni altra stanza ha **due mobili** contro i muri, a caso fra botte, cassa, vaso, statua, letto a baldacchino, tavolo, spade incrociate, paiolo, candelabro, armatura; mai dove chiuderebbero il passaggio.
+- **Le trappole dei cunicoli** (0.12.15), sempre lontano dall'atrio e dove il corridoio va dritto: quattro **spuntoni** che escono per due battiti e rientrano per due, ognuno col suo passo (fuori si vedono bene; pestarli o esserci sopra quando escono costa mezzo cuore); fino a due **lastre incrinate** (un segno appena diverso sul pavimento): ci passi sopra e cede, perdi un cuore e ti ritrovi nell'atrio. Al suo posto resta un buco, per sempre: le lastre sono solo dove il castello resta tutto raggiungibile anche senza.
 - **Le cose**: monete (4–9 m.o.) in due stanze, una cosa da vendere in una terza; la **chiave della sala del trono** in una stanza qualunque apre la **porta chiusa** della sala (e resta nella toppa: esce dallo zaino); un **muro che cede** (sembra un muro: ci vai contro e si apre) porta alla stanza del tesoro (20–25 m.o.). Quello che prendi resta preso per tutto il viaggio: si ricorda per cosa è, non per dov'era.
 - **La sala del trono**, in alto, addobbata a nozze **come una chiesa** (0.12.11: una navata 7×11, più lunga che larga): in fondo il **prete**; davanti a lui **la dama in bianco, a sinistra**, e il tuo posto accanto, in cima al tappeto; nell'angolo **il pianista**; **in prima fila il re e la regina**, poi file di sedie, una fila sì e una no, con gente in ginocchio e qualche sedia vuota; la navata col tappeto rosso fino alla porta (in fondo, al centro); rose agli angoli. Andando contro la dama: «Volete sposarmi?»
   ```
@@ -529,7 +533,7 @@ Idea: **ogni uccello ha il suo verso**, generato dal suo ID. Lo stesso uccello c
 - **Nome del giocatore:** si sceglie all'inizio della partita ("Il registro di bordo"), anche col taccuino ripreso, proponendo quello di prima.
 - **Come si gioca:** alla prima spedizione, un riquadro asciutto, senza retorica: i tasti in due colonne (in mare, a terra) e cinque regole brevi, l'ultima dice che ci sono attività secondarie e qualche segreto. Si riapre da *Spedizione → Istruzioni*.
 - **Il grande lago non si naviga**, e la nave non passa tra due terre che si toccano per un angolo (§ 6).
-- **Tempo in terzi:** attraccare gratis, ripartire due terzi di giornata, aspettare a bordo uno, traversate lunghe uno ogni 120° (§ 6).
+- **Tempo in terzi:** attraccare gratis, ripartire due terzi di giornata, aspettare a bordo uno, traversate lunghe uno ogni 200° (§ 6).
 - **Animali per momento:** alba cinghiale, pomeriggio orso, notte lupi; mai una zona vuota (§ 9.3).
 - **Esplorazione pura:** niente avvisi su uccello e animali, solo «Nessun canto» (§ 9.3).
 - **Ricercati:** bacheca nei due porti, W rossa, fumo, fuggitivo che spara, taglia di 15 m.o. alla gendarmeria del Forte (§ 9.6).

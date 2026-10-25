@@ -4,7 +4,7 @@
 // Vicino a una costa si può guardare col binocolo o sbarcare, gratis.
 // Espone l'oggetto globale `Mare`.
 const Mare = (() => {
-  const SEA_LEG = 120;        // gradi di traversata che fanno passare un terzo di giornata
+  const SEA_LEG = 200;        // gradi di traversata che fanno passare un terzo di giornata
   const MAX_SAILS = 4;
   const SAIL_SPEED = 1.8;     // gradi al secondo per ogni livello di vela
   const TURN_RATE = 100;      // gradi di rotta al secondo

@@ -47,6 +47,8 @@ const Gioco = (() => {
   const MAZE_TRAPS = 16;
   const SPIKE = 2;
   // Il castello: i mostri che rimbalzano tolgono un cuore
+  const CASTLE_SPIKE = 1;    // gli spuntoni del castello: mezzo cuore
+  const CASTLE_FALL = 2;     // la lastra che cede: un cuore
   const CASTLE = { damage: 2, death: "Perso nel castello", deathText: "I mostri del castello abbandonato non perdonano" };
   // Il fuggitivo: ti vede come un animale, spara da vicino ogni `reload` battiti, scappa dal bordo
   // della mappa solo se sei lontano; damage = mezzi cuori
@@ -124,6 +126,26 @@ const Gioco = (() => {
     throne: { name: "Il trono",         icon: "throne",     cls: "t-throne", walk: false, sight: true },
     chair:  { name: "Sedia vuota",      icon: "chair",      cls: "t-chair",  walk: false, sight: true },
     rose:   { name: "Rose bianche",     icon: "rose",       cls: "t-rose",   walk: false, sight: true },
+    // l'arredo del castello: l'atrio, la biblioteca, i mobili delle stanze. Si vede oltre, non si passa
+    armor:     { name: "Armatura",          icon: "armor",      cls: "t-decor", walk: false, sight: true },
+    banner:    { name: "Stendardo",         icon: "banner",     cls: "t-decor t-banner", walk: false, sight: true },
+    hearth:    { name: "Camino spento",     icon: "fireplace",  cls: "t-decor", walk: false, sight: true },
+    portrait:  { name: "Ritratto del re",   icon: "painting",   cls: "t-decor t-gold", walk: false, sight: true },
+    candles:   { name: "Candelabro",        icon: "candelabra", cls: "t-decor t-gold", walk: false, sight: true },
+    shelf:     { name: "Scaffale di libri", icon: "bookshelf",  cls: "t-decor", walk: false, sight: true },
+    lectern:   { name: "Leggio con un libro aperto", icon: "book", cls: "t-decor", walk: false, sight: true },
+    barrel:    { name: "Botte",             icon: "barrel",     cls: "t-decor", walk: false, sight: true },
+    crate:     { name: "Cassa",             icon: "crate",      cls: "t-decor", walk: false, sight: true },
+    vasefur:   { name: "Vaso",              icon: "vase",       cls: "t-decor", walk: false, sight: true },
+    statuefur: { name: "Statua",            icon: "statue",     cls: "t-decor", walk: false, sight: true },
+    bedfur:    { name: "Letto a baldacchino", icon: "bed",      cls: "t-decor", walk: false, sight: true },
+    table:     { name: "Tavolo",            icon: "table",      cls: "t-decor", walk: false, sight: true },
+    swords:    { name: "Spade incrociate",  icon: "swords",     cls: "t-decor", walk: false, sight: true },
+    cauldron:  { name: "Paiolo",            icon: "cauldron",   cls: "t-decor", walk: false, sight: true },
+    // le trappole dei cunicoli: gli spuntoni escono e rientrano ogni due battiti; la lastra incrinata cede
+    cspike:    { name: "Spuntoni",          icon: "spikesdown", cls: "t-cspike", walk: true, sight: true, noise: 1, sound: "macerie", cspike: true },
+    crack:     { name: "Lastra incrinata",  ch: "⁖",            cls: "t-cfloor t-crack", walk: true, sight: true, noise: 1, sound: "macerie", crack: true },
+    chole:     { name: "Buco nel pavimento", icon: "hole",      cls: "t-chole", walk: false, sight: true },
   };
 
   // Gli animali: l'orso di giorno, i lupi di notte, il cinghiale all'alba. L'orso colpisce forte (quattro
@@ -1393,6 +1415,8 @@ const Gioco = (() => {
     if (t.spike) springSpike(n);
     if (t.exit) { leaveCastle(); return true; }
     if (s.castle) castleStep(n);
+    if (t.cspike && spikesUp(n)) spiked();
+    if (t.crack) { fallThrough(n); return true; }
     if (t.junk && s.pirates.some((o) => o.mode === "sleep") && Math.random() < PIRATE_WAKE) wakePirates(`${t.name} sotto i piedi: un rumore tremendo. I bucanieri si svegliano!`);
     if (s.bottle && same(s.bottle, n)) takeBottle();
     s.heard.push({ ...n, r: s.noise });
@@ -1726,6 +1750,8 @@ const Gioco = (() => {
       if (s.over) return;
       bounce(o);
     }
+    // gli spuntoni che escono proprio adesso, sotto i tuoi piedi
+    if (s.spikes && s.spikes.has(key(s.player)) && spikesUp(s.player) && !spikesUp(s.player, s.ticks - 1)) spiked();
     if (s.over) return;
     for (const o of s.beasts) {
       if (s.over) return;
@@ -1941,6 +1967,7 @@ const Gioco = (() => {
     cm.lit ||= [];
     if (cm.unlocked) map[plan.lock.y][plan.lock.x] = "cfloor";
     if (cm.cracked) map[plan.crack.y][plan.crack.x] = "cfloor";
+    for (const k of (cm.fallen ||= [])) { const c = unkey(k); map[c.y][c.x] = "chole"; }
     const outside = { zone, at: s.gateAt };
     s = {
       zone, seed: zone.seed, tags: zone.tags, time: s.time, map, free: [], ruin: null,
@@ -1956,6 +1983,7 @@ const Gioco = (() => {
       priest: plan.priest,
       guests: plan.guests,
       bouncers: plan.monsters.map((m) => ({ ...m })),
+      spikes: new Map((plan.spikes || []).map((c) => [key(c), c.phase])),
       lady: cm.married ? null : plan.lady,
       run: 0, ticks: 0, noise: 0, heard: [], lastAct: 0, lastMove: [0, 0], over: false,
     };
@@ -2012,6 +2040,33 @@ const Gioco = (() => {
     trip.pack.splice(trip.pack.findIndex((it) => it.kind === "ottone"), 1);   // la chiave resta nella porta
     Suoni.play("legno");
     log("La chiave gira e resta nella toppa. La porta della sala del trono si apre.");
+    render();
+  }
+
+  // Gli spuntoni: due battiti fuori, due dentro, ognuno col suo passo
+  const spikesUp = (c, ticks = s.ticks) => Math.floor(ticks / 2 + s.spikes.get(key(c))) % 2 === 0;
+  function spiked() {
+    hurt(CASTLE_SPIKE);
+    trip.stats.hits++;
+    Suoni.play("tagliola");
+    el.map.classList.remove("is-hit");
+    void el.map.offsetWidth;
+    el.map.classList.add("is-hit");
+    log(`Gli spuntoni escono dal pavimento! ${lostHearts(CASTLE_SPIKE)}.`);
+    if (!s.player.hp) die("castle");
+  }
+
+  // La lastra incrinata cede: si cade nelle cantine e si risale dall'atrio. Al suo posto resta un buco
+  function fallThrough(c) {
+    s.map[c.y][c.x] = "chole";
+    s.cm.fallen.push(key(c));
+    hurt(CASTLE_FALL);
+    trip.stats.hits++;
+    Suoni.play("macerie");
+    log(`La lastra cede sotto i piedi! Cadi nelle cantine e risali dall'atrio, tutto ammaccato. ${lostHearts(CASTLE_FALL)}.`);
+    if (!s.player.hp) { die("castle"); return; }
+    Object.assign(s.player, s.castle.start);
+    light(s.player);
     render();
   }
 
@@ -2692,6 +2747,7 @@ const Gioco = (() => {
         // Dove si passa le icone sono più trasparenti; quello che blocca è pieno
         let cls = `cell ${t.cls} ${t.walk ? "walk" : "block"}`;
         if (t === TILES.sea) cls += ` wave${(x * 2 + y * 3) % 5}`;
+        if (t.cspike && spikesUp({ x, y })) { icon = "spikesup"; cls += " is-up"; }
 
         if (dark && !s.lit.has(k)) {
           icon = null;

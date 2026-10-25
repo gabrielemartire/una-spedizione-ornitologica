@@ -2,6 +2,15 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.15 · 25 ottobre 2026
+
+- **L'atrio del castello** è più grande e si riconosce: il tappeto rosso dal portone, due armature ai lati, gli stendardi, il camino spento, il ritratto del re, i candelabri.
+- **La biblioteca**: in ogni castello una stanza con gli scaffali lungo il muro e un leggio col libro aperto.
+- **Le stanze sono arredate**, giusto un po': due mobili ciascuna (botti, casse, vasi, statue, letti, tavoli, spade, paioli…).
+- **Gli spuntoni**: in alcuni cunicoli escono dal pavimento per due battiti e rientrano per due. Passa quando sono giù: pestarli costa mezzo cuore.
+- **La lastra che cede**: qua e là una lastra appena incrinata. Se ci passi sopra cadi nelle cantine, perdi un cuore e risali dall'atrio. Al suo posto resta un buco.
+- **In mare il tempo passa ancora più piano**: un cambio d'ora ogni 200° di traversata (prima 120°).
+
 ## 0.12.14 · 25 ottobre 2026
 
 - **Le istruzioni sono riscritte da capo**: lo scopo, come si osserva un uccello, il rumore, le ore, la paga della ciurma, come finisce il viaggio; poi i tasti, in mare, a terra e sempre.
