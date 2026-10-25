@@ -908,8 +908,6 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
 
 /* Il labirinto di siepi: siepi piene, trappole appena visibili tra le foglie; l'unicorno e il mostro gentili */
 .t-hedge { background: #24401f; box-shadow: inset 0 2px 0 #3a5e2e, inset 0 -2px 0 #16280f; }
-.t-spike { color: #6a7a4a; }
-.cell.t-spike .ic { opacity: 0.22; }
 .e-folk { filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 1px #000); }
 .e-unicorn { color: #f6f0ff; filter: drop-shadow(0 0 3px #e0a8ff) drop-shadow(0 0 1px #000); }
 .e-minotaur { color: #c89a6a; }

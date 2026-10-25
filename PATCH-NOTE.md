@@ -2,6 +2,13 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.16 · 25 ottobre 2026
+
+- **Il diario sono i tuoi appunti**: ogni nota è scritta come la scriverebbe l'esploratore, in prima persona (*Un lupo mi azzanna!*, *Spargo i semi. Ora bisogna aspettare che cambi la luce.*, *Valle Rossa: sento un cinguettio.*).
+- **Chi parla, parla in una finestrella**, non nel diario: l'unicorno e il mostro del labirinto, il prete, il re, la regina, il pianista e gli invitati della sala del trono. Si chiude con Invio.
+- **Nel labirinto non ci sono più le trappole tra le foglie**: non si vedevano e non si capivano.
+- **Il ricercato che scappa non è perso**: se sparisce oltre il bosco, una finestrella lo dice e lui si nasconde in un'altra zona della stessa isola (la W resta, e di notte il suo fuoco si vede col binocolo). La taglia vale fino alla scadenza dei 3 giorni; allo scadere, una nota nel diario.
+
 ## 0.12.15 · 25 ottobre 2026
 
 - **L'atrio del castello** è più grande e si riconosce: il tappeto rosso dal portone, due armature ai lati, gli stendardi, il camino spento, il ritratto del re, i candelabri.

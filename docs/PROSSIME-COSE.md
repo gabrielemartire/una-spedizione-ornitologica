@@ -23,6 +23,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **La casa degli sposi**: dopo le nozze, in città una casa nuova da visitare, la tua (da sviluppare).
 
 ## Fatto di recente
+- [x] **Versione 0.12.16**: il diario è scritto come appunti dell'esploratore; unicorno, mostro, prete e invitati parlano in finestrella; via le trappole tra le foglie; il ricercato che scappa resta sull'isola.
 - [x] **Versione 0.12.15**: castello con l'atrio arredato, la biblioteca, due mobili per stanza, spuntoni a tempo e lastre che cedono; traversate a 200°.
 - [x] **Versione 0.12.14**: istruzioni riscritte; i fantasmi del castello si spostano di due caselle.
 - [x] **Versione 0.12.13**: la lucina-esca nella nebbia (non andarle incontro a vele spiegate), la morte spiegata prima della fine, nella nebbia il tempo è fermo, traversate lunghe il doppio; le taglie sono fogli sciolti in fondo al taccuino.

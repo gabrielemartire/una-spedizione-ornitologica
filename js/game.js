@@ -42,10 +42,8 @@ const Gioco = (() => {
   const BURIED_COINS = 9;
   // I timbri del taccuino, in ordine: il bit nel codice è la posizione
   const STAMPS = ["campfire", "engagement", "death", "tarotsun", "tarotmoon", "kraken"];
-  // Il labirinto di siepi: uscirne costa un giorno intero; le trappole tra le foglie un cuore
+  // Il labirinto di siepi: uscirne costa un giorno intero
   const MAZE_DAY = 3;
-  const MAZE_TRAPS = 16;
-  const SPIKE = 2;
   // Il castello: i mostri che rimbalzano tolgono un cuore
   const CASTLE_SPIKE = 1;    // gli spuntoni del castello: mezzo cuore
   const CASTLE_FALL = 2;     // la lastra che cede: un cuore
@@ -111,9 +109,8 @@ const Gioco = (() => {
     glass:  { name: "Vetri rotti",      icon: "glass",      cls: "t-junk",   walk: true,  sight: true, noise: 4, sound: "macerie", junk: true },
     pot:    { name: "Padelle",          icon: "pot",        cls: "t-junk",   walk: true,  sight: true, noise: 4, sound: "macerie", junk: true },
     shards: { name: "Cocci",            icon: "shards",     cls: "t-junk",   walk: true,  sight: true, noise: 4, sound: "macerie", junk: true },
-    // Il labirinto di siepi: le siepi, e le trappole tra le foglie (si vedono, appena)
+    // Il labirinto di siepi
     hedge:  { name: "Siepe",            cls: "t-hedge",  walk: false, sight: false },
-    spike:  { name: "Foglie smosse",    icon: "trap",       cls: "t-spike",  walk: true,  sight: true, noise: 1, sound: "cespuglio", spike: true },
     // Il castello abbandonato, dentro
     cwall:  { name: "Muro del castello", cls: "t-cwall", walk: false, sight: false },
     swall:  { name: "Muro del castello", cls: "t-cwall t-swall", walk: false, sight: false, secret: true },
@@ -156,11 +153,11 @@ const Gioco = (() => {
   // speed = passi per ogni tuo passo (l'acqua ne costa 2); il cinghiale invece carica in linea retta
   const KINDS = {
     bear: { name: "Orso", icon: "bear", speed: { hunt: 1.15, search: 1, wander: 0.5 }, sight: 9, nightSight: 6, smell: 3, hearing: 2, damage: 8, rest: 3, sated: true, sound: "orso", step: "passoOrso",
-      verb: "L'orso ti raggiunge e ti colpisce!", death: "Sbranato", deathText: "L'orso ha avuto la meglio" },
+      verb: "L'orso mi raggiunge e mi colpisce!", death: "Sbranato", deathText: "L'orso ha avuto la meglio" },
     wolf: { name: "Lupo", icon: "wolf", speed: { hunt: 1, search: 1, wander: 0.5 }, sight: 8, nightSight: 8, smell: 5, hearing: 3, damage: 2, rest: 2, sound: "lupo", step: null,
-      verb: "Un lupo ti azzanna!", death: "Azzannato", deathText: "Il branco ha avuto la meglio" },
+      verb: "Un lupo mi azzanna!", death: "Azzannato", deathText: "Il branco ha avuto la meglio" },
     boar: { name: "Cinghiale", icon: "boar", charge: 8, chargeSpeed: 2, sight: 8, nightSight: 6, hearing: 2, damage: 3, rest: 2, sound: "orso", step: "passoOrso",
-      verb: "Il cinghiale ti travolge!", death: "Travolto", deathText: "Il cinghiale non ha curvato, tu nemmeno" },
+      verb: "Il cinghiale mi travolge!", death: "Travolto", deathText: "Il cinghiale non ha curvato, tu nemmeno" },
   };
 
   const TIMES = ["alba", "pomeriggio", "notte"];
@@ -543,12 +540,6 @@ const Gioco = (() => {
         .sort((a, b) => depth.get(key(a)) - depth.get(key(b)))[0];
       for (const c of pathFrom(prev, e, target) || []) if (map[c.y][c.x] === "hedge") map[c.y][c.x] = "grass";
     }
-    const corridors = [];
-    for (let y = 1; y < H - 1; y++) for (let x = maze.x0; x < W - 1; x++) {
-      const c = { x, y };
-      if (map[y][x] === "grass" && !maze.room.some((q) => same(q, c)) && entries.every((e) => dist(e, c) > 4)) corridors.push(c);
-    }
-    corridors.sort(() => r() - 0.5).slice(0, MAZE_TRAPS).forEach((c) => { map[c.y][c.x] = "spike"; });
   }
 
   // Il tesoro in mezzo, la carne accanto, quattro uomini intorno, e caselle rumorose sparse. Da ogni entrata
@@ -959,7 +950,7 @@ const Gioco = (() => {
         // Ricaricare a terra costa un giorno intero: niente fughe dagli orsi col refresh
         if (!advance(REFRESH_COST)) return true;
         landAt(zone, { waited: true });
-        log("Hai perso un giorno: ti risvegli sulla nave.");
+        log("Ho perso un giorno intero. Riapro gli occhi sulla nave.");
       } else {
         Mare.enter();
         if (data.mode === "city" && city) { Mare.stop(); visitCity(city); }
@@ -1037,7 +1028,7 @@ const Gioco = (() => {
     const present = !!bird && !memory.done && !memory.gone && bird.ore.includes(time);
     // il diario segna solo gli sbarchi: dove, a che ora (lo dice la data della nota) e se l'uccello c'era
     const from = via != null ? ` <small>(a piedi da ${trip.world.zones[via].name})</small>` : "";
-    if (!quiet) note(`${zone.name}${from}: ${present ? "sembra un cinguettio." : memory.done ? "uccello già nel taccuino." : memory.gone ? "l'uccello è volato via." : bird ? "nessun uccello, ora sbagliata." : "nessun uccello."}`, "bird");
+    if (!quiet) note(`${zone.name}${from}: ${present ? "sento un cinguettio." : memory.done ? "il suo uccello ce l'ho già." : memory.gone ? "l'uccello se n'è andato." : bird ? "nessun uccello. Forse non è la sua ora." : "nessun uccello."}`, "bird");
     // L'oggetto della zona si decide al primo sbarco, e resta lì finché non lo prendi
     const ri = rng(zone.seed ^ 0x17e3);
     if (memory.item === undefined) memory.item = gen.ruin || ri() < ITEM_CHANCE ? { kind: oggettoACaso(ri, !!gen.ruin), taken: false } : null;
@@ -1102,7 +1093,7 @@ const Gioco = (() => {
 
     // All'ora sbagliata l'uccello non c'è, ma a volte lascia tracce (i rari no: di quelli si sa solo dalle voci)
     if (bird && !present && !memory.done && !memory.gone && !bird.rara) learn(bird, "traccia");
-    if (s.merchant) log("Qualcuno col cappuccio aspetta vicino alla riva.");
+    if (s.merchant) log("Sulla riva aspetta qualcuno col cappuccio.");
     if (s.pirates.length) note("Nessuna traccia di animali.");
     render();
   }
@@ -1229,6 +1220,7 @@ const Gioco = (() => {
     bountyState(w.name, "escaped");
     trip.wanted = null;
     if (s && s.fugitive) { s.fugitive = null; el.ents.fugitive.hidden = true; }
+    log(`Sono passati ${WANTED_DAYS} giorni: ${w.name} ha lasciato l'arcipelago. Niente taglia.`);
   }
 
   // Le città sono battlemap a parte (js/citta.js), con le botteghe lungo la strada
@@ -1375,12 +1367,13 @@ const Gioco = (() => {
     if (t.locked) { openLock(n); return false; }
     if (t.secret) { crackWall(n); return false; }
     if (s.lady && same(s.lady, n)) { meetBride(); return false; }
-    if (s.priest && same(s.priest, n)) { log("Il prete sfoglia il messale: «Siamo qui riuniti… manca solo lo sposo.»"); return false; }
+    if (s.priest && same(s.priest, n)) { say("Il prete", "Sfoglia il messale: «Siamo qui riuniti… manca solo lo sposo.»"); return false; }
     const guest = s.guests && s.guests.find((o) => same(o, n));
     if (guest) {
-      log(guest.kind === "king" ? "Il re annuisce, solenne: «Bella cerimonia. Manca solo lo sposo.»"
-        : guest.kind === "queen" ? "La regina si sventola: «Che caldo. Speriamo che lo sposo arrivi presto.»"
-        : guest.kind === "pianist" ? "Il pianista attacca le prime note della marcia nuziale, poi si ferma: «Non ancora?»"
+      const who = { king: "Il re", queen: "La regina", pianist: "Il pianista" }[guest.kind] || "Un invitato";
+      say(who, guest.kind === "king" ? "Annuisce, solenne: «Bella cerimonia. Manca solo lo sposo.»"
+        : guest.kind === "queen" ? "Si sventola: «Che caldo. Speriamo che lo sposo arrivi presto.»"
+        : guest.kind === "pianist" ? "Attacca le prime note della marcia nuziale, poi si ferma: «Non ancora?»"
         : pickRandom(["«Che bella sposa!»", "«Shh, sta per cominciare.»", "«Io porto il riso.»", "Prega a bassa voce, e non ti guarda."]));
       return false;
     }
@@ -1391,7 +1384,7 @@ const Gioco = (() => {
     if (s.merchant && (same(s.merchant, n) || same(s.merchant.cart, n))) { meetMerchant(); return false; }
     if (s.fugitive && same(s.fugitive, n)) { capture(); return true; }
     const pirate = s.pirates.find((o) => same(o, n));
-    if (pirate) { if (pirate.mode === "sleep") wakePirates("Inciampi in un bucaniere che dorme: si svegliano tutti!"); return false; }
+    if (pirate) { if (pirate.mode === "sleep") wakePirates("Inciampo in un bucaniere che dorme: si svegliano tutti!"); return false; }
     if (s.chest && same(s.chest, n)) { openChest(); return false; }
     if (t.tower) { meetLady(); return false; }
     if (t.fire) { campfire(); return false; }
@@ -1412,7 +1405,6 @@ const Gioco = (() => {
     if (s.marsh && same(s.marsh, n)) takeMarshmallow();
     if (s.loot && same(s.loot, n)) takeLoot();
     if (s.cup && same(s.cup, n)) takeCup();
-    if (t.spike) springSpike(n);
     if (t.exit) { leaveCastle(); return true; }
     if (s.castle) castleStep(n);
     if (t.cspike && spikesUp(n)) spiked();
@@ -1441,7 +1433,7 @@ const Gioco = (() => {
     trip.zones[s.zone.id].item.taken = true;
     s.item = null;
     Suoni.play("monete");
-    log(`Hai trovato: ${it.nome}. Finisce in stiva.`);
+    log(`Trovato: ${it.nome.toLowerCase()}. Va in stiva.`);
   }
 
   // Il passaggio: si va a piedi nella zona vicina, e si arriva all'ora del giorno dopo. La nave resta dov'è
@@ -1478,7 +1470,7 @@ const Gioco = (() => {
     trip.pack.push({ kind: "marshmallow", cook: 0 });
     s.marsh = null;
     Suoni.play("cespuglio");
-    log("Un marshmallow, bianco bianco, accanto al fuoco. Nello zaino.");
+    log("Accanto al fuoco c'è un marshmallow, bianco bianco. Nello zaino.");
   }
 
   function campfire() {
@@ -1495,7 +1487,7 @@ const Gioco = (() => {
     const m = marshOf();
     m.cook = Math.min(3, m.cook + 1);
     Suoni.play("legno");
-    if (m.cook === 3) { log("Il marshmallow prende fuoco: bruciato."); earnStamp("campfire"); }
+    if (m.cook === 3) { log("Il marshmallow ha preso fuoco. Carbone."); earnStamp("campfire"); }
     campfire();
   }
 
@@ -1510,10 +1502,10 @@ const Gioco = (() => {
     if (kind === "marshmallow") {
       p.hp = Math.max(p.hp, maxHp());
       trip.violet = VIOLET;
-      log(`Mangi il marshmallow ${MARSH_LOOK[m.cook]}. Ti senti benissimo: un cuore viola in più.`);
+      log(`Mangio il marshmallow ${MARSH_LOOK[m.cook]}. Mi sento benissimo: un cuore viola in più.`);
     } else {
       p.hp = Math.min(Math.max(p.hp, maxHp()), p.hp + FISH_HEAL);
-      log("Apri la scatola e mangi il pesce. Due cuori.");
+      log("Apro la scatola e mangio il pesce. Mi rimette in piedi: due cuori.");
     }
     Suoni.play("osservato");
     leaveMerchant();
@@ -1550,7 +1542,7 @@ const Gioco = (() => {
     s.traps.add(key(s.player));
     trip.zones[s.zone.id].traps = [...s.traps];
     Suoni.play("tagliola");
-    log("Posi una tagliola, ben nascosta.");
+    log("Poso una tagliola, ben nascosta.");
     return true;
   }
 
@@ -1583,7 +1575,7 @@ const Gioco = (() => {
     s.bottle = null;
     Suoni.play("pagina");
     trip.rumors.unshift({ msg: `Il messaggio nella bottiglia, a ${s.zone.name}: «${b.text}»`, day: day(), time: now() });
-    log(`Una bottiglia sulla riva, con un messaggio: «${b.text}» È nelle voci.`);
+    log(`Sulla riva, una bottiglia con un messaggio: «${b.text}» Lo ricopio tra le voci.`);
   }
 
   function dig() {
@@ -1602,7 +1594,7 @@ const Gioco = (() => {
       Suoni.play("monete");
       log(`La pala batte su qualcosa: un tesoro sepolto! ${coins ? `${coins} ${coins === 1 ? "moneta" : "monete"}` : "Niente monete"}${kind ? ` e ${OGGETTI[kind].nome.toLowerCase()}, in stiva` : ""}.`);
     } else if (!s.holes.has(k)) {
-      note("Una buca vuota.");
+      note("Scavo una buca: niente.");
     }
     s.holes.add(k);
   }
@@ -1626,7 +1618,7 @@ const Gioco = (() => {
 
   // Il forziere: con la chiave si apre (la chiave resta), dentro un oggetto rituale e qualche moneta
   function openChest() {
-    if (!hasPack("chiave")) { log("Un forziere chiuso. Serve una chiave."); return; }
+    if (!hasPack("chiave")) { log("Un forziere chiuso. Mi serve una chiave."); return; }
     const kind = oggettoACaso(Math.random, true);
     const coins = CHEST_COINS[0] + Math.floor(Math.random() * (CHEST_COINS[1] - CHEST_COINS[0] + 1));
     trip.hold.push({ kind });
@@ -1666,13 +1658,13 @@ const Gioco = (() => {
   // I semi: si spargono dove l'uccello è volato via per sempre; quando cambia la luce, torna nella zona
   function sowSeeds() {
     const memory = trip.zones[s.zone.id];
-    if (!hasPack("semi")) { log("Non hai semi. Li vende l'emporio."); return; }
-    if (!memory.gone) { log(memory.done ? "L'uccello di qui è già nel taccuino: i semi non servono." : "I semi servono a far tornare un uccello volato via: qui non ce n'è bisogno."); return; }
+    if (!hasPack("semi")) { log("Non ho semi. Li vende l'emporio."); return; }
+    if (!memory.gone) { log(memory.done ? "L'uccello di qui ce l'ho già: i semi non servono." : "I semi richiamano un uccello volato via. Qui non serve."); return; }
     if (memory.seededAt != null) { log("I semi sono già sparsi. Bisogna aspettare che cambi la luce."); return; }
     trip.pack.splice(trip.pack.findIndex((it) => it.kind === "semi"), 1);
     memory.seededAt = trip.third;
     Suoni.play("cespuglio");
-    log("Spargi i semi. Ora bisogna aspettare che cambi la luce.");
+    log("Spargo i semi. Ora bisogna aspettare che cambi la luce.");
   }
 
   // L'uovo: passati EGG_DAYS giorni da quando l'hai avuto, si schiude e nel taccuino arriva il Pulcino
@@ -1703,7 +1695,7 @@ const Gioco = (() => {
     s.merchant = null;
     el.ents.merchant.hidden = el.ents.cart.hidden = true;
     const heard = rumor("mercante");
-    log(heard ? "Il mercante si avvicina e sussurra. È nel diario." : "Il mercante prende l'oggetto, ma non sa niente di nuovo.");
+    log(heard ? "Il mercante si avvicina e mi sussurra qualcosa. Lo ricopio tra le voci." : "Il mercante prende l'oggetto, ma non sa niente di nuovo.");
     leaveMerchant();
   }
 
@@ -1726,7 +1718,7 @@ const Gioco = (() => {
       trip.zones[s.zone.id].done = true;
       checkComplete();
       Suoni.play("osservato");
-      log(`${b.info.nome} annotato nel taccuino! Torna alla nave.`);
+      log(`${b.info.nome}! Disegnato e annotato. Ora torno alla nave.`);
       drawPostcard();
     } else if (d <= OBSERVE) {
       toast("Qualcosa ti copre la vista.");
@@ -1813,11 +1805,11 @@ const Gioco = (() => {
       trip.zones[s.zone.id].gone = true;
       drawPostcard();
       if (!b.info.rara) learn(b.info, "traccia");
-      log(`${reason}: l'uccello vola via dalla zona.`);
+      log(`${reason}. L'uccello se n'è andato da qui.`);
       return;
     }
     Object.assign(b, pickRandom(spots));
-    log(`${reason}: l'uccello vola in un altro punto.`);
+    log(`${reason}. L'uccello si è spostato più in là.`);
   }
 
   // --- Il ricercato: sta al suo fuoco finché non ti vede o ti sente, poi scappa e ti spara ---
@@ -1837,7 +1829,7 @@ const Gioco = (() => {
       if (!seen && !s.heard.some((n) => n.r > 0 && dist(f, n) <= n.r + OUTLAW.hearing)) return;
       f.mode = "flee";
       f.reload = 1;
-      log("Il ricercato ti ha visto: scappa!");
+      log("Il ricercato mi ha visto: scappa!");
     }
     if (f.reload) f.reload--;
     // da vicino, se ti vede, spara invece di correre: alberi e rocce fermano il colpo, i cespugli ti nascondono
@@ -1849,7 +1841,7 @@ const Gioco = (() => {
       el.map.classList.remove("is-hit");
       void el.map.offsetWidth;
       el.map.classList.add("is-hit");
-      log(`Il ricercato ti spara! ${lostHearts(OUTLAW.damage)}.`);
+      log(`Il ricercato mi spara! ${lostHearts(OUTLAW.damage)}.`);
       if (!p.hp) die("fugitive");
       return;
     }
@@ -1868,14 +1860,18 @@ const Gioco = (() => {
     }
     f.energy = Math.min(f.energy, 1);
     slide(f, steps);
-    // sul bordo della mappa, se sei lontano, sparisce tra gli alberi
+    // sul bordo della mappa, se sei lontano, sparisce tra gli alberi: si nasconde in un'altra zona della stessa
+    // isola. La taglia resta valida fino alla scadenza
     const edge = f.x === W - 1 || f.y === 0 || f.y === H - 1;
     if (edge && dist(f, p) > OUTLAW.escape) {
       s.fugitive = null;
       el.ents.fugitive.hidden = true;
-      bountyState(trip.wanted.name, "escaped");
-      trip.wanted = null;
-      log("Il ricercato è sparito oltre il bosco. Addio taglia.");
+      const w = trip.wanted, here = trip.world.zones[w.zone];
+      const cities = new Set(trip.world.cities.map((c) => c.zone));
+      const others = trip.world.zones.filter((z) => z.island === here.island && z.id !== here.id && !cities.has(z.id) && !z.tags.has("bucanieri") && !z.tags.has("labirinto"));
+      if (others.length) w.zone = others[Math.floor(Math.random() * others.length)].id;
+      say("Il ricercato", others.length ? "È sparito oltre il bosco. Si nasconderà in un'altra zona dell'isola: di notte, col binocolo, cerca il suo fuoco." : "È sparito oltre il bosco. Tornerà al suo nascondiglio: riprova più tardi.");
+      log("Il ricercato mi è scappato oltre il bosco. È ancora sull'isola.");
     }
   }
 
@@ -1887,28 +1883,17 @@ const Gioco = (() => {
     (trip.captured ||= []).push({ name: trip.wanted.name, day: day(), delivered: false });   // nel taccuino, dietro le sbarre
     bountyState(trip.wanted.name, "caught");
     Suoni.play("tonfo");
-    log(`Preso! ${trip.wanted.name} finisce in stiva.`);
+    log(`Ce l'ho! ${trip.wanted.name} è in stiva, con le mani legate.`);
   }
 
   // --- Il labirinto di siepi: trappole tra le foglie, la coppa nello slargo, un unicorno e un mostro gentili ---
-
-  function springSpike(c) {
-    hurt(SPIKE);
-    trip.stats.hits++;
-    Suoni.play("tagliola");
-    el.map.classList.remove("is-hit");
-    void el.map.offsetWidth;
-    el.map.classList.add("is-hit");
-    log(`Le foglie nascondevano una trappola! ${lostHearts(SPIKE)}.`);
-    if (!s.player.hp) die("spike");
-  }
 
   function takeCup() {
     s.cup = null;
     trip.zones[s.zone.id].cupTaken = true;
     trip.hold.push({ kind: "coppa" });
     Suoni.play("osservato");
-    log("Nello slargo, su un piedistallo di pietra: la Coppa dei Tre Maghi. In stiva.");
+    log("Nello slargo, su un piedistallo di pietra, la Coppa dei Tre Maghi. La prendo: in stiva.");
   }
 
   // Uscire dal labirinto (a bordo o da un passaggio) costa un giorno intero: una volta per visita
@@ -1916,7 +1901,7 @@ const Gioco = (() => {
     if (!s.tags.has("labirinto") || s.mazePaid) return true;
     s.mazePaid = true;
     trip.hp = s.player.hp;
-    note("Uscire dal labirinto ha preso un giorno intero.");
+    note("Per uscire dal labirinto ci ho messo un giorno intero.");
     if (!advance(MAZE_DAY)) return false;
     s.time = now();
     return true;
@@ -1924,16 +1909,22 @@ const Gioco = (() => {
 
   const FOLK = {
     unicorn: { name: "L'unicorno", hello: "L'unicorno china il capo, la criniera che luccica: «Buongiorno, viaggiatore! Che splendida giornata per perdersi.»",
-      lines: ["«Con permesso, passo io e poi lei.»", "«Le auguro un'ottima uscita.»", "«Attento alle foglie smosse, mi raccomando.»"] },
+      lines: ["«Con permesso, passo io e poi lei.»", "«Le auguro un'ottima uscita.»", "«Si ricordi: tenendo sempre la siepe a destra, prima o poi si esce.»"] },
     minotaur: { name: "Il mostro del labirinto", hello: "Un mostro enorme, con le corna, si toglie un cappello che non ha: «Oh, mi perdoni. Prego, prego, si accomodi.»",
       lines: ["«Dopo di lei, insisto.»", "«Mi scusi, sono un po' ingombrante.»", "«Che bel tempo, vero? Si cammina che è un piacere.»"] },
   };
 
+  // Chi parla parla in una finestrella, non nel diario: si chiude con Invio
+  function say(title, text, ok = "Prosegui") {
+    s.over = true;
+    showOverlay(title, text, [["leave-merchant", ok]]);
+  }
+
   // Passandoci accanto si scambiano di posto con te, gentili come la gente in città; la prima volta salutano
   function greet(o, bump) {
     const f = FOLK[o.kind];
-    if (!o.met) { o.met = true; log(f.hello); }
-    else if (bump) log(`${f.name}: ${f.lines[Math.floor(Math.random() * f.lines.length)]}`);
+    if (!o.met) { o.met = true; say(f.name, f.hello, "Ricambia il saluto"); }
+    else if (bump) say(f.name, f.lines[Math.floor(Math.random() * f.lines.length)]);
     if (!bump) return;
     const p = s.player, back = { x: p.x, y: p.y };
     p.x = o.x; p.y = o.y;
@@ -1991,7 +1982,7 @@ const Gioco = (() => {
     castleStep(s.player);
     buildDom();
     render();
-    log("Il ponte levatoio cigola: sei dentro il castello. Fa freddo, e c'è odore di cera.");
+    log("Il ponte levatoio cigola: sono dentro il castello. Fa freddo, e c'è odore di cera.");
   }
 
   function leaveCastle() {
@@ -2052,7 +2043,7 @@ const Gioco = (() => {
     el.map.classList.remove("is-hit");
     void el.map.offsetWidth;
     el.map.classList.add("is-hit");
-    log(`Gli spuntoni escono dal pavimento! ${lostHearts(CASTLE_SPIKE)}.`);
+    log(`Spuntoni dal pavimento, proprio sotto i piedi! ${lostHearts(CASTLE_SPIKE)}.`);
     if (!s.player.hp) die("castle");
   }
 
@@ -2063,7 +2054,7 @@ const Gioco = (() => {
     hurt(CASTLE_FALL);
     trip.stats.hits++;
     Suoni.play("macerie");
-    log(`La lastra cede sotto i piedi! Cadi nelle cantine e risali dall'atrio, tutto ammaccato. ${lostHearts(CASTLE_FALL)}.`);
+    log(`La lastra cede sotto i piedi! Cado nelle cantine e risalgo dall'atrio, dolorante. ${lostHearts(CASTLE_FALL)}.`);
     if (!s.player.hp) { die("castle"); return; }
     Object.assign(s.player, s.castle.start);
     light(s.player);
@@ -2074,7 +2065,7 @@ const Gioco = (() => {
     s.map[c.y][c.x] = "cfloor";
     s.cm.cracked = true;
     Suoni.play("macerie");
-    log("Un mattone suona vuoto. Spingi: il muro cede, c'è un passaggio segreto!");
+    log("Un mattone suona vuoto. Spingo: il muro cede, c'è un passaggio segreto!");
     render();
   }
 
@@ -2105,7 +2096,7 @@ const Gioco = (() => {
     el.map.classList.remove("is-hit");
     void el.map.offsetWidth;
     el.map.classList.add("is-hit");
-    log(`${o.kind === "bat" ? "Un pipistrello ti morde" : "Un fantasma ti passa attraverso, gelido"}! ${lostHearts(CASTLE.damage)}.`);
+    log(`${o.kind === "bat" ? "Un pipistrello mi morde" : "Un fantasma mi passa attraverso, gelido"}! ${lostHearts(CASTLE.damage)}.`);
     if (!s.player.hp) die("castle");
   }
 
@@ -2157,7 +2148,7 @@ const Gioco = (() => {
     if (!advance(3 - (trip.third % 3))) return;
     const ship = trip.world.zones[trip.shipZone ?? s.zone.id];
     landAt(ship, { waited: true, quiet: true, bush: true });
-    log("Ti risvegli in un cespuglio, accanto alla nave. Hai mal di testa, e al dito una fede nuziale.");
+    log("Mi risveglio in un cespuglio, accanto alla nave. Mal di testa, e al dito una fede nuziale.");
   }
 
   // A festa in corso la tastiera è sua: Invio (o un clic) va avanti
@@ -2184,7 +2175,7 @@ const Gioco = (() => {
     Suoni.play("monete");
     // da ora sono in allarme per sempre: non dormono più e sanno sempre dove sei
     for (const o of s.pirates) { o.mode = "hunt"; o.reload = Math.max(o.reload, 1); }
-    log(`Il tesoro dei bucanieri: ${PIRATE_TREASURE} m.o.! Adesso lo sanno.`);
+    log(`Prendo il tesoro dei bucanieri: ${PIRATE_TREASURE} m.o.! Adesso lo sanno.`);
   }
 
   function pirateSees(o) {
@@ -2199,7 +2190,7 @@ const Gioco = (() => {
     if (o.rest) { o.rest--; return; }
     const looted = trip.zones[s.zone.id].looted;
     if (looted || pirateSees(o) || s.heard.some((n) => n.r > 0 && dist(o, n) <= n.r + PIRATE.hearing)) {
-      if (o.mode !== "hunt") log(o.gun ? "Un bucaniere col fucile ti ha visto!" : "Un bucaniere sguaina la spada e ti corre incontro!");
+      if (o.mode !== "hunt") log(o.gun ? "Un bucaniere col fucile mi ha visto!" : "Un bucaniere sguaina la spada e mi corre incontro!");
       o.mode = "hunt";
     } else if (o.mode === "hunt") o.mode = "guard";
     if (o.reload) o.reload--;
@@ -2212,7 +2203,7 @@ const Gioco = (() => {
       el.map.classList.remove("is-hit");
       void el.map.offsetWidth;
       el.map.classList.add("is-hit");
-      log(`Un bucaniere ti spara! ${lostHearts(PIRATE.gun)}.`);
+      log(`Un bucaniere mi spara! ${lostHearts(PIRATE.gun)}.`);
       if (!p.hp) die("pirate");
       return;
     }
@@ -2236,7 +2227,7 @@ const Gioco = (() => {
       el.map.classList.remove("is-hit");
       void el.map.offsetWidth;
       el.map.classList.add("is-hit");
-      log(`Un bucaniere ti colpisce con la spada! ${lostHearts(PIRATE.sword)}.`);
+      log(`Un bucaniere mi colpisce con la spada! ${lostHearts(PIRATE.sword)}.`);
       if (!p.hp) die("pirate");
       return;
     }
@@ -2303,14 +2294,14 @@ const Gioco = (() => {
     // sazio, ti nota solo se gli vai addosso o se fai molto rumore vicino a lui
     const provoked = o.sated ? dist(o, p) <= 1 || s.heard.some((n) => n.r >= 3 && dist(o, n) <= 2) : sees(o) || hears(o);
     if (provoked) {
-      if (o.mode !== "hunt") { Suoni.play(k.sound); log(`${o.kind === "wolf" ? "Un lupo" : "L'orso"} ti ha fiutato e ti insegue!`); }
+      if (o.mode !== "hunt") { Suoni.play(k.sound); log(`${o.kind === "wolf" ? "Un lupo" : "L'orso"} mi ha fiutato e mi insegue!`); }
       o.mode = "hunt";
       o.last = { x: p.x, y: p.y };
     } else if (o.mode === "hunt") {
       o.mode = "search";
       o.searchLeft = 6;
       trip.stats.escapes++;
-      log(`${o.kind === "wolf" ? "Il lupo" : "L'orso"} ti ha perso: va a cercarti dove ti ha visto.`);
+      log(`${o.kind === "wolf" ? "Il lupo" : "L'orso"} mi ha perso: va a cercarmi dove mi ha visto.`);
     }
 
     o.energy += k.speed[o.mode];
@@ -2524,8 +2515,7 @@ const Gioco = (() => {
   }
 
   function die(kind) {
-    const SPIKES = { death: "Trafitto", deathText: "Le foglie del labirinto nascondevano troppe trappole" };
-    const k = KINDS[kind] || { pirate: PIRATE, castle: CASTLE, spike: SPIKES }[kind] || OUTLAW;
+    const k = KINDS[kind] || { pirate: PIRATE, castle: CASTLE }[kind] || OUTLAW;
     endTrip({ kind: "death", title: k.death, text: `${k.deathText}, al giorno ${day()}, ${now()}.` });
   }
 
