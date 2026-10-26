@@ -500,15 +500,20 @@ const Globo = (() => {
       }
     }
 
-    // Il cuore rosa sulla torre della donna, quando hai la sua lettera
+    // La torre della donna, quando hai la sua lettera: alta e stretta, il tetto a punta rosa e la finestra
+    // accesa, col cuore rosa sopra
     if (opts.tower != null) {
       const z = world.zones[opts.tower], s = project(z.lat, z.lon);
-      const HEART = [[-2, -1], [-1, -2], [1, -2], [2, -1], [-2, 0], [-1, -1], [0, -1], [1, -1], [2, 0], [-1, 0], [0, 0], [1, 0], [-1, 1], [0, 1], [1, 1], [0, 2]];
+      const TOWER = ["..h.h..", ".hhhhh.", "..hhh..", "...h...", "...r...", "..rrr..", ".rrrrr.", "..###..", "..#w#..", "..###..", "..###..", "..#d#.."];
+      const COL = { h: [240, 120, 170], r: [214, 96, 140], "#": [206, 198, 182], w: [255, 214, 120], d: [40, 30, 26] };
       if (s) {
-        for (const [dx, dy] of HEART) for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-          if (!HEART.some(([x, y]) => x === dx + ox && y === dy + oy)) put(s.x + dx + ox, s.y + dy + oy, [60, 20, 40]);
-        }
-        for (const [dx, dy] of HEART) put(s.x + dx, s.y + dy, [240, 120, 170]);
+        const at = (dx, dy) => TOWER[dy]?.[dx] && TOWER[dy][dx] !== ".";
+        TOWER.forEach((row, dy) => [...row].forEach((ch, dx) => {
+          const x = s.x + dx - 3, y = s.y + dy - 11;
+          if (ch !== ".") { put(x, y, COL[ch]); return; }
+          // il bordo scuro, perché si stacchi dall'isola
+          if ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([ox, oy]) => at(dx + ox, dy + oy))) put(x, y, [60, 20, 40]);
+        }));
       }
     }
 

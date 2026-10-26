@@ -54,6 +54,7 @@ const Citta = (() => {
       emporio: { semi: 5, cibo: 2, tagliola: 3 },
       gendarmeria: {},
       societa: {},
+      casa: { name: "Casa tua" },   // c'è solo dopo le nozze nel castello
     },
     porto: {
       medico: { cost: 3, extra: 2 }, // tutti i cuori e uno in più, che il Forte non ripristina
@@ -66,6 +67,7 @@ const Citta = (() => {
   const SHOP_INFO = {
     medico: ["Medico", "medicine"], taverna: ["Taverna", "tankard"], mercato: ["Mercato", "shop"],
     emporio: ["Emporio", "seeds"], gendarmeria: ["Gendarmeria", "manacles"], societa: ["Società ornitologica", "birdhouse"],
+    casa: ["Casa tua", "ring"],
   };
 
   // il nome della bottega: in una città può avere il suo
@@ -482,6 +484,8 @@ const Citta = (() => {
     const trip = Gioco.trip;
     const r = rng(trip.seed ^ (city.id === "forte" ? 0xf0f7e : 0x9077));
     const plan = city.id === "forte" ? buildForte(r) : buildPorto(r);
+    // dopo le nozze, al Forte c'è la casa degli sposi: la porta con la fede sul tetto, in un vicolo a sud
+    if (city.id === "forte" && trip.married) placeShop(plan, "casa", { x: 14, y: 20 }, ["road", "square"]);
     c = { city, ...plan, player: { ...plan.start }, npcs: [], open: null, prev: null, near: null };
     // la gente: sulle strade e sulla banchina, mai addosso a te né davanti a porte e nave
     const spots = [];
@@ -650,6 +654,7 @@ const Citta = (() => {
     if (kind === "mercato") return `compra la merce della stiva · ${shop.price} m.o. al pezzo`;
     if (kind === "gendarmeria") return `paga le taglie dei ricercati · ${Gioco.BOUNTY} m.o.`;
     if (kind === "societa") return `premia chi completa una specie · ${SOCIETY_PRIZE} m.o.`;
+    if (kind === "casa") return "la dama ti aspetta · si dorme gratis fino all'alba, e ti cura un cuore";
     return "chiuso";
   }
 
@@ -839,7 +844,7 @@ const Citta = (() => {
       const tower = kind === "lettera" && trip.world.zones.find((z) => z.tags.has("torre"));
       if (tower) {
         trip.towerKnown = true;
-        trip.rumors.unshift({ msg: `Sulla lettera sigillata c'è scritto: «Alla dama della torre, ${tower.name}». Segnata sul globo con un cuore rosa.`, day: Gioco.day(), time: Gioco.now() });
+        trip.rumors.unshift({ msg: `Sulla lettera sigillata c'è scritto: «Alla dama della torre, ${tower.name}». La torre è segnata sul globo, col cuore rosa.`, day: Gioco.day(), time: Gioco.now() });
       }
       dialog("Uno sconosciuto", `«Tenete, a me non serve più.» Ti mette in mano ${OGGETTI_SPECIALI[kind].nome.toLowerCase()} e se ne va. Finisce nello zaino.${tower ? ` Sopra c'è un indirizzo: la torre di ${tower.name}.` : ""}`, [["back", "Grazie…?"]]);
     }
@@ -880,6 +885,11 @@ const Citta = (() => {
       gendarmeria();
     } else if (kind === "societa") {
       societa();
+    } else if (kind === "casa") {
+      dialog("La dama", pickLine(HOME_LINES), [
+        ["home", "Dormi a casa fino all'alba"],
+        ["back", "Esci"],
+      ]);
     } else {
       emporio();
     }
@@ -940,6 +950,26 @@ const Citta = (() => {
     Gioco.toast(shop.extra ? "Ferite curate, e ti senti più forte del solito." : "Ferite curate.");
     Gioco.renderStatus();
     back();
+  }
+
+  const HOME_LINES = [
+    "«Finalmente a casa! Ho tenuto la zuppa al caldo.»",
+    "«Hai la faccia di chi ha visto un uccello raro. Racconta!»",
+    "«Il letto è rifatto e la candela è accesa. Resti stanotte?»",
+    "«Le altre dame del castello mi chiedono sempre di te.»",
+  ];
+  const pickLine = (lines) => lines[Math.floor(Math.random() * lines.length)];
+
+  // Dormire a casa: gratis, fino all'alba (la ciurma si paga comunque); niente storie, ma un cuore curato
+  function sleepHome() {
+    const trip = Gioco.trip;
+    back();
+    if (!Gioco.advance(3 - (trip.third % 3))) return;
+    trip.hp = Math.max(trip.hp, Math.min(Gioco.maxHp(), trip.hp + 2));
+    Gioco.toast("Dormi a casa tua. All'alba la dama ti ha medicato una ferita, e il caffè è pronto.");
+    drawPostcard();
+    Gioco.renderStatus();
+    Gioco.save();
   }
 
   // Dormire in taverna: si arriva all'alba (la ciurma si paga) e forse si sente una voce
@@ -1017,6 +1047,7 @@ const Citta = (() => {
     if (action === "back") back();
     else if (action === "heal") heal();
     else if (action === "sleep") sleep();
+    else if (action === "home") sleepHome();
     else if (action === "wanted") acceptWanted();
     else if (action.startsWith("buy:")) buy(action.slice(4));
     else if (action === "grog") dialog("La nota sul barile", GROG, [["back", "Rimetti a posto la nota"]], { voice: false });

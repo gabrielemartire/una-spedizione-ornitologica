@@ -2,6 +2,17 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.18 · 26 ottobre 2026
+
+- **La ciurma costa 5 monete al giorno**, non più 8.
+- **C'è sempre un castello** nell'arcipelago (prima una volta su cinque mancava). Nei mondi già salvati che non l'avevano, compare in una zona senza altre cose speciali; il resto del mondo non cambia.
+- **I cartelli dei passaggi si leggono avvicinandosi**: a due passi il diario annota *Un cartello: di là c'è …* e sotto la mappa compare dove porta. Il passaggio che porta alla zona del castello ha uno **stendardo** al posto del cartello (*Uno stendardo con lo stemma del castello…*). Il cartello da cui sei arrivato non si rilegge.
+- **La lettera sigillata mostra la torre sul globo**: non più solo un cuoricino, ma una torre alta e stretta col tetto a punta rosa, la finestra accesa e il cuore sopra.
+- **La casa degli sposi**: dopo le nozze nel castello, al Forte c'è casa tua, in un vicolo a sud, con la fede disegnata sul tetto. Dentro c'è la dama: si dorme gratis fino all'alba (la ciurma si paga comunque) e lei ti cura un cuore.
+- **Il cinghiale colpisce sempre**: quando la carica si fermava proprio accanto a te e gli andavi addosso, non succedeva niente. Ora andare addosso a un animale sveglio (cinghiale, lupo, orso non sazio) vuol dire prendersi il colpo.
+- **Nel diario non si scrive più che un animale ti ha perso.**
+- **I bucanieri**: se rubi il tesoro di notte mentre dormono, continuano a dormire (*Russano ancora.*); li sveglia solo il rumore. I fucili sparano ogni 8 passi invece di 6, e tornando di giorno dopo il furto aspettano un paio di passi prima di sparare.
+
 ## 0.12.17 · 25 ottobre 2026
 
 - **La nave parte sempre in mare aperto**: a volte nasceva in un'insenatura chiusa, senza uscita. Ora parte solo nel mare grande, quello che porta dappertutto, e lontano da canali stretti. Se una nave è già chiusa in un'insenatura (per esempio in una partita in corso), tornando in mare viene portata nel mare aperto più vicino.

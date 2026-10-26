@@ -20,9 +20,14 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **I timbri dei tarocchi e del Kraken**: l'Appeso, la Morte, il Sole, la Luna, il Kraken sono nel taccuino ma non si prendono ancora.
 - [ ] **Il circo**: un circo itinerante da qualche parte nell'arcipelago (tendone, giocolieri, acrobati, animali), con le icone della categoria *circus* di game-icons (https://game-icons.net/tags/circus.html). Da pensare insieme: dove compare, cosa ci si fa.
 - [ ] **La protesta in piazza**: una missione secondaria che parte dai quattro che protestano al Forte (da pensare).
-- [ ] **La casa degli sposi**: dopo le nozze, in città una casa nuova da visitare, la tua (da sviluppare).
+
+## In arrivo (chiesto il 26 ottobre)
+- [ ] **Ribilanciare i costi** (ciurma già a 5): proposta da discutere.
+- [ ] **Popup iniziale più semplice** e **tutorial in gioco** alla prima isola e al primo sbarco al Forte.
+- [ ] **Uccelli con regole fisse**: i gabbiani solo sulle isole coi porti, i corvi solo nelle paludi, e una regola precisa per ogni specie.
 
 ## Fatto di recente
+- [x] **Versione 0.12.18**: ciurma a 5; il castello c'è sempre; i cartelli si leggono avvicinandosi, lo stendardo verso il castello; la torre disegnata sul globo con la lettera; la casa degli sposi al Forte; il cinghiale colpisce anche se gli vai addosso; nel diario niente fughe dagli animali; i bucanieri dormono anche dopo il furto notturno e sparano ogni 8 passi.
 - [x] **Versione 0.12.17**: via gli spuntoni del castello; le ferite nel diario si raccontano senza numeri; la nave parte sempre in mare aperto e una nave chiusa in un'insenatura viene liberata.
 - [x] **Versione 0.12.16**: il diario è scritto come appunti dell'esploratore; unicorno, mostro, prete e invitati parlano in finestrella; via le trappole tra le foglie; il ricercato che scappa resta sull'isola.
 - [x] **Versione 0.12.15**: castello con l'atrio arredato, la biblioteca, due mobili per stanza, spuntoni a tempo e lastre che cedono; traversate a 200°.

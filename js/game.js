@@ -13,7 +13,7 @@ const Gioco = (() => {
   const BIRD_LEAVE = 0.35;    // probabilità che, spaventato, lasci la zona invece di spostarsi
   const MAX_HP = 10;
   const START_MONEY = 100;
-  const CREW_PAY = 8;         // la paga giornaliera della ciurma
+  const CREW_PAY = 5;         // la paga giornaliera della ciurma
   const DEPART_COST = 2;
   const SAVE_KEY = "spedizione-ornitologica:partita";
   const NOTEBOOK_KEY = "spedizione-ornitologica:taccuino";
@@ -51,9 +51,9 @@ const Gioco = (() => {
   // della mappa solo se sei lontano; damage = mezzi cuori
   const OUTLAW = { sight: 8, nightSight: 5, hearing: 2, range: 6, reload: 4, damage: 2, escape: 10,
     death: "Impallinato", deathText: "Il ricercato aveva la mira migliore" };
-  // I bucanieri: due col fucile (un cuore ogni 6 battiti), due con la spada (colpiscono a contatto come i lupi).
-  // Al tuo passo, vedono meno lontano degli animali; di notte, finché il tesoro c'è, dormono
-  const PIRATE = { sight: 6, nightSight: 4, hearing: 1, range: 6, reload: 6, gun: 2, sword: 2, rest: 2, roam: 4,
+  // I bucanieri: due col fucile (un cuore ogni 8 battiti), due con la spada (colpiscono a contatto come i lupi).
+  // Al tuo passo, vedono meno lontano degli animali; di notte dormono, anche se il tesoro sparisce
+  const PIRATE = { sight: 6, nightSight: 4, hearing: 1, range: 6, reload: 8, gun: 2, sword: 2, rest: 2, roam: 4,
     death: "Infilzato", deathText: "I bucanieri non perdonano chi tocca il loro bottino" };
   const PIRATE_TREASURE = 30;
   const PIRATE_WAKE = 0.8;    // quanto spesso una casella rumorosa li sveglia
@@ -726,7 +726,7 @@ const Gioco = (() => {
       const { tags, place } = zoneTags(zSeed, biome);
       return { tags, place, name: zoneName(tags, place) };
     });
-    // Castello e vulcano: al massimo uno per globo, e non sempre
+    // Il castello c'è sempre (uno per globo); il vulcano non sempre
     const r = rng(seed ^ 0x51ed27);
     const wild = world.zones.filter((z) => !world.cities.some((c) => c.zone === z.id));
     const pickZone = (ok) => { const pool = wild.filter(ok); return pool.length ? pool[Math.floor(r() * pool.length)] : null; };
@@ -749,6 +749,12 @@ const Gioco = (() => {
     const rb = rng(seed ^ 0xb0ca4);
     const plain = (z) => !["castello", "vulcano", "torre", "falo", "labirinto"].some((t) => z.tags.has(t));
     wild.filter(plain).sort(() => rb() - 0.5).slice(0, rb() < 0.4 ? 2 : 1).forEach((z) => z.tags.add("bucanieri"));
+    // se al primo tiro il castello non è uscito, va in una zona rimasta semplice: i mondi già salvati non cambiano
+    if (!wild.some((z) => z.tags.has("castello"))) {
+      const rk = rng(seed ^ 0xca57e);
+      const pool = wild.filter((z) => z.biome !== "ghiaccio" && plain(z) && !z.tags.has("bucanieri"));
+      if (pool.length) pool[Math.floor(rk() * pool.length)].tags.add("castello");
+    }
     // i forzieri chiusi: uno ogni CHEST_EVERY zone, almeno uno
     const rc = rng(seed ^ 0x7c4e57);
     world.chests = wild.filter((z) => !z.tags.has("bucanieri") && !z.tags.has("labirinto")).slice().sort(() => rc() - 0.5).slice(0, Math.max(1, Math.round(wild.length / CHEST_EVERY))).map((z) => z.id);
@@ -1051,6 +1057,7 @@ const Gioco = (() => {
       startPos: entry,
       player: { ...entry, hp: trip.hp },
       passes: shape.passes,
+      signsRead: new Set(shape.passes.filter((ps) => ps.to === via).map(key)),   // il cartello da cui arrivi lo conosci già
       bird: { ...gen.bird, info: bird, present, observed: false, gone: false },
       beasts: spawnBeasts(gen, zone, time),
       item: memory.item && !memory.item.taken && itemAt ? { ...itemAt, kind: memory.item.kind } : null,
@@ -1069,8 +1076,8 @@ const Gioco = (() => {
       npcs: gen.maze ? mazeFolk(gen, rp) : [],
       // il castello: dove si torna uscendo dal portone (sul ponte, davanti al ponte levatoio)
       gateAt: castleGate(gen),
-      pirates: gen.pirates ? gen.pirates.men.map((c, i) => ({ ...c, home: { ...c }, gun: i < 2, reload: 0, energy: 0, rest: 0,
-        mode: memory.looted ? "hunt" : time === "notte" ? "sleep" : "guard" })) : [],
+      pirates: gen.pirates ? gen.pirates.men.map((c, i) => ({ ...c, home: { ...c }, gun: i < 2, reload: memory.looted ? 2 : 0, energy: 0, rest: 0,
+        mode: time === "notte" ? "sleep" : memory.looted ? "hunt" : "guard" })) : [],
       loot: gen.pirates && !memory.looted ? gen.pirates.treasure : null,
       run: 0,
       ticks: 0,
@@ -1384,6 +1391,9 @@ const Gioco = (() => {
     const pirate = s.pirates.find((o) => same(o, n));
     if (pirate) { if (pirate.mode === "sleep") wakePirates("Inciampo in un bucaniere che dorme: si svegliano tutti!"); return false; }
     if (s.chest && same(s.chest, n)) { openChest(); return false; }
+    // andare addosso a un animale sveglio (il cinghiale che ha appena caricato, un lupo) fa male: ti colpisce
+    const beast = s.beasts.find((o) => same(o, n));
+    if (beast && !beast.rest && !beast.sated) { attack(beast); return true; }
     if (t.tower) { meetLady(); return false; }
     if (t.fire) { campfire(); return false; }
     if (!t.walk || occupied(n)) return false;
@@ -1408,6 +1418,7 @@ const Gioco = (() => {
     if (t.crack) { fallThrough(n); return true; }
     if (t.junk && s.pirates.some((o) => o.mode === "sleep") && Math.random() < PIRATE_WAKE) wakePirates(`${t.name} sotto i piedi: un rumore tremendo. I bucanieri si svegliano!`);
     if (s.bottle && same(s.bottle, n)) takeBottle();
+    readSigns(n);
     s.heard.push({ ...n, r: s.noise });
     // accanto alla torre, la donna si affaccia
     if (s.tower && !s.towerMet && s.tower.some((c) => Math.abs(c.x - n.x) + Math.abs(c.y - n.y) === 1)) { s.towerMet = true; meetLady(); }
@@ -1431,6 +1442,17 @@ const Gioco = (() => {
     s.item = null;
     Suoni.play("monete");
     log(`Trovato: ${it.nome.toLowerCase()}. Va in stiva.`);
+  }
+
+  // Avvicinandosi a un cartello si legge dove porta; quello verso il castello è uno stendardo
+  const towardCastle = (ps) => trip.world.zones[ps.to].tags.has("castello");
+  function readSigns(c) {
+    const ps = s.passes.find((q) => Math.abs(q.x - c.x) + Math.abs(q.y - c.y) <= 2 && !(s.signsRead ||= new Set()).has(key(q)));
+    if (!ps) return;
+    s.signsRead.add(key(ps));
+    const dest = trip.world.zones[ps.to].name;
+    log(towardCastle(ps) ? `Uno stendardo con lo stemma del castello. Di là c'è ${dest}.` : `Un cartello: di là c'è ${dest}.`);
+    showTileInfo(ps);
   }
 
   // Il passaggio: si va a piedi nella zona vicina, e si arriva all'ora del giorno dopo. La nave resta dov'è
@@ -2141,7 +2163,7 @@ const Gioco = (() => {
   }, true);
   document.addEventListener("click", (e) => { if (party != null && e.target.closest("#scene")) partyStep(); });
 
-  // --- I bucanieri: dormono di notte finché il tesoro c'è; svegli fanno la guardia; derubati, ti trovano sempre ---
+  // --- I bucanieri: dormono di notte; svegli fanno la guardia; derubati, da svegli ti trovano sempre ---
 
   function wakePirates(msg) {
     for (const o of s.pirates) if (o.mode === "sleep") { o.mode = "hunt"; o.reload = 1; }
@@ -2154,7 +2176,8 @@ const Gioco = (() => {
     trip.zones[s.zone.id].looted = true;
     earn("tesoro dei bucanieri", PIRATE_TREASURE);
     Suoni.play("monete");
-    // da ora sono in allarme per sempre: non dormono più e sanno sempre dove sei
+    // di notte dormono e non se ne accorgono (finché non li sveglia un rumore); di giorno sanno sempre dove sei
+    if (s.pirates.some((o) => o.mode === "sleep")) { log(`Prendo il tesoro dei bucanieri: ${PIRATE_TREASURE} m.o.! Russano ancora.`); return; }
     for (const o of s.pirates) { o.mode = "hunt"; o.reload = Math.max(o.reload, 1); }
     log(`Prendo il tesoro dei bucanieri: ${PIRATE_TREASURE} m.o.! Adesso lo sanno.`);
   }
@@ -2282,7 +2305,6 @@ const Gioco = (() => {
       o.mode = "search";
       o.searchLeft = 6;
       trip.stats.escapes++;
-      log(`${o.kind === "wolf" ? "Il lupo" : "L'orso"} mi ha perso: va a cercarmi dove mi ha visto.`);
     }
 
     o.energy += k.speed[o.mode];
@@ -2704,6 +2726,7 @@ const Gioco = (() => {
 
     const look = BIOMI[biomeOf(s.tags)].mappa;
     const roofCenter = s.ruin ? [...s.ruin.interior][Math.floor(s.ruin.interior.size / 2)] : null;
+    const banners = new Set(s.passes.filter(towardCastle).map(key));
 
     for (let y = 0; y < H; y++) {
       for (let x = 0; x < W; x++) {
@@ -2714,6 +2737,7 @@ const Gioco = (() => {
         let icon = t === TILES.tree ? look.tree[(x * 7 + y * 13) % 3 === 0 ? look.tree.length - 1 : 0]
           : t === TILES.tall ? look.tall : t.icon;
         let ch = t.ch || "";
+        if (t.pass && banners.has(k)) icon = "banner";
         // Dove si passa le icone sono più trasparenti; quello che blocca è pieno
         let cls = `cell ${t.cls} ${t.walk ? "walk" : "block"}`;
         if (t === TILES.sea) cls += ` wave${(x * 2 + y * 3) % 5}`;

@@ -143,7 +143,7 @@ Ogni zona ha **un bioma** e **0–3 caratteristiche**. Insieme formano i **tag**
 | Bosco di cristallo | azzurro, viola | fantastico, raro |
 | Foresta di funghi | viola, crema | fantastico, raro |
 
-**Caratteristiche:** `fiume` (con o senza `cascata`), `lago`, oppure nessuna acqua; `rovine`, `villaggio`, `colline`, `montagne`; rari, al massimo uno per globo: `castello` e `vulcano`.
+**Caratteristiche:** `fiume` (con o senza `cascata`), `lago`, oppure nessuna acqua; `rovine`, `villaggio`, `colline`, `montagne`; rari, al massimo uno per globo: `castello` (dalla 0.12.18 sempre uno) e `vulcano`.
 - **Fiume:** non c'è sempre; dove c'è, di giorno **l'orso è molto più probabile**. Col binocolo si valuta se vale la pena attraccare.
 - **Lago:** tondo, profondo nel mezzo; nelle isole ghiacciate è gelato e ci si cammina sopra.
 - **Vulcano:** una colata di lava (non si attraversa) e rocce nere; il calore scioglie il ghiaccio della zona. *(v2: tutta l'isola diventa di un bioma più caldo.)*
@@ -307,9 +307,9 @@ Restano gli animali, che inseguono solo te, e l'uccello, che può spaventarsi (a
 
 Uno o due per arcipelago, mai nella zona del ricercato, di una città, del castello, del vulcano, della torre o del falò; niente mercanti né forzieri. **Il segnale**: col binocolo, a ogni ora, una colonna di fumo grasso (il *boucan*); la prima volta il diario annota *«Fumo grasso dalla costa. Odore di carne.»*. Dal globo niente; il nome della zona non dice niente.
 
-**Dentro**: nessun animale (*«Nessuna traccia di animali.»*). Il tesoro (30 m.o., ci passi sopra) lontano da dove si arriva, accanto la carne che affumica, intorno **quattro bucanieri**: due col fucile (un cuore ogni 6 battiti, entro 6 caselle, in vista; da vicino aspettano di poter sparare), due con la spada (un cuore a contatto, poi 2 battiti di pausa). Al tuo passo; vista 6 caselle di giorno, 4 di notte; le tagliole le scavalcano. Svegli e tranquilli girano vicino al fuoco.
+**Dentro**: nessun animale (*«Nessuna traccia di animali.»*). Il tesoro (30 m.o., ci passi sopra) lontano da dove si arriva, accanto la carne che affumica, intorno **quattro bucanieri**: due col fucile (un cuore ogni 8 battiti, entro 6 caselle, in vista; da vicino aspettano di poter sparare), due con la spada (un cuore a contatto, poi 2 battiti di pausa). Al tuo passo; vista 6 caselle di giorno, 4 di notte; le tagliole le scavalcano. Svegli e tranquilli girano vicino al fuoco.
 
-**Di notte, finché il tesoro c'è, dormono** (`z`). Le caselle rumorose (vetri rotti, padelle, cocci, con la loro icona) li svegliano 4 volte su 5; andare addosso a uno che dorme li sveglia sempre; se se ne sveglia uno si svegliano tutti. Il generatore garantisce, da ogni entrata (la nave e i passaggi), un sentiero al tesoro senza caselle rumorose e senza bucanieri.
+**Di notte dormono** (`z`), anche se rubi il tesoro (0.12.18: *Russano ancora.*); di giorno, dopo il furto, ti cacciano sempre. Le caselle rumorose (vetri rotti, padelle, cocci, con la loro icona) li svegliano 4 volte su 5; andare addosso a uno che dorme li sveglia sempre; se se ne sveglia uno si svegliano tutti. Il generatore garantisce, da ogni entrata (la nave e i passaggi), un sentiero al tesoro senza caselle rumorose e senza bucanieri.
 
 **Dopo il furto** restano lì per sempre, non dormono più e sanno sempre dove sei: la zona è persa per il resto del viaggio, uccelli compresi.
 
@@ -344,7 +344,9 @@ Il ponte levatoio: ci vai contro e sei dentro; il tempo non passa né entrando n
 - **Sì**: auguri (riquadro), il buio, **la festa** (una scena in pixel art: la tavolata, gli invitati coi boccali, gli sposi, il suonatore di liuto e l'oste, i coriandoli; quattro battute con Invio; solo gente, niente creature del labirinto), il buio. Ti risvegli **all'alba** in un cespuglio accanto alla nave, con la **fede nuziale** nello zaino e il timbro dell'anello. Da lì il castello è **chiuso per nozze** (il portone sbarrato, col cartello). **No**: lei resta lì.
 - **Poi** (da fare): in città una casa nuova, la tua.
 
-**I passaggi** hanno l'icona del cartello (non più del ponte, che si confondeva col ponte del castello) e non stanno mai sul lato del castello.
+**I passaggi** hanno l'icona del cartello (non più del ponte, che si confondeva col ponte del castello) e non stanno mai sul lato del castello. Dalla 0.12.18 **a due passi dal cartello** si legge dove porta (nel diario e sotto la mappa); quello verso la zona del castello è uno **stendardo**.
+
+**La casa degli sposi** (0.12.18): dopo le nozze, al Forte compare casa tua (una porta in un vicolo a sud, la fede sul tetto). La dama ti accoglie con una battuta; si dorme gratis fino all'alba e lei cura un cuore.
 
 ## 10. Le città
 
@@ -390,7 +392,7 @@ Valori iniziali, da tarare giocando.
 | Voce | Valore |
 |---|---|
 | Soldi iniziali | 100 |
-| Paga della ciurma | 8 al giorno |
+| Paga della ciurma | 5 al giorno (0.12.18; prima 8) |
 | Voce vaga / precisa | 10 / 35 |
 | Cura | 5 per punto vita |
 | Tagliola · carne · petardo · semi | 12 · 4 · 8 · 3 |
@@ -407,8 +409,8 @@ La linguetta, **Tab** o *Diario* nella barra aprono il **taccuino**: un libro ap
 Il diario è un diario, non un manuale: niente spiegazioni, se un capitolo è vuoto è vuoto.
 - **Note**: sono **gli appunti dell'esploratore**, in prima persona e asciutti (*Un lupo mi azzanna! Fa male.*, *Spargo i semi.*, *Mi risveglio in un cespuglio…*), mai al maschile o al femminile; **niente numeri di gioco** (le ferite si raccontano: *un graffio*, *fa male*, *fa molto male*, *una brutta ferita*); le battute di chi parla non stanno qui ma nelle finestrelle. In alto a penna *viaggio n. X*. Gli sbarchi, con giorno e momento, la zona e se l'uccello c'era (*sento un cinguettio*, *nessun uccello. Forse non è la sua ora*, *l'uccello se n'è andato*, *il suo uccello ce l'ho già*); arrivando a piedi da un passaggio, *(a piedi da …)*. Poi i fatti importanti della battlemap, che non ha più avvisi sopra.
 - **Uccelli**: per specie, con sotto il titolo **dove si trovano** i suoi uccelli comuni (*Si trovano: foresta · taiga · palude · ovunque*), così si può partire a caccia di una specie intera. Ogni uccello è una **scheda**: quattro angoli appena segnati, il riquadro del disegno e righe vuote da riempire. **Sconosciuto**: tutto vuoto. **Incrociato** (traccia: sbarcato all'ora sbagliata, volato via, o tornato a bordo senza osservarlo): nome sulla prima riga, habitat e ore sulla seconda, terza e quarta vuote, niente disegno. **Osservato**: nome (e latino), habitat e ore, curiosità, dove e quando, e il disegno a colori. **I rari osservati hanno una cornice d'oro** (doppio filo dorato, gemme agli angoli, *✦ raro*).
-- **Voci**: le voci sentite; quella su un uccello **si barra** quando l'hai osservato. La lettera sigillata aggiunge l'indirizzo della torre (e un cuore rosa sul globo).
-- **Finanze**: in alto a destra, a penna e di sbieco, *ciurma: 8 m.o. al giorno*; sotto il registro delle **entrate e uscite** a tre colonne (cosa · giorno · importo), con le uscite in rosso (ciurma, medico, taverna, rapine) e le entrate in verde (mercato, premi della Società, taglie); le righe vuote si riempiono man mano.
+- **Voci**: le voci sentite; quella su un uccello **si barra** quando l'hai osservato. La lettera sigillata aggiunge l'indirizzo della torre (e sul globo la torre, col tetto rosa e il cuore).
+- **Finanze**: in alto a destra, a penna e di sbieco, *ciurma: 5 m.o. al giorno*; sotto il registro delle **entrate e uscite** a tre colonne (cosa · giorno · importo), con le uscite in rosso (ciurma, medico, taverna, rapine) e le entrate in verde (mercato, premi della Società, taglie); le righe vuote si riempiono man mano.
 - **Zaino**: la lista degli oggetti (il binocolo, la pala, gli oggetti magici; l'uovo dice solo *potrebbe schiudersi*). **Da qui si usano le cose** (0.12.4): quelle che si usano hanno un numero e cosa fanno (*mangia*, *posa*, *spargi*); il numero o un clic le usano, solo a terra. Sotto la battlemap i tasti scritti sono solo *spazio osserva · Z attendi · X scava · Tab diario*, disegnati come tasti (riquadrino col nome del tasto, poi l'azione), e così in mare e in città (T, M ed E restano come scorciatoie).
 - **Stiva**: com'è adesso. Gli oggetti, e in basso nella pagina di destra **i ricercati presi e non ancora consegnati**, ognuno in **una cella con le sbarre**; consegnato, sparisce dalla stiva.
 - **I fogli delle taglie** (non sono un capitolo, non hanno linguetta; dalla 0.12.13): in fondo al taccuino, un foglio sciolto, un po' storto, per ogni avviso accettato; senza avvisi non c'è niente. Ognuno con l'insegna **WANTED**, il nome, il delitto, la taglia e il giorno; consegnato il ricercato, un timbro rosso bordato **CATTURATO**; se scappa, un timbro grigio *sfuggito*.
