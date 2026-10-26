@@ -2,6 +2,10 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.12.19 · 26 ottobre 2026
+
+- **Alle nozze si va avanti camminando**: nella sala del trono, premere di nuovo la freccia verso la sposa vale come Invio. Si risponde *Sì, lo voglio*, poi si passa agli auguri e si scorre tutta la festa. Tenendo giù il tasto non si salta niente: ogni passo va premuto.
+
 ## 0.12.18 · 26 ottobre 2026
 
 - **La ciurma costa 5 monete al giorno**, non più 8.

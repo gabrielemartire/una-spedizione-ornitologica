@@ -341,7 +341,7 @@ Il ponte levatoio: ci vai contro e sei dentro; il tempo non passa né entrando n
   |     V     |
   | k k V k k |
   ```
-- **Sì**: auguri (riquadro), il buio, **la festa** (una scena in pixel art: la tavolata, gli invitati coi boccali, gli sposi, il suonatore di liuto e l'oste, i coriandoli; quattro battute con Invio; solo gente, niente creature del labirinto), il buio. Ti risvegli **all'alba** in un cespuglio accanto alla nave, con la **fede nuziale** nello zaino e il timbro dell'anello. Da lì il castello è **chiuso per nozze** (il portone sbarrato, col cartello). **No**: lei resta lì.
+- **Sì**: auguri (riquadro), il buio, **la festa** (una scena in pixel art: la tavolata, gli invitati coi boccali, gli sposi, il suonatore di liuto e l'oste, i coriandoli; quattro battute con Invio; solo gente, niente creature del labirinto), il buio. Ti risvegli **all'alba** in un cespuglio accanto alla nave, con la **fede nuziale** nello zaino e il timbro dell'anello. Da lì il castello è **chiuso per nozze** (il portone sbarrato, col cartello). **No**: lei resta lì. Dalla 0.12.19 ogni passo verso la sposa vale come Invio: la domanda, gli auguri e la festa vanno avanti camminando.
 - **Poi** (da fare): in città una casa nuova, la tua.
 
 **I passaggi** hanno l'icona del cartello (non più del ponte, che si confondeva col ponte del castello) e non stanno mai sul lato del castello. Dalla 0.12.18 **a due passi dal cartello** si legge dove porta (nel diario e sotto la mappa); quello verso la zona del castello è uno **stendardo**.

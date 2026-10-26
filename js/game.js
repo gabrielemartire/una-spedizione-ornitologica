@@ -1371,7 +1371,7 @@ const Gioco = (() => {
     if (t.gate) { enterCastle(); return false; }
     if (t.locked) { openLock(n); return false; }
     if (t.secret) { crackWall(n); return false; }
-    if (s.lady && same(s.lady, n)) { meetBride(); return false; }
+    if (s.lady && same(s.lady, n)) { s.brideKey = `${dx},${dy}`; meetBride(); return false; }
     if (s.priest && same(s.priest, n)) { say("Il prete", "Sfoglia il messale: «Siamo qui riuniti… manca solo lo sposo.»"); return false; }
     const guest = s.guests && s.guests.find((o) => same(o, n));
     if (guest) {
@@ -2154,10 +2154,23 @@ const Gioco = (() => {
     log("Mi risveglio in un cespuglio, accanto alla nave. Mal di testa, e al dito una fede nuziale.");
   }
 
+  // Dalla dama alla festa, un passo verso di lei vale come Invio: la domanda, gli auguri e la festa
+  // vanno avanti camminando (un tasto premuto di nuovo, non tenuto giù, se no si salta tutto)
+  const towardBride = (e) => {
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    return !!s?.brideKey && !e.repeat && MOVES[k]?.join(",") === s.brideKey;
+  };
+  window.addEventListener("keydown", (e) => {
+    if (party != null || !towardBride(e) || el.overlay.hidden) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    el.overlay.querySelector(".menu-item:focus, .menu-item")?.click();
+  }, true);
+
   // A festa in corso la tastiera è sua: Invio (o un clic) va avanti
   window.addEventListener("keydown", (e) => {
     if (party == null) return;
-    if (e.key === "Enter" || e.key === " ") partyStep();
+    if (e.key === "Enter" || e.key === " " || towardBride(e)) partyStep();
     e.preventDefault();
     e.stopImmediatePropagation();
   }, true);

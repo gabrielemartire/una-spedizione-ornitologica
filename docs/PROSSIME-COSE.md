@@ -27,6 +27,7 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **Uccelli con regole fisse**: i gabbiani solo sulle isole coi porti, i corvi solo nelle paludi, e una regola precisa per ogni specie.
 
 ## Fatto di recente
+- [x] **Versione 0.12.19**: alle nozze un passo verso la sposa vale come Invio.
 - [x] **Versione 0.12.18**: ciurma a 5; il castello c'è sempre; i cartelli si leggono avvicinandosi, lo stendardo verso il castello; la torre disegnata sul globo con la lettera; la casa degli sposi al Forte; il cinghiale colpisce anche se gli vai addosso; nel diario niente fughe dagli animali; i bucanieri dormono anche dopo il furto notturno e sparano ogni 8 passi.
 - [x] **Versione 0.12.17**: via gli spuntoni del castello; le ferite nel diario si raccontano senza numeri; la nave parte sempre in mare aperto e una nave chiusa in un'insenatura viene liberata.
 - [x] **Versione 0.12.16**: il diario è scritto come appunti dell'esploratore; unicorno, mostro, prete e invitati parlano in finestrella; via le trappole tra le foglie; il ricercato che scappa resta sull'isola.
