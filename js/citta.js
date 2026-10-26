@@ -517,8 +517,63 @@ const Citta = (() => {
     clearInterval(timer);
     timer = setInterval(stroll, NPC_MS);
     Gioco.renderStatus();
-    Gioco.toast(city.id === "forte" ? "Il Forte: le botteghe hanno l'insegna sul tetto." : "Il porticciolo: le botteghe danno sulla banchina.");
     render();
+    // la prima volta in ogni città, il giro delle botteghe con la freccia; poi solo un avviso
+    if (Gioco.firstTime(`citta-${city.id}`)) tour(0);
+    else Gioco.toast(city.id === "forte" ? "Il Forte: le botteghe hanno l'insegna sul tetto." : "Il porticciolo: le botteghe danno sulla banchina.");
+  }
+
+  // --- Il giro della città, alla prima visita: qualche riga per posto, e una freccia che lo indica ---
+
+  const TOURS = {
+    forte: [
+      [null, "Il Forte, la città grande dell'arcipelago. In città il tempo non passa, tranne quando dormi. Ecco dove sono le botteghe: ci entri camminando contro la porta."],
+      ["medico", "Il medico cura le ferite, a pagamento."],
+      ["taverna", "In taverna si dorme fino all'alba, e al bancone si sentono voci sugli uccelli rari."],
+      ["mercato", "Al mercato vendi le cose che trovi a terra durante le esplorazioni."],
+      ["emporio", "All'emporio: semi, pesce in scatola e tagliole."],
+      ["societa", "La Società ornitologica premia chi completa una specie: tutti i suoi uccelli comuni nel taccuino."],
+      ["board", "Sulla banchina, la bacheca dei ricercati: a volte c'è una taglia."],
+      ["gendarmeria", "In gendarmeria consegni i ricercati e riscuoti la taglia."],
+      ["casa", "E questa è casa tua, dove ti aspetta la dama."],
+      ["ship", "Questa è la tua nave: ci sali per ripartire. La ciurma si paga ogni alba."],
+    ],
+    porto: [
+      [null, "Il porticciolo del fiordo, costruito sull'acqua. Più piccolo del Forte, ma ha quello che serve. Le botteghe danno sulla banchina: ci entri camminando contro la porta."],
+      ["taverna", "La Taverna Pesce Sgozzato, su palafitte: si dorme fino all'alba e si sentono storie."],
+      ["medico", "Il medico del porticciolo cura le ferite e ti dà un cuore in più."],
+      ["mercato", "Il mercato compra quello che trovi, ma non l'arte: quella la vogliono in città."],
+      ["emporio", "L'emporio: semi, pesce in scatola e tagliole."],
+      ["board", "La bacheca dei ricercati."],
+      ["falegname", "In fondo alla banchina lavora il falegname. Ha l'aria di uno che parla volentieri."],
+      ["ship", "La tua nave: ci sali per ripartire. La ciurma si paga ogni alba."],
+    ],
+  };
+
+  function tourSpot(kind) {
+    if (!kind) return null;
+    if (kind === "ship") return c.ship;
+    if (kind === "falegname") return c.carpenter || null;
+    if (kind === "board") {
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (c.map[y][x] === "board") return { x, y };
+      return null;
+    }
+    return c.doors[kind] || null;
+  }
+
+  function tour(i) {
+    const steps = TOURS[c.city.id].filter(([kind]) => !kind || tourSpot(kind));
+    const ov = Gioco.el.overlay;
+    c.tourArrow ||= Object.assign(document.createElement("div"), { className: "entity tour-arrow no-slide",
+      innerHTML: '<svg viewBox="0 0 10 12" aria-hidden="true"><path d="M3 0h4v6h3l-5 6-5-6h3z"/></svg>' });
+    if (i >= steps.length) { back(); return; }
+    c.tour = i;
+    const [kind, text] = steps[i];
+    const at = tourSpot(kind);
+    if (at) { place(c.tourArrow, at); Gioco.el.map.appendChild(c.tourArrow); } else c.tourArrow.remove();
+    // la finestrella non deve coprire quello che indica
+    ov.classList.toggle("is-top", !!at && at.y >= H / 2);
+    dialog(c.city.name, text, [["tour", i + 1 < steps.length ? "Avanti" : "Si comincia"]], { voice: false });
   }
 
   function leave() {
@@ -677,6 +732,8 @@ const Citta = (() => {
 
   // Si esce dalla bottega tornando in strada, dove eri
   function back() {
+    // finito (o interrotto) il giro della città, via la freccia
+    if (c.tour != null) { c.tour = null; c.tourArrow?.remove(); Gioco.el.overlay.classList.remove("is-top"); }
     c.open = null;
     c.typing = null;
     Gioco.el.overlay.hidden = true;
@@ -1048,6 +1105,7 @@ const Citta = (() => {
     else if (action === "heal") heal();
     else if (action === "sleep") sleep();
     else if (action === "home") sleepHome();
+    else if (action === "tour") tour(c.tour + 1);
     else if (action === "wanted") acceptWanted();
     else if (action.startsWith("buy:")) buy(action.slice(4));
     else if (action === "grog") dialog("La nota sul barile", GROG, [["back", "Rimetti a posto la nota"]], { voice: false });

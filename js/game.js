@@ -16,6 +16,7 @@ const Gioco = (() => {
   const CREW_PAY = 5;         // la paga giornaliera della ciurma
   const DEPART_COST = 2;
   const SAVE_KEY = "spedizione-ornitologica:partita";
+  const TUTORIAL_KEY = "spedizione-ornitologica:tutorial";   // i consigli già dati, una volta per sempre
   const NOTEBOOK_KEY = "spedizione-ornitologica:taccuino";
   const REFRESH_COST = 3;
   const MERCHANTS = 2;        // mercanti per globo
@@ -759,6 +760,9 @@ const Gioco = (() => {
     const rc = rng(seed ^ 0x7c4e57);
     world.chests = wild.filter((z) => !z.tags.has("bucanieri") && !z.tags.has("labirinto")).slice().sort(() => rc() - 0.5).slice(0, Math.max(1, Math.round(wild.length / CHEST_EVERY))).map((z) => z.id);
     for (const z of world.zones) z.name = zoneName(z.tags, z.place);
+    // per gli uccelli: se la zona tocca il mare e se la sua isola ha una città (i gabbiani stanno lì)
+    const portIslands = new Set(world.cities.map((c) => world.zones[c.zone].island));
+    for (const z of world.zones) { z.coast = !!world.coastal[z.id]; z.port = portIslands.has(z.island); }
     // Due mercanti girano per il globo, ognuno in una zona, e cercano un oggetto preciso
     const rm = rng(seed ^ 0x3e7c11);
     const kinds = Object.keys(OGGETTI);
@@ -1000,7 +1004,7 @@ const Gioco = (() => {
     const memory = (trip.zones[zone.id] ||= { visited: false, done: false, gone: false });
     // L'uccello della zona si decide al primo attracco, tra quelli adatti, e poi resta quello.
     // I rari no: li porterà in una zona solo una voce di taverna (al massimo due per spedizione)
-    if (memory.bird === undefined) memory.bird = uccelloPerZona(zone.tags, zone.biome, Math.random)?.id ?? null;
+    if (memory.bird === undefined) memory.bird = uccelloPerZona(zone, Math.random)?.id ?? null;
     const bird = memory.bird != null ? UCCELLI[memory.bird] : null;
     const shape = zoneShape(zone);
     const gen = generate(zone.seed, zone.tags, bird, shape);
@@ -1101,6 +1105,7 @@ const Gioco = (() => {
     if (s.merchant) log("Sulla riva aspetta qualcuno col cappuccio.");
     if (s.pirates.length) note("Nessuna traccia di animali.");
     render();
+    if (!quiet) coachLanding();
   }
 
   // L'unicorno e il mostro del labirinto: in due corridoi lontani dall'entrata
@@ -1254,8 +1259,8 @@ const Gioco = (() => {
     for (const u of birds) {
       // la zona: una che gli vada bene, meglio se mai visitata; altrimenti una del suo bioma
       const zones = trip.world.zones.filter(free);
-      const fit = zones.filter((z) => zonaAdatta(u, z.tags, z.biome)).sort((a, b) => !!trip.zones[a.id] - !!trip.zones[b.id]);
-      const zone = fit[0] || zones.find((z) => !u.bioma || z.biome === u.bioma);
+      const fit = zones.filter((z) => zonaAdatta(u, z)).sort((a, b) => !!trip.zones[a.id] - !!trip.zones[b.id]);
+      const zone = fit[0] || zones.find((z) => zonaAdatta({ ...u, tratto: null }, z));
       if (!zone) continue;
       const memory = (trip.zones[zone.id] ||= { visited: false, done: false, gone: false });
       memory.bird = u.id;
@@ -1353,6 +1358,36 @@ const Gioco = (() => {
     if (kind === "dig") dig();
     s.lastAct = t;
     if (!s.over) tick();
+    if (!s.over) coach();
+  }
+
+  // --- I primi passi: alla prima isola, una finestrella alla volta, al momento giusto, una volta sola ---
+
+  const tutorialDone = new Set();
+  function firstTime(step) {
+    try { JSON.parse(localStorage.getItem(TUTORIAL_KEY) || "[]").forEach((k) => tutorialDone.add(k)); } catch (e) { /* senza memoria, vale quella della pagina */ }
+    if (tutorialDone.has(step)) return false;
+    tutorialDone.add(step);
+    try { localStorage.setItem(TUTORIAL_KEY, JSON.stringify([...tutorialDone])); } catch (e) { /* pazienza */ }
+    return true;
+  }
+  const tip = (step, text) => firstTime(step) && (say("Primi passi", text, "Ho capito"), true);
+
+  function coachLanding() {
+    if (s.castle || s.tags.has("labirinto")) return;
+    if (birdActive()) tip("sbarco", "Sei a terra. In questa zona vive un uccello: è l'icona che vedi sulla mappa. Raggiungilo con le frecce, ma senza farti sentire.");
+    else if (!s.bird.observed) tip("sbarco", "Sei a terra, ma l'uccello di questa zona adesso non c'è: ognuno si fa vedere solo alla sua ora (alba, pomeriggio o notte). Torna alla nave, la casella col galeone, e aspetta a bordo.");
+  }
+
+  function coach() {
+    if (!s || s.over || s.castle || !el.overlay.hidden) return;
+    const b = s.bird, p = s.player;
+    if (b.observed && tip("nave", "Annotato nel taccuino! Ora torna alla nave, la casella col galeone: da lì riparti, o aspetti a bordo che cambi l'ora.")) return;
+    if (s.beasts.some((o) => dist(o, p) <= 8) && tip("animale", "Attento, un animale. Le caselle rosse sono dove può arrivarti al prossimo passo. L'erba alta e i cespugli ti nascondono; il rumore lo richiama.")) return;
+    if (!birdActive()) return;
+    const d = dist(p, b);
+    if (d <= OBSERVE && d > FLEE && los(s.map, p, b) && tip("tiro", "È a tiro: lo vedi bene e non sei troppo vicino. Premi spazio per osservarlo e disegnarlo nel taccuino.")) return;
+    if (d <= 10) tip("vicino", "Lo senti cantare: sei vicino. Da qui fai piano. Se ti avvicini troppo o fai rumore, vola via. Tenere premute le frecce è correre, e correre fa rumore.");
   }
 
   function occupied(c) {
@@ -2975,6 +3010,6 @@ const Gioco = (() => {
     get zoneState() { return s; },   // la battlemap in corso: per le prove automatiche
     get el() { return el; },
     get explorer() { return explorer; },
-    MAX_HP, CREW_PAY, TIME_ICONS, TIMES, BOUNTY, WANTED_DAYS,
+    firstTime, MAX_HP, CREW_PAY, TIME_ICONS, TIMES, BOUNTY, WANTED_DAYS,
   };
 })();

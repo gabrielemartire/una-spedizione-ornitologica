@@ -193,15 +193,8 @@ function showWelcome() {
   box.dataset.kind = "welcome";
   box.innerHTML = `<div class="patch-card welcome" role="dialog" aria-label="Come si gioca">
       <h2>Come si gioca</h2>
-      <p class="welcome-lead">Sei un ornitologo con una nave a noleggio. Lo scopo è osservare gli uccelli dell'arcipelago e riempire il taccuino.</p>
-      <ul>
-        <li><b>In mare</b> scegli una costa. Da vicino, col binocolo, vedi com'è la zona prima di sbarcare.</li>
-        <li><b>A terra</b> cerchi l'uccello della zona. Per osservarlo devi vederlo senza niente in mezzo, a tre o quattro passi: più vicino vola via.</li>
-        <li><b>Fai piano.</b> Il rumore spaventa l'uccello e richiama gli animali (in rosso). Correre fa più rumore; erba alta e cespugli ti nascondono.</li>
-        <li><b>Ogni uccello ha le sue ore</b>: alba, pomeriggio o notte. Se non c'è, aspetta a bordo e riprova.</li>
-        <li><b>La ciurma si paga ogni alba</b>, ${Gioco.CREW_PAY} monete. Le guadagni in città: vendendo quello che trovi, coi premi della Società ornitologica e con le taglie.</li>
-        <li><b>Il viaggio finisce</b> se resti senza soldi o senza vita. Il taccuino però resta: alla fine ricevi un codice per riprenderlo nella spedizione dopo.</li>
-      </ul>
+      <p class="welcome-lead">Sei un ornitologo con una nave a noleggio.</p>
+      <p class="welcome-lead">Lo scopo: osservare gli uccelli dell'arcipelago e riempire il taccuino, prima di finire i soldi per la ciurma.</p>
       <div class="welcome-cols">
         <dl><dt>In mare</dt>
           <dd><kbd>← →</kbd> rotta</dd><dd><kbd>↑ ↓</kbd> vele</dd><dd><kbd>T</kbd> binocolo</dd><dd><kbd>Invio</kbd> sbarca o entra in porto</dd></dl>
@@ -210,7 +203,7 @@ function showWelcome() {
         <dl><dt>Sempre</dt>
           <dd><kbd>Tab</kbd> diario e zaino</dd></dl>
       </div>
-      <p class="welcome-lead">Il resto lo scopri viaggiando.</p>
+      <p class="welcome-lead">Il resto lo scopri alla prima isola.</p>
       <p class="patch-foot">Lo ritrovi in <i>Spedizione → Istruzioni</i> · Invio per chiudere</p>
       <button class="menu-item" data-action="close-patch">Chiudi</button>
     </div>`;

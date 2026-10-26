@@ -22,11 +22,10 @@ Lista di lavoro. Le idee nascono nella chat di progetto; il quadro completo è n
 - [ ] **La protesta in piazza**: una missione secondaria che parte dai quattro che protestano al Forte (da pensare).
 
 ## In arrivo (chiesto il 26 ottobre)
-- [ ] **Ribilanciare i costi** (ciurma già a 5): proposta da discutere.
-- [ ] **Popup iniziale più semplice** e **tutorial in gioco** alla prima isola e al primo sbarco al Forte.
-- [ ] **Uccelli con regole fisse**: i gabbiani solo sulle isole coi porti, i corvi solo nelle paludi, e una regola precisa per ogni specie.
+- [ ] **Ribilanciare i costi** (ciurma già a 5): proposta A, soldi iniziali da 100 a 60; da decidere.
 
 ## Fatto di recente
+- [x] **Versione 0.13**: regole fisse per ogni specie di uccello; primi passi alla prima isola; il giro della città con la freccia; benvenuto più corto.
 - [x] **Versione 0.12.19**: alle nozze un passo verso la sposa vale come Invio.
 - [x] **Versione 0.12.18**: ciurma a 5; il castello c'è sempre; i cartelli si leggono avvicinandosi, lo stendardo verso il castello; la torre disegnata sul globo con la lettera; la casa degli sposi al Forte; il cinghiale colpisce anche se gli vai addosso; nel diario niente fughe dagli animali; i bucanieri dormono anche dopo il furto notturno e sparano ogni 8 passi.
 - [x] **Versione 0.12.17**: via gli spuntoni del castello; le ferite nel diario si raccontano senza numeri; la nave parte sempre in mare aperto e una nave chiusa in un'insenatura viene liberata.

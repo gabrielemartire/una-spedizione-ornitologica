@@ -2,6 +2,23 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.13 · 26 ottobre 2026
+
+- **Gli uccelli seguono regole fisse**, uguali in ogni arcipelago:
+  - **gabbiani** solo sulle coste delle isole col porto (il Forte o il porticciolo);
+  - **corvi** solo nelle paludi;
+  - **aironi** solo dove c'è acqua (palude, fiume, lago, cascata);
+  - **gufi** solo di notte;
+  - **colibrì** solo ai tropici e nel deserto;
+  - **fenici** solo nel deserto e sotto i vulcani;
+  - **pettirossi** nei boschi e nei villaggi;
+  - **cinciallegre** nella taiga e sul ghiaccio.
+
+  Dentro ogni specie le varianti si distinguono per caratteristica della zona e ora; diversi indizi sono stati riscritti. Non tutti gli arcipelaghi hanno tutto (una palude, un vulcano): in un viaggio può non esserci modo di vedere ogni uccello. Le zone già visitate tengono il loro uccello.
+- **Primi passi alla prima isola**: una finestrella alla volta, una volta sola. Allo sbarco (cosa cercare, o che non è l'ora dell'uccello), quando lo senti cantare (fai piano), quando è a tiro (premi spazio), al primo animale vicino (le caselle rosse, l'erba alta che nasconde), e dopo averlo annotato (torna alla nave).
+- **La prima volta in città, il giro delle botteghe**: qualche riga per ogni posto (medico, taverna, mercato, emporio, Società, bacheca, gendarmeria, casa tua se ti sei sposato, la nave; al porticciolo anche il falegname), con una freccia grossa che saltella sopra e un riquadro sul posto. Invio va avanti.
+- **Il benvenuto è più corto**: chi sei, lo scopo e i tasti. Il resto lo spiegano i primi passi.
+
 ## 0.12.19 · 26 ottobre 2026
 
 - **Alle nozze si va avanti camminando**: nella sala del trono, premere di nuovo la freccia verso la sposa vale come Invio. Si risponde *Sì, lo voglio*, poi si passa agli auguri e si scorre tutta la festa. Tenendo giù il tasto non si salta niente: ogni passo va premuto.

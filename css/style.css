@@ -348,6 +348,11 @@ body.in-game .frame { width: min(1440px, 100%); height: calc(100vh - 16px); min-
   box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.6);
 }
 .map-overlay[hidden] { display: none; }
+.map-overlay.is-top { top: 8px; bottom: auto; }
+/* il giro della città: un riquadro sul posto di cui si parla e una freccia grossa che saltella sopra */
+.entity.tour-arrow { z-index: 4; overflow: visible; box-shadow: 0 0 0 2px #000, 0 0 0 4px var(--bird), 0 0 0 6px #000; }
+.entity.tour-arrow svg { position: absolute; left: 50%; bottom: 100%; width: calc(var(--cell) * 1.2); height: calc(var(--cell) * 1.5); transform: translateX(-50%); fill: var(--bird); stroke: #000; stroke-width: 0.8; paint-order: stroke; animation: tour-bob 0.6s ease-in-out infinite alternate; }
+@keyframes tour-bob { from { margin-bottom: 10px; } to { margin-bottom: 2px; } }
 .map-overlay h3 { margin: 0; font-size: 22px; font-weight: normal; color: var(--bird); }
 .map-overlay p { margin: 2px 0 6px; line-height: 1.15; }
 .map-overlay .menu { justify-items: start; margin-top: 2px; gap: 0; }

@@ -427,7 +427,9 @@ Il diario è un diario, non un manuale: niente spiegazioni, se un capitolo è vu
 
 **Perché inseguire una specie: la Società ornitologica.** Al Forte, quando hai osservato **tutti gli uccelli comuni di una specie**, la Società ti paga **25 m.o.** (una volta per specie, entrando nella sua sede). Le specie già complete nel taccuino ripreso col codice non si ripagano: la Società le ha premiate nella spedizione di prima. Il taccuino dice dove cercarli: chi ha poche monete può decidere di andare a completare i gabbiani invece di girare a caso.
 
-Ogni uccello ha: bioma (o "ovunque"), a volte una caratteristica (fiume, lago, cascata, rovine, villaggio, montagne, castello, vulcano), **i momenti in cui si fa vedere**, un indizio e una curiosità. Gli ID non cambiano mai: il codice del taccuino si baserà su di essi.
+**Le regole delle specie** (0.13), sempre uguali: gabbiani solo sulle coste delle isole col porto; corvi solo nelle paludi; aironi dove c'è acqua; gufi solo di notte; colibrì ai tropici e nel deserto; fenici nel deserto e sotto i vulcani; pettirossi nei boschi (foresta, taiga, tropici) e nei villaggi; cinciallegre nella taiga e sul ghiaccio. Le varianti si distinguono per caratteristica e ora. Non tutti gli arcipelaghi hanno tutto: un viaggio può non bastare per ogni uccello (va bene così, il taccuino passa al viaggio dopo).
+
+Ogni uccello ha: bioma (uno, più d'uno o "ovunque"; per i gabbiani anche *coste delle isole col porto*), a volte una caratteristica (fiume, lago, cascata, rovine, villaggio, montagne, castello, vulcano), **i momenti in cui si fa vedere**, un indizio e una curiosità. Gli ID non cambiano mai: il codice del taccuino si baserà su di essi.
 
 **Un uccello per zona, deciso all'attracco.** Al primo sbarco in una zona si sceglie il suo uccello tra quelli adatti al bioma e alle caratteristiche (chi vuole una caratteristica ha la precedenza); da lì in poi è sempre quello. Se l'ora è sbagliata non si fa vedere: puoi aspettare a bordo e riprovare. Una volta osservato, la zona è segnata con la ✓ e lì non compare più niente.
 
@@ -533,7 +535,9 @@ Idea: **ogni uccello ha il suo verso**, generato dal suo ID. Lo stesso uccello c
 ## 19. Decisioni prese
 
 - **Nome del giocatore:** si sceglie all'inizio della partita ("Il registro di bordo"), anche col taccuino ripreso, proponendo quello di prima.
-- **Come si gioca:** alla prima spedizione, un riquadro asciutto, senza retorica: i tasti in due colonne (in mare, a terra) e cinque regole brevi, l'ultima dice che ci sono attività secondarie e qualche segreto. Si riapre da *Spedizione → Istruzioni*.
+- **Come si gioca:** alla prima spedizione, un riquadro corto (0.13): chi sei, lo scopo e i tasti. Si riapre da *Spedizione → Istruzioni*.
+- **Primi passi** (0.13): alla prima isola, finestrelle *Primi passi* una volta sola, al momento giusto: allo sbarco, quando l'uccello è vicino, quando è a tiro, al primo animale vicino, dopo l'osservazione. Ricordate nel browser (`spedizione-ornitologica:tutorial`).
+- **Il giro della città** (0.13): la prima volta al Forte e la prima al porticciolo, una finestrella per posto con una freccia che lo indica (e un riquadro intorno); la finestrella sale in alto se il posto è nella metà bassa della mappa.
 - **Il grande lago non si naviga**, e la nave non passa tra due terre che si toccano per un angolo (§ 6).
 - **Tempo in terzi:** attraccare gratis, ripartire due terzi di giornata, aspettare a bordo uno, traversate lunghe uno ogni 200° (§ 6).
 - **Animali per momento:** alba cinghiale, pomeriggio orso, notte lupi; mai una zona vuota (§ 9.3).
