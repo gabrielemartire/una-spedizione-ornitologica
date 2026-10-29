@@ -429,6 +429,15 @@ const Globo = (() => {
       if (!data[o + 3]) return;
       data[o] = col[0]; data[o + 1] = col[1]; data[o + 2] = col[2];
     };
+    // Un'icona a pixel poggiata sul punto s (in basso al centro), col bordo scuro perché si stacchi dall'isola
+    const sprite = (s, rows, col, edge) => {
+      const w = rows[0].length, at = (dx, dy) => rows[dy]?.[dx] && rows[dy][dx] !== ".";
+      for (let dy = -1; dy <= rows.length; dy++) for (let dx = -1; dx <= w; dx++) {
+        const x = s.x + dx - (w >> 1), y = s.y + dy - rows.length + 1;
+        if (at(dx, dy)) put(x, y, col[rows[dy][dx]]);
+        else if ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([ox, oy]) => at(dx + ox, dy + oy))) put(x, y, edge);
+      }
+    };
 
     // La scia della nave
     (opts.wake || []).forEach((w, k) => {
@@ -436,14 +445,16 @@ const Globo = (() => {
       if (s && k % 2 === 0) put(s.x, s.y, blend(pal[T.OCEAN].lit, [255, 255, 255], 0.55));
     });
 
-    // Le città: una torre per il Forte, una casetta per il Porto
+    // Le città: una campana d'oro al Forte, una d'oro rosso al porticciolo
     if (opts.markers) {
+      const BELL = ["...h...", "..bbb..", ".bLbbb.", ".bLbbb.", ".bbbbb.", "bbbbbbb", "...c..."];
       for (const city of world.cities) {
         const ll = toLatLon(city.p), s = project(ll.lat, ll.lon);
         if (!s) continue;
-        const roof = city.id === "forte" ? [222, 214, 196] : [200, 90, 60];
-        [[0, 0], [1, 0], [0, 1], [1, 1], [0, -1], [1, -1]].forEach(([dx, dy]) => put(s.x + dx, s.y + dy, roof));
-        [[-1, -1], [2, -1], [-1, 1], [2, 1], [-1, 0], [2, 0], [0, 2], [1, 2], [0, -2], [1, -2]].forEach(([dx, dy]) => put(s.x + dx, s.y + dy, [30, 24, 20]));
+        const gold = city.id === "forte"
+          ? { b: [232, 186, 60], L: [255, 236, 150], h: [120, 100, 80], c: [120, 90, 30] }
+          : { b: [206, 104, 64], L: [246, 176, 120], h: [120, 100, 80], c: [110, 50, 30] };
+        sprite(s, BELL, gold, [30, 24, 20]);
       }
     }
 
@@ -465,21 +476,14 @@ const Globo = (() => {
       }
     }
 
-    // Il falò: un marshmallow sullo stecco, bianco e dorato sotto, così si sa dov'è la radura
+    // Il falò: un fuocherello coi ciocchi, così si sa dov'è la radura
     if (opts.markers) {
-      const MARSH = [".www.", "wwwww", "wwwww", "ggggg", ".ggg.", "..s..", "..s..", "..s.."];
-      const COL = { w: [250, 246, 236], g: [226, 168, 80], s: [120, 80, 44] };
-      const at = (dx, dy) => MARSH[dy]?.[dx] && MARSH[dy][dx] !== ".";
+      const FIRE = ["...r...", "..rrr..", ".rryrr.", ".ryyyr.", "rryWyrr", ".rrrrr.", "bbbbbbb"];
+      const COL = { r: [230, 80, 30], y: [255, 190, 60], W: [255, 240, 170], b: [110, 70, 40] };
       for (const z of world.zones) {
         if (!z.tags.has("falo")) continue;
         const s = project(z.lat, z.lon);
-        if (!s) continue;
-        for (let dy = -1; dy <= MARSH.length; dy++) for (let dx = -1; dx <= 5; dx++) {
-          const x = s.x + dx - 2, y = s.y + dy - 7;
-          if (at(dx, dy)) { put(x, y, COL[MARSH[dy][dx]]); continue; }
-          // il bordo scuro, perché si stacchi dall'isola
-          if ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([ox, oy]) => at(dx + ox, dy + oy))) put(x, y, [40, 30, 26]);
-        }
+        if (s) sprite(s, FIRE, COL, [40, 30, 26]);
       }
     }
 
@@ -495,6 +499,8 @@ const Globo = (() => {
       for (const [id, m] of Object.entries(opts.marks)) {
         if (!m.visited && !m.rumor) continue;
         const z = world.zones[id], s = project(z.lat, z.lon);
+        // sul castello resta il castello; sul labirinto niente ?, chi lo trova lo riconosce
+        if (!m.rumor && (z.tags.has("castello") || (z.tags.has("labirinto") && !m.done && !m.gone))) continue;
         if (!s) continue;
         const mark = MARKS[m.done ? "done" : m.gone ? "gone" : m.rumor ? "rumor" : "seen"];
         const halo = mark === MARKS.done ? [250, 244, 220] : [16, 14, 12];
