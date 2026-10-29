@@ -120,7 +120,7 @@ Così il ciclo tipico (sbarco, esplorazione, ripartenza) costa due terzi di gior
 
 **Il Kraken**: ogni volta che la nave va **al largo** (nessuna costa alla portata del binocolo) si tira 1 su 8; se esce, **3–7 secondi dopo** il mare intorno diventa nero d'inchiostro (macchia di 3,5° con sei tentacoli sul globo; dal ponte acqua nera e tentacoli). Arrivando **ferma la nave** (vele a zero); dentro al massimo una vela, e la nave va **a un terzo della velocità** (5–6 secondi per uscire); uscendo passa un terzo di giornata. Diario: *«Acqua nera a babordo. Nessuno vuole parlarne.»* Una volta per viaggio. Il timbro del Kraken per ora non si prende.
 
-**Sul globo** (0.12.7) si vedono le città e il castello (un torrione coi merli), e dalla 0.13.1 il falò (un marshmallow sullo stecco); i vulcani no, si scoprono andandoci.
+**Sul globo** (0.12.7) si vedono le città (dalla 0.13.2 campane: d'oro il Forte, d'oro rosso il porticciolo), il castello (un torrione coi merli, su cui non va mai il segno del diario) e il falò (un fuoco); sul labirinto niente ?; i vulcani no, si scoprono andandoci.
 
 ## 7. Zone, biomi e caratteristiche
 

@@ -2,6 +2,13 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.13.2 · 29 ottobre 2026
+
+- **Il falò sul globo è un fuoco**, coi ciocchi sotto, al posto del marshmallow.
+- **Le città sono campane**: d'oro al Forte, d'oro rosso al porticciolo del fiordo.
+- **Il castello resta il castello**: dopo averlo visitato non ci finisce sopra il segno del diario.
+- **Niente ? sul labirinto**: chi l'ha trovato lo riconosce (se ci vedi l'uccello, la spunta resta).
+
 ## 0.13.1 · 29 ottobre 2026
 
 - **Sul globo c'è il marshmallow**: un marshmallow sullo stecco (bianco, dorato sotto) segna la zona del falò, visibile da lontano come il castello. Il falò c'è sempre, uno per arcipelago (controllato su 200 mondi).
