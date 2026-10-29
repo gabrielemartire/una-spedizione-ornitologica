@@ -465,6 +465,24 @@ const Globo = (() => {
       }
     }
 
+    // Il falò: un marshmallow sullo stecco, bianco e dorato sotto, così si sa dov'è la radura
+    if (opts.markers) {
+      const MARSH = [".www.", "wwwww", "wwwww", "ggggg", ".ggg.", "..s..", "..s..", "..s.."];
+      const COL = { w: [250, 246, 236], g: [226, 168, 80], s: [120, 80, 44] };
+      const at = (dx, dy) => MARSH[dy]?.[dx] && MARSH[dy][dx] !== ".";
+      for (const z of world.zones) {
+        if (!z.tags.has("falo")) continue;
+        const s = project(z.lat, z.lon);
+        if (!s) continue;
+        for (let dy = -1; dy <= MARSH.length; dy++) for (let dx = -1; dx <= 5; dx++) {
+          const x = s.x + dx - 2, y = s.y + dy - 7;
+          if (at(dx, dy)) { put(x, y, COL[MARSH[dy][dx]]); continue; }
+          // il bordo scuro, perché si stacchi dall'isola
+          if ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([ox, oy]) => at(dx + ox, dy + oy))) put(x, y, [40, 30, 26]);
+        }
+      }
+    }
+
     // I segni del diario sulle zone visitate: ✓ uccello osservato, ? visitata senza vederlo, ✗ volato via
     const MARKS = {
       done: { color: [16, 14, 12], px: [[-2, 0], [-1, 1], [0, 2], [1, 1], [2, 0], [3, -1], [4, -2]] },

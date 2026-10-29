@@ -2,6 +2,11 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.13.1 · 29 ottobre 2026
+
+- **Sul globo c'è il marshmallow**: un marshmallow sullo stecco (bianco, dorato sotto) segna la zona del falò, visibile da lontano come il castello. Il falò c'è sempre, uno per arcipelago (controllato su 200 mondi).
+- **Riparato `versione.js`**: nella 0.13 un errore di battitura rompeva il file, e le patch note e il numero di versione non comparivano.
+
 ## 0.13 · 26 ottobre 2026
 
 - **Gli uccelli seguono regole fisse**, uguali in ogni arcipelago:
