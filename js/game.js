@@ -670,9 +670,9 @@ const Gioco = (() => {
   }
 
   // Chi c'è in questo momento: di giorno l'orso, di notte i lupi, all'alba il cinghiale (o l'orso, vicino al
-  // fiume). Una zona senza animali non c'è mai
+  // fiume). Senza animali solo i bucanieri, il labirinto e la radura del falò
   function spawnBeasts(gen, zone, time) {
-    if (zone.tags.has("bucanieri") || zone.tags.has("labirinto")) return [];
+    if (["bucanieri", "labirinto", "falo"].some((t) => zone.tags.has(t))) return [];
     const r = rng(zone.seed ^ Math.imul(trip.third + 1, 0x9e3779b1));
     const river = zone.tags.has("fiume");
     const spots = gen.lair.slice();
@@ -1202,7 +1202,7 @@ const Gioco = (() => {
   function wantedPoster() {
     if (trip.wanted || (trip.wantedDay != null && day() - trip.wantedDay < WANTED_EVERY)) return null;
     const cities = new Set(trip.world.cities.map((c) => c.zone));
-    const zones = trip.world.zones.filter((z) => !cities.has(z.id) && !z.tags.has("bucanieri") && !z.tags.has("labirinto"));
+    const zones = trip.world.zones.filter((z) => !cities.has(z.id) && !z.tags.has("bucanieri") && !z.tags.has("labirinto") && !z.tags.has("falo"));
     if (!zones.length) return null;
     const zone = zones[Math.floor(Math.random() * zones.length)];
     const [name, crime] = OUTLAWS[Math.floor(Math.random() * OUTLAWS.length)];
@@ -1920,7 +1920,7 @@ const Gioco = (() => {
       el.ents.fugitive.hidden = true;
       const w = trip.wanted, here = trip.world.zones[w.zone];
       const cities = new Set(trip.world.cities.map((c) => c.zone));
-      const others = trip.world.zones.filter((z) => z.island === here.island && z.id !== here.id && !cities.has(z.id) && !z.tags.has("bucanieri") && !z.tags.has("labirinto"));
+      const others = trip.world.zones.filter((z) => z.island === here.island && z.id !== here.id && !cities.has(z.id) && !z.tags.has("bucanieri") && !z.tags.has("labirinto") && !z.tags.has("falo"));
       if (others.length) w.zone = others[Math.floor(Math.random() * others.length)].id;
       say("Il ricercato", others.length ? "È sparito oltre il bosco. Si nasconderà in un'altra zona dell'isola: di notte, col binocolo, cerca il suo fuoco." : "È sparito oltre il bosco. Tornerà al suo nascondiglio: riprova più tardi.");
       log("Il ricercato mi è scappato oltre il bosco. È ancora sull'isola.");

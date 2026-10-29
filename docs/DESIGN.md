@@ -480,7 +480,7 @@ Il controllo è un CRC-16: intercetta gli errori di battitura. Nel leggere si pe
 
 ### 14.2 La radura del falò, il cibo, le tagliole, la bottiglia (0.9)
 
-- **La radura del falò**: una per globo, in una zona interna (*… del falò*). Un cerchio d'alberi con due varchi e una fascia libera intorno, il falò nel mezzo (non si attraversa), il marshmallow accanto: uno per viaggio. Contro il fuoco: cuocerlo (bianco → ancora bianco → dorato → bruciato, e il timbro), mangiarlo, andare.
+- **La radura del falò**: una per globo, in una zona interna (*… del falò*). Un cerchio d'alberi con due varchi e una fascia libera intorno, il falò nel mezzo (non si attraversa), il marshmallow accanto: uno per viaggio. Dalla 0.13.3 la radura è senza nemici: niente animali e mai il ricercato. Contro il fuoco: cuocerlo (bianco → ancora bianco → dorato → bruciato, e il timbro), mangiarlo, andare.
 - **Mangiare (M)**: il marshmallow rimette tutta la vita e dà un **cuore viola** che assorbe il primo colpo; il **pesce in scatola** (emporio, 2 m.o., uno alla volta) cura due cuori: costa meno del medico ma cura meno, però si porta dietro.
 - **Tagliole (T, emporio, 3 m.o.)**: si posano dove sei; restano nella zona finché non scattano. Lupo: muore, ma la schiva 3 volte su 10 (la tagliola scatta comunque). Orso e cinghiale: fermi 15 tuoi passi.
 - **La bottiglia col messaggio**: una zona caraibica sul mare su tre, sulla prima fila di terra. Si sceglie prima l'arrivo (calpestabile, non acqua), poi da 2 a 4 tratti dritti, alternando verticale e orizzontale; conta dove arrivi, non da dove passi. **X scava** con la pala (sempre nello zaino: il tasto S era già il passo in giù): un passo; nel posto giusto 0–9 m.o. e un oggetto se sono meno di 4, altrove *una buca vuota*.

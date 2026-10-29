@@ -2,6 +2,10 @@
 
 Le novità di ogni versione di [*Una spedizione ornitologica*](https://gabrielemartire.github.io/una-spedizione-ornitologica/). Nel gioco compaiono alla prima accensione dopo un aggiornamento.
 
+## 0.13.3 · 29 ottobre 2026
+
+- **La radura del falò è senza nemici**: niente orsi, lupi o cinghiali, a nessuna ora; il ricercato non ci si nasconde e, scappando, non ci va.
+
 ## 0.13.2 · 29 ottobre 2026
 
 - **Il falò sul globo è un fuoco**, coi ciocchi sotto, al posto del marshmallow.
